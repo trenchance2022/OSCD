@@ -1,4 +1,7 @@
+package memory_management;
 
+import ProcessManagement.PIDBitmap;
+import main.Constants;
 
 public class Memory {
     byte[][] memoryData = new byte[Constants.MEMORY_PAGE_SIZE][Constants.PAGE_SIZE_BYTES];

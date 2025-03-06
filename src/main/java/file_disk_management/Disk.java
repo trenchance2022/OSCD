@@ -1,3 +1,7 @@
+package file_disk_management;
+
+import main.Constants;
+
 import java.util.Random;
 
 class Disk {

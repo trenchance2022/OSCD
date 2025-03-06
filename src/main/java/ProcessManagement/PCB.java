@@ -1,3 +1,7 @@
+package ProcessManagement;
+
+import memory_management.PageTableArea;
+import main.Constants;
 
 public class PCB {
     // 别的属性

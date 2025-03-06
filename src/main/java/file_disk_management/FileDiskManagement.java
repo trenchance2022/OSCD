@@ -1,3 +1,5 @@
+package file_disk_management;
+
 public interface FileDiskManagement {
 
         // 创建文件

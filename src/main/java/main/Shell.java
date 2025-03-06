@@ -1,3 +1,8 @@
+package main;
+
+import file_disk_management.FileDiskManagement;
+import memory_management.MemoryManagement;
+
 import java.util.Scanner;
 
 class Shell {

@@ -1,3 +1,7 @@
+package ProcessManagement;
+
+import memory_management.MMU;
+
 public class CPU {
 
     // 有多个CPU，每个CPU都有一个MMU，并且有一个PCB标识当前运行的进程

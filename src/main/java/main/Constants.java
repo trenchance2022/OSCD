@@ -1,9 +1,11 @@
+package main;
+
 // 常量类
 public final class Constants {
 
     // 私有构造函数，防止实例化
     private Constants() {
-        throw new UnsupportedOperationException("Constants class cannot be instantiated");
+        throw new UnsupportedOperationException("main.Constants class cannot be instantiated");
     }
 
     // 常数

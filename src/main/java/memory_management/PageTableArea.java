@@ -1,3 +1,5 @@
+package memory_management;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Random;

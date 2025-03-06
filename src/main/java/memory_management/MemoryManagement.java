@@ -1,3 +1,7 @@
+package memory_management;
+
+import ProcessManagement.CPU;
+
 //内存管理模块对外接口
 public interface MemoryManagement {
 

@@ -1,3 +1,4 @@
+package memory_management;
 
 public class PageTableEntry {
 

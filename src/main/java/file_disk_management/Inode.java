@@ -1,3 +1,5 @@
+package file_disk_management;
+
 class Inode {
     int inodeNumber;  // inode编号
     String fileName;  // 文件名

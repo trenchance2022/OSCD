@@ -1,3 +1,9 @@
+package memory_management;
+
+import ProcessManagement.PCB;
+import file_disk_management.FileDiskManagement;
+import file_disk_management.FileSystemImpl;
+import main.Constants;
 
 // 每个CPU都有一个MMU，MMU负责地址转换，内含TLB缓冲区，页表寄存器
 public class MMU {

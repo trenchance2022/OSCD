@@ -1,4 +1,11 @@
-import javax.swing.*;
+package memory_management;
+
+import ProcessManagement.CPU;
+import ProcessManagement.PIDBitmap;
+import file_disk_management.FileDiskManagement;
+import file_disk_management.FileSystemImpl;
+import main.Constants;
+
 import java.util.Arrays;
 
 public class MemoryManagementImpl implements MemoryManagement {

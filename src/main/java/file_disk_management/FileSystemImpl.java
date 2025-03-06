@@ -1,7 +1,9 @@
+package file_disk_management;
+
 import java.util.Scanner;
 import java.util.Arrays;
 
-class FileSystemImpl implements FileDiskManagement {
+public class FileSystemImpl implements FileDiskManagement {
     Disk disk;
     Directory root;
     Directory currentDirectory;

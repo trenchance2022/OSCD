@@ -1,3 +1,5 @@
+package file_disk_management;
+
 class Bitmap {
     private int[] bitmap;   // 位图，1表示已分配，0表示空闲
     private int size;       // 位图的大小（即磁盘块的总数）
