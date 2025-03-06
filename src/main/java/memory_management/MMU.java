@@ -1,6 +1,6 @@
 package memory_management;
 
-import ProcessManagement.PCB;
+import process_management.PCB;
 import file_disk_management.FileDiskManagement;
 import file_disk_management.FileSystemImpl;
 import main.Constants;

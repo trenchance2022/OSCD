@@ -1,4 +1,4 @@
-package ProcessManagement;
+package process_management;
 
 import memory_management.PageTableArea;
 import main.Constants;

@@ -1,6 +1,6 @@
 package memory_management;
 
-import ProcessManagement.PIDBitmap;
+import process_management.PIDBitmap;
 import main.Constants;
 
 public class Memory {

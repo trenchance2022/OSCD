@@ -1,7 +1,7 @@
 package memory_management;
 
-import ProcessManagement.CPU;
-import ProcessManagement.PIDBitmap;
+import process_management.CPU;
+import process_management.PIDBitmap;
 import file_disk_management.FileDiskManagement;
 import file_disk_management.FileSystemImpl;
 import main.Constants;
