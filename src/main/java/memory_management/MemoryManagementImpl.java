@@ -61,7 +61,7 @@ public class MemoryManagementImpl implements MemoryManagement {
         // 释放页表
         PageTableArea.getInstance().removePageTable(pageTableAddress);
         // 释放PID
-        PIDBitmap.getInstance().freePID(cpu.getCurrentPCB().getPID());
+        PIDBitmap.getInstance().freePID(cpu.getCurrentPCB().getPid());
         return true;
     }
 

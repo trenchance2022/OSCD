@@ -30,7 +30,7 @@ public class IODevice extends Thread {
         try {
             while (running) {
                 PCB pcb = deviceQueue.take();
-                System.out.println("设备 " + deviceId + " 正在处理进程 " + pcb.getPID());
+                System.out.println("设备 " + deviceId + " 正在处理进程 " + pcb.getPid());
                 
                 // 模拟IO操作时间
                 Thread.sleep(processingTime);
@@ -38,8 +38,11 @@ public class IODevice extends Thread {
                 // IO操作完成，将进程状态改为就绪，并放入就绪队列
                 pcb.setState(ProcessState.READY);
                 pcb.resetTimeUsed();
-                readyQueue.put(pcb);
-                System.out.println("设备 " + deviceId + " 完成进程 " + pcb.getPID() + " 的IO操作，进程已放回就绪队列");
+                
+                // 使用调度器的addReadyProcess方法
+                Scheduler.getInstance().addReadyProcess(pcb);
+                
+                System.out.println("设备 " + deviceId + " 完成进程 " + pcb.getPid() + " 的IO操作，进程已放回就绪队列");
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
@@ -49,9 +52,5 @@ public class IODevice extends Thread {
     public void shutdown() {
         running = false;
         interrupt();
-    }
-
-    public int getDeviceId() {
-        return deviceId;
     }
 }

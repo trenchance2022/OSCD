@@ -5,9 +5,19 @@ import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 
-class Scheduler {
+public class Scheduler {
     private List<BlockingQueue<PCB>> readyQueues; // 多级反馈队列
     private List<CPU> cpus; // 管理多个CPU
+    
+    // 单例模式
+    private static Scheduler instance;
+    
+    public static synchronized Scheduler getInstance() {
+        if (instance == null) {
+            instance = new Scheduler();
+        }
+        return instance;
+    }
 
     public Scheduler() {
         // 初始化4个优先级队列
@@ -17,11 +27,11 @@ class Scheduler {
         }
         cpus = new ArrayList<>();
     }
-
+    
     public void addCPU(CPU cpu) {
         cpus.add(cpu);
     }
-
+    
     public PCB createProcess(String executablePath) {
         // 使用PIDBitmap分配PID
         int pid = PIDBitmap.getInstance().allocatePID();
@@ -56,80 +66,34 @@ class Scheduler {
         
         return pcb;
     }
-
+    
     public void addReadyProcess(PCB pcb) {
-        pcb.setState(ProcessState.READY);
-        readyQueues.get(pcb.getPriority()).add(pcb);
-        System.out.println("进程 " + pcb.getPID() + " 加入优先级 " + pcb.getPriority() + " 的就绪队列");
-        
-        // 检查是否有空闲CPU可以立即执行该进程
-        for (CPU cpu : cpus) {
-            if (cpu.isIdle()) {
-                notifyCPUIdle(cpu);
-                break;
-            }
+        if (pcb != null && pcb.getState() == ProcessState.READY) {
+            readyQueues.get(pcb.getPriority()).add(pcb);
+            System.out.println("进程 " + pcb.getPid() + " 加入优先级为 " + pcb.getPriority() + " 的就绪队列");
         }
     }
-
+    
     public PCB getNextProcess() {
-        // 从高优先级到低优先级查找就绪进程
+        // 从高优先级队列开始查找就绪进程
         for (BlockingQueue<PCB> queue : readyQueues) {
             if (!queue.isEmpty()) {
                 PCB pcb = queue.poll();
-                System.out.println("调度器选择进程 " + pcb.getPID() + "，优先级 " + pcb.getPriority());
+                System.out.println("调度器选择进程 " + pcb.getPid() + "，优先级为 " + pcb.getPriority());
                 return pcb;
             }
         }
         return null;
     }
-
+    
     public void notifyCPUIdle(CPU cpu) {
         // CPU空闲时，尝试分配新进程
         PCB nextProcess = getNextProcess();
         if (nextProcess != null) {
             nextProcess.setState(ProcessState.RUNNING);
-            System.out.println("CPU-" + cpu.getCpuId() + " 空闲，调度器分配进程 " + nextProcess.getPID());
-        }
-    }
-
-    public BlockingQueue<PCB> getReadyQueue(int priority) {
-        return readyQueues.get(priority);
-    }
-
-    public void printQueueStatus() {
-        for (int i = 0; i < readyQueues.size(); i++) {
-            System.out.println("优先级 " + i + " 队列中的进程数: " + readyQueues.get(i).size());
-        }
-        
-        // 打印CPU状态
-        for (CPU cpu : cpus) {
-            System.out.println("CPU-" + cpu.getCpuId() + " 状态: " + (cpu.isIdle() ? "空闲" : "忙碌"));
-        }
-    }
-
-    public void balanceLoad() {
-        // 检查是否有进程需要重新分配
-        boolean hasIdleCpu = false;
-        boolean hasBusyCpu = false;
-        
-        for (CPU cpu : cpus) {
-            if (cpu.isIdle()) {
-                hasIdleCpu = true;
-            } else {
-                hasBusyCpu = true;
-            }
-        }
-        
-        // 如果有空闲CPU且有忙碌CPU，尝试重新分配进程
-        if (hasIdleCpu && hasBusyCpu) {
-            System.out.println("检测到CPU负载不均，尝试重新平衡负载...");
-            
-            // 通知所有空闲CPU尝试获取进程
-            for (CPU cpu : cpus) {
-                if (cpu.isIdle()) {
-                    notifyCPUIdle(cpu);
-                }
-            }
+            System.out.println("CPU-" + cpu.getCpuId() + " 空闲，调度器分配进程 " + nextProcess.getPid());
+            // 将进程分配给CPU
+            cpu.changeProcess(nextProcess);
         }
     }
 }

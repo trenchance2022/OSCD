@@ -10,26 +10,47 @@ public class PCB {
     private ProcessState state; // 进程状态
     private int timeSlice;  // 分配的时间片
     private int timeUsed;   // 已使用的时间片
-    private Runnable process;   // 进程代码
+    private Object process;   // 进程代码
     private String executablePath;  //执行文件路径
     // 下面的属性会传给PTR
-    private final int codeSize;//代码段大小
-    private final int innerFragmentation;//内部碎片(代码段与数据段之间的碎片)
-    private int pageTableSize;
-    private final int pageTableAddress;
+    private int codeSize = 0;//代码段大小
+    private int innerFragmentation = 0;//内部碎片(代码段与数据段之间的碎片)
+    private int pageTableSize = 0;
+    private int pageTableAddress = -1;
 
-
-    public PCB(int codeSize, int[] diskAddressBlock, int priority, Runnable process) {
-        this.pid = PIDBitmap.getInstance().allocatePID();
+    // 用于创建进程对象的构造函数
+    public PCB(int pid, int priority, Object process) {
+        this.pid = pid;
         this.priority = priority;
         this.process = process;
         this.state = ProcessState.NEW;
         this.timeUsed = 0;
-        this.size = codeSize;
+        // 根据优先级设置时间片大小
+        setTimeSliceByPriority();
+        // this.size = codeSize;
+        // this.codeSize = codeSize;
+        // this.pageTableSize = (codeSize - 1) / Constants.PAGE_SIZE_BYTES + 1;
+        // this.innerFragmentation = Constants.PAGE_SIZE_BYTES * pageTableSize - codeSize;
+        // this.pageTableAddress = PageTableArea.getInstance().addPageTable(pid, codeSize, diskAddressBlock);
+    }
+
+    // 用于创建带内存管理的进程对象的构造函数
+    public PCB(int pid, int codeSize, int[] diskAddressBlock, int priority, Object process) {
+        this.pid = pid;
+        this.priority = priority;
+        this.process = process;
+        this.state = ProcessState.NEW;
+        this.timeUsed = 0;
         this.codeSize = codeSize;
+        this.size = codeSize;
         this.pageTableSize = (codeSize - 1) / Constants.PAGE_SIZE_BYTES + 1;
         this.innerFragmentation = Constants.PAGE_SIZE_BYTES * pageTableSize - codeSize;
-        this.pageTableAddress = PageTableArea.getInstance().addPageTable(pid, codeSize, diskAddressBlock);
+        
+        // 只有在提供了磁盘地址块时才创建页表
+        if (diskAddressBlock != null && diskAddressBlock.length > 0) {
+            this.pageTableAddress = PageTableArea.getInstance().addPageTable(pid, codeSize, diskAddressBlock);
+        }
+        
         // 根据优先级设置时间片大小
         setTimeSliceByPriority();
     }
@@ -44,12 +65,16 @@ public class PCB {
         }
     }
 
-    public ProcessState getState() {
-        return state;
+    public int getPid() {
+        return pid;
     }
 
-    public void setState(ProcessState state) {
-        this.state = state;
+    public int getSize() {
+        return size;
+    }
+
+    public void addSize(int addSize) {
+        this.size += addSize;
     }
 
     public int getPriority() {
@@ -61,6 +86,14 @@ public class PCB {
         setTimeSliceByPriority();
     }
 
+    public ProcessState getState() {
+        return state;
+    }
+
+    public void setState(ProcessState state) {
+        this.state = state;
+    }
+
     public int getTimeSlice() {
         return timeSlice;
     }
@@ -69,52 +102,16 @@ public class PCB {
         return timeUsed;
     }
 
-    public void resetTimeUsed() {
-        this.timeUsed = 0;
-    }
-
-    public Runnable getProcess() {
-        return process;
-    }
-
     public void incrementTimeUsed() {
         this.timeUsed++;
     }
 
-    public int getCodeSize() {
-        return codeSize;
+    public void resetTimeUsed() {
+        this.timeUsed = 0;
     }
 
-    public int getInnerFragmentation() {
-        return innerFragmentation;
-    }
-
-
-    public int getSize() {
-        return size;
-    }
-
-    public void addSize(int addSize) {
-        this.size += addSize;
-    }
-
-    public void addPage(int addSize) {
-        this.pageTableSize += addSize;
-    }
-
-
-    public int getPageTableSize() {
-        return pageTableSize;
-    }
-
-
-    public int getPageTableAddress() {
-        return pageTableAddress;
-    }
-
-
-    public int getPID() {
-        return pid;
+    public Object getProcess() {
+        return process;
     }
 
     public void setExecutablePath(String path) {
@@ -125,15 +122,28 @@ public class PCB {
         return executablePath;
     }
 
-    @Override
-    public String toString() {
-        return "PCB{" +
-                "pid=" + pid +
-                ", state=" + state +
-                ", priority=" + priority +
-                ", timeSlice=" + timeSlice +
-                ", timeUsed=" + timeUsed +
-                '}';
+    public int getCodeSize() {
+        return codeSize;
+    }
+
+    public int getInnerFragmentation() {
+        return innerFragmentation;
+    }
+
+    public void addPage(int addSize) {
+        this.pageTableSize += addSize;
+    }
+
+    public int getPageTableSize() {
+        return pageTableSize;
+    }
+
+    public int getPageTableAddress() {
+        return pageTableAddress;
+    }
+
+    public void setPageTableAddress(int pageTableAddress) {
+        this.pageTableAddress = pageTableAddress;
     }
 }
 

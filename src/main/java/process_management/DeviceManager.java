@@ -21,17 +21,13 @@ public class DeviceManager {
 
     public void requestIO(PCB pcb, int deviceId) {
         if (devices.containsKey(deviceId)) {
-            pcb.setState(ProcessState.WAITING);
+            pcb.setState(ProcessState.WAITING); // 修改为WAITING状态而不是BLOCKED
+            
+            // 将进程添加到设备队列
             devices.get(deviceId).addProcess(pcb);
-            System.out.println("进程 " + pcb.getPID() + " 请求设备 " + deviceId + " 的IO操作，进程已阻塞");
+            System.out.println("进程 " + pcb.getPid() + " 请求设备 " + deviceId + " 的IO操作，进程已阻塞");
         } else {
             System.out.println("设备 " + deviceId + " 不存在");
-        }
-    }
-
-    public void shutdown() {
-        for (IODevice device : devices.values()) {
-            device.shutdown();
         }
     }
 }
