@@ -2,9 +2,8 @@ package process_management;
 
 import memory_management.MMU;
 import memory_management.MemoryManagement;
-import memory_management.MemoryManagementImpl;
 import java.util.concurrent.BlockingQueue;
-import java.util.Arrays;
+import main.Constants;
 
 public class CPU extends Thread {
     private int cpuId;
@@ -12,8 +11,7 @@ public class CPU extends Thread {
     private Scheduler scheduler;
     private DeviceManager deviceManager;
     private BlockingQueue<Interrupt> interruptQueue;
-    private volatile boolean running = true;
-    private MemoryManagement memoryManager;
+    private MemoryManagement memoryManagement = new memory_management.MemoryManagementImpl();
 
     // 有多个CPU，每个CPU都有一个MMU，并且有一个PCB标识当前运行的进程
     private final MMU mmu = new MMU();
@@ -22,33 +20,37 @@ public class CPU extends Thread {
         this.cpuId = cpuId;
         this.scheduler = scheduler;
         this.deviceManager = deviceManager;
-        this.interruptQueue = interruptQueue;
-        this.memoryManager = new MemoryManagementImpl();
+        // 通过中断请求线注册CPU并获取中断队列
+        this.interruptQueue = InterruptRequestLine.getInstance().registerCPU(cpuId);
     }
 
     @Override
     public void run() {
         try {
-            // 初始状态运行空闲进程
-            runIdleProcess();
-            
-            while (running) {
-                // 检查中断
-                if (!interruptQueue.isEmpty()) {
+            while (true) {
+                // 检查中断队列，但只处理一个时钟中断
+                boolean clockInterruptHandled = false;
+                while (!interruptQueue.isEmpty()) {
+                    Interrupt interrupt = interruptQueue.peek();
+                    
+                    // 如果是时钟中断且已经处理过一个时钟中断，则跳过
+                    if (interrupt.getType() == Interrupt.InterruptType.CLOCK && clockInterruptHandled) {
+                        interruptQueue.take(); // 移除但不处理
+                        continue;
+                    }
+                    
+                    // 处理中断
                     handleInterrupt(interruptQueue.take());
-                }
-                
-                // 如果当前没有进程运行，请求调度器分配进程
-                if (currentPCB == null) {
-                    requestProcess();
+                    
+                    // 如果处理的是时钟中断，标记为已处理
+                    if (interrupt.getType() == Interrupt.InterruptType.CLOCK) {
+                        clockInterruptHandled = true;
+                    }
                 }
                 
                 // 执行当前进程
                 if (currentPCB != null) {
-                    executeCurrentProcess();
-                    Thread.sleep(100); // 短暂休眠，避免CPU占用过高
-                } else {
-                    Thread.sleep(100); // 空闲时休眠
+                    execute();
                 }
             }
         } catch (InterruptedException e) {
@@ -56,39 +58,49 @@ public class CPU extends Thread {
         }
     }
 
-    private void executeCurrentProcess() {
-        if (currentPCB != null) {
-            Process process = (Process) currentPCB.getProcess();
+    private void execute() {
+        String instruction = InstructionFetch();
+        if (instruction != null) {
+            executeInstruction(instruction);
+        }
+    }
+
+    private String InstructionFetch() {
+        // 获取当前进程的PC值（程序计数器）
+        int pc = currentPCB.getPc();
+        
+        // 读取指令
+        StringBuilder instruction = new StringBuilder();
+        byte[] buffer = new byte[1];
+        int currentAddress = pc;
+
+        // 逐字节读取，直到遇到指令结束符"#"
+        while (true) {
+            if (!memoryManagement.Read(this, currentAddress, buffer, 1)) {
+                System.out.println("CPU-" + cpuId + " 读取内存失败，地址: " + currentAddress);
+                return null;
+            }
             
-            // 如果进程还有指令要执行
-            if (process.hasNextInstruction()) {
-                String instruction = process.getNextInstruction();
-                process.executeInstruction(instruction);
-                
-                // 检查是否还有更多指令
-                if (!process.hasNextInstruction()) {
-                    // 进程执行完毕
-                    System.out.println("CPU-" + cpuId + " 进程 " + currentPCB.getPid() + " 执行完毕");
-                    currentPCB.setState(ProcessState.TERMINATED);
-                    
-                    // 释放PID资源
-                    PIDBitmap.getInstance().freePID(currentPCB.getPid());
-                    System.out.println("释放进程 " + currentPCB.getPid() + " 的PID资源");
-                    
-                    runIdleProcess();
-                }
-            } else {
-                // 进程执行完毕
-                System.out.println("CPU-" + cpuId + " 进程 " + currentPCB.getPid() + " 执行完毕");
-                currentPCB.setState(ProcessState.TERMINATED);
-                
-                // 释放PID资源
-                PIDBitmap.getInstance().freePID(currentPCB.getPid());
-                System.out.println("释放进程 " + currentPCB.getPid() + " 的PID资源");
-                
-                runIdleProcess();
+            char c = (char) buffer[0];
+            currentAddress++;
+            
+            if (c == '#') {
+                break;
+            }
+            
+            instruction.append(c);
+            
+            // 防止无限循环，设置最大指令长度
+            if (instruction.length() > 100) {
+                System.out.println("CPU-" + cpuId + " 指令过长，可能缺少结束符");
+                return null;
             }
         }
+
+        // 更新PC值，指向下一条指令
+        currentPCB.setPc(currentAddress);
+
+        return instruction.toString();
     }
 
     private void handleInterrupt(Interrupt interrupt) {
@@ -102,10 +114,44 @@ public class CPU extends Thread {
         }
     }
 
+    // 解析并执行指令
+    private void executeInstruction(String instruction) {
+        System.out.println("CPU-" + cpuId + " 执行指令: " + instruction);
+        
+        // 将指令按空格分割成操作码和操作数
+        String[] parts = instruction.split("\\s+");
+        if (parts.length == 0) {
+            System.out.println("CPU-" + cpuId + " 空指令");
+            return;
+        }
+        
+        String opcode = parts[0].toUpperCase();
+        
+        try{
+            // 根据操作码执行相应操作
+            switch (opcode) {
+                case "C":
+                    int computeTime = Integer.parseInt(parts[1]);
+                    Thread.sleep(computeTime);
+                    currentPCB.incrementTimeUsed(computeTime);
+                    break;
+                case "R":
+                    String filename = parts[1];
+                    int readtime = Integer.parseInt(parts[2]);
+                    
+                    break;
+                default:
+                    break;
+            }
+        } catch (Exception e) {
+            System.out.println("CPU-" + cpuId + " 指令解析错误: " + instruction);
+        }
+    }
+
     private void handleClockInterrupt() {
         if (currentPCB != null) {
             // 更新进程已使用的时间片
-            currentPCB.incrementTimeUsed();
+            currentPCB.incrementTimeUsed(Constants.CLOCK_INTERRUPT_INTERVAL_MS);
             System.out.println("CPU-" + cpuId + " 时钟中断：进程 " + currentPCB.getPid() + 
                     " 已使用时间片 " + currentPCB.getTimeUsed() + "/" + currentPCB.getTimeSlice());
             
@@ -124,9 +170,17 @@ public class CPU extends Thread {
                 }
                 
                 scheduler.addReadyProcess(currentPCB);
-                
-                // CPU进入空闲状态
-                runIdleProcess();
+
+                // 立即请求新进程执行
+                PCB nextProcess = scheduler.getNextProcess();
+                if (nextProcess != null) {
+                    nextProcess.setState(ProcessState.RUNNING);
+                    changeProcess(nextProcess);
+                } else {
+                    // 没有可用进程，CPU进入空闲状态
+                    currentPCB = null;
+                    System.out.println("CPU-" + cpuId + " 进入空闲状态");
+                }
             }
         }
     }
@@ -137,36 +191,12 @@ public class CPU extends Thread {
             
             // 将进程交给设备管理器处理
             deviceManager.requestIO(currentPCB, deviceId);
-            
-            // CPU进入空闲状态
-            runIdleProcess();
         }
-    }
-
-    private void requestProcess() {
-        PCB process = scheduler.getNextProcess();
-        if (process != null) {
-            currentPCB = process;
-            currentPCB.setState(ProcessState.RUNNING);
-            // 更新MMU
-            mmu.update(currentPCB);
-            System.out.println("CPU-" + cpuId + " 开始执行进程 " + currentPCB.getPid());
-        }
-    }
-
-    private void runIdleProcess() {
-        currentPCB = null;
-        System.out.println("CPU-" + cpuId + " 进入空闲状态，运行空闲进程");
-        // 通知调度器CPU空闲
-        scheduler.notifyCPUIdle(this);
     }
 
     public void generateIOInterrupt(int deviceId) {
-        try {
-            interruptQueue.put(new Interrupt(Interrupt.InterruptType.IO, deviceId));
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-        }
+        InterruptRequestLine.getInstance().sendInterrupt(
+            cpuId, new Interrupt(Interrupt.InterruptType.IO, deviceId));
     }
 
     public int getCpuId() {
@@ -177,11 +207,6 @@ public class CPU extends Thread {
         return currentPCB == null;
     }
 
-    public void shutdown() {
-        running = false;
-        interrupt();
-    }
-
     public PCB getCurrentPCB() {
         return currentPCB;
     }
@@ -190,8 +215,11 @@ public class CPU extends Thread {
         return mmu;
     }
 
-    public void changeProcess(PCB currentPCB) {
-        mmu.update(currentPCB);
-        this.currentPCB = currentPCB;
+    public void changeProcess(PCB newPCB) {
+        if (newPCB != null) {
+            mmu.update(newPCB);
+            this.currentPCB = newPCB;
+            System.out.println("CPU-" + cpuId + " 开始执行进程 " + currentPCB.getPid());
+        }
     }
 }

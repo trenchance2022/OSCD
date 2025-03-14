@@ -6,14 +6,12 @@ import java.util.concurrent.LinkedBlockingQueue;
 public class IODevice extends Thread {
     private int deviceId;
     private BlockingQueue<PCB> deviceQueue;
-    private BlockingQueue<PCB> readyQueue;
     private int processingTime; // 模拟IO操作的处理时间（毫秒）
     private volatile boolean running = true;
 
     public IODevice(int deviceId, BlockingQueue<PCB> readyQueue, int processingTime) {
         this.deviceId = deviceId;
         this.deviceQueue = new LinkedBlockingQueue<>();
-        this.readyQueue = readyQueue;
         this.processingTime = processingTime;
     }
 

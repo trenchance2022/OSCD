@@ -97,6 +97,21 @@ class Shell {
                     System.out.println("Usage: vi <filename>");
                 }
                 break;
+            case "exec":
+                if (parts.length == 2) {
+                    String filename = parts[1];
+                    // 检查文件是否存在
+                    String fileContent = fileDiskManagement.readFileData(filename);
+                    if (!fileContent.equals("-1")) {
+                        // 文件存在，创建进程
+                        process_management.Scheduler.getInstance().createProcess(filename);
+                    } else {
+                        System.out.println("文件 " + filename + " 不存在或无法读取");
+                    }
+                } else {
+                    System.out.println("Usage: exec <filename>");
+                }
+                break;
             case "info":
                 if (parts.length == 2 && parts[1].equals("dir")) {
                     fileDiskManagement.showDirectoryStructure();
@@ -106,6 +121,7 @@ class Shell {
                     System.out.println("Unknown info command.");
                 }
                 break;
+            
             default:
                 System.out.println("Unknown command.");
         }

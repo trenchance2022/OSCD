@@ -57,4 +57,7 @@ public interface FileDiskManagement {
         // 读取文件内容
         String readFileData(String fileName);
 
+        //返回文件占用磁盘块号
+        int[] getFileDiskBlock(String filename);
+
 }

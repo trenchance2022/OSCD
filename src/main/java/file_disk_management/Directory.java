@@ -188,4 +188,13 @@ class Directory {
             dir.showDirectoryStructure(prefix + "  ");
         }
     }
+
+    public int[] getFileDiskBlock(String filename){
+        for (Inode inode : files) {
+            if (inode.fileName.equals(filename)) {
+                return inode.blockIndexes;
+            }
+        }
+        return null;
+    }
 }

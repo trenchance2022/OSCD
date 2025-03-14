@@ -215,4 +215,8 @@ public class FileSystemImpl implements FileDiskManagement {
         return "-1";
     }
 
+    public int[] getFileDiskBlock(String filename){
+        return currentDirectory.getFileDiskBlock(filename);
+    }
+
 }

@@ -15,4 +15,5 @@ public final class Constants {
     public static final int TLB_SIZE = 8; // TLB大小
     public static final int SYSTEM_MEMORY_PAGE_SIZE = 16; // 系统内存页大小
     public static final int BLOCK_SIZE_BYTES = PAGE_SIZE_BYTES; // 块大小
+    public static final int CLOCK_INTERRUPT_INTERVAL_MS = 100; // 时钟中断间隔(毫秒)
 }

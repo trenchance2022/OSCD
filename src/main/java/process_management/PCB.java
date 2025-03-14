@@ -10,58 +10,35 @@ public class PCB {
     private ProcessState state; // 进程状态
     private int timeSlice;  // 分配的时间片
     private int timeUsed;   // 已使用的时间片
-    private Object process;   // 进程代码
-    private String executablePath;  //执行文件路径
+    private String executedFile;  //执行文件
+    private int pc;         //程序计数器
     // 下面的属性会传给PTR
-    private int codeSize = 0;//代码段大小
-    private int innerFragmentation = 0;//内部碎片(代码段与数据段之间的碎片)
-    private int pageTableSize = 0;
-    private int pageTableAddress = -1;
+    private int codeSize;//代码段大小
+    private int innerFragmentation;//内部碎片(代码段与数据段之间的碎片)
+    private int pageTableSize;
+    private int pageTableAddress;
 
-    // 用于创建进程对象的构造函数
-    public PCB(int pid, int priority, Object process) {
+    public PCB(int pid, int codeSize, int[] diskAddressBlock, int priority) {
         this.pid = pid;
         this.priority = priority;
-        this.process = process;
-        this.state = ProcessState.NEW;
-        this.timeUsed = 0;
-        // 根据优先级设置时间片大小
-        setTimeSliceByPriority();
-        // this.size = codeSize;
-        // this.codeSize = codeSize;
-        // this.pageTableSize = (codeSize - 1) / Constants.PAGE_SIZE_BYTES + 1;
-        // this.innerFragmentation = Constants.PAGE_SIZE_BYTES * pageTableSize - codeSize;
-        // this.pageTableAddress = PageTableArea.getInstance().addPageTable(pid, codeSize, diskAddressBlock);
-    }
-
-    // 用于创建带内存管理的进程对象的构造函数
-    public PCB(int pid, int codeSize, int[] diskAddressBlock, int priority, Object process) {
-        this.pid = pid;
-        this.priority = priority;
-        this.process = process;
         this.state = ProcessState.NEW;
         this.timeUsed = 0;
         this.codeSize = codeSize;
         this.size = codeSize;
         this.pageTableSize = (codeSize - 1) / Constants.PAGE_SIZE_BYTES + 1;
         this.innerFragmentation = Constants.PAGE_SIZE_BYTES * pageTableSize - codeSize;
-        
-        // 只有在提供了磁盘地址块时才创建页表
-        if (diskAddressBlock != null && diskAddressBlock.length > 0) {
-            this.pageTableAddress = PageTableArea.getInstance().addPageTable(pid, codeSize, diskAddressBlock);
-        }
-        
-        // 根据优先级设置时间片大小
+        this.pageTableAddress = PageTableArea.getInstance().addPageTable(pid, codeSize, diskAddressBlock);
         setTimeSliceByPriority();
     }
 
     private void setTimeSliceByPriority() {
         // 优先级越高，时间片越小
+        // 确保时间片是时钟中断间隔的整倍数
         switch (priority) {
-            case 0: this.timeSlice = 2; break;  // 最高优先级
-            case 1: this.timeSlice = 4; break;
-            case 2: this.timeSlice = 8; break;
-            default: this.timeSlice = 16; break; // 最低优先级，FCFS
+            case 0: this.timeSlice = 2 * Constants.CLOCK_INTERRUPT_INTERVAL_MS; break;  // 最高优先级
+            case 1: this.timeSlice = 4 * Constants.CLOCK_INTERRUPT_INTERVAL_MS; break;
+            case 2: this.timeSlice = 8 * Constants.CLOCK_INTERRUPT_INTERVAL_MS; break;
+            default: this.timeSlice = 16 * Constants.CLOCK_INTERRUPT_INTERVAL_MS; break; // 最低优先级，FCFS
         }
     }
 
@@ -102,24 +79,29 @@ public class PCB {
         return timeUsed;
     }
 
-    public void incrementTimeUsed() {
-        this.timeUsed++;
+    public void incrementTimeUsed(int time) {
+        // 每次时钟中断增加的时间等于时钟中断间隔
+        this.timeUsed += time;
     }
 
     public void resetTimeUsed() {
         this.timeUsed = 0;
     }
 
-    public Object getProcess() {
-        return process;
+    public void setExecutedFile(String path) {
+        this.executedFile = path;
     }
 
-    public void setExecutablePath(String path) {
-        this.executablePath = path;
+    public String getExecutedFile() {
+        return executedFile;
     }
 
-    public String getExecutablePath() {
-        return executablePath;
+    public int getPc() {
+        return pc;
+    }
+
+    public void setPc(int pc) {
+        this.pc = pc;
     }
 
     public int getCodeSize() {
