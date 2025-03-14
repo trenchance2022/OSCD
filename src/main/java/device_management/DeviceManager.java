@@ -1,4 +1,7 @@
-package process_management;
+package device_management;
+
+import process_management.PCB;
+import process_management.ProcessState;
 
 import java.util.HashMap;
 import java.util.Map;

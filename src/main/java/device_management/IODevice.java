@@ -1,4 +1,8 @@
-package process_management;
+package device_management;
+
+import process_management.PCB;
+import process_management.ProcessState;
+import process_management.Scheduler;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;

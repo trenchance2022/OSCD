@@ -1,4 +1,4 @@
-package process_management;
+package interrupt_management;
 
 public class Interrupt {
     public enum InterruptType {

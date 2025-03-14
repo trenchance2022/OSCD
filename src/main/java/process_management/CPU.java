@@ -1,5 +1,8 @@
 package process_management;
 
+import device_management.DeviceManager;
+import interrupt_management.Interrupt;
+import interrupt_management.InterruptRequestLine;
 import memory_management.MMU;
 import memory_management.MemoryManagement;
 import java.util.concurrent.BlockingQueue;
