@@ -141,7 +141,107 @@ public class CPU extends Thread {
                 case "R":
                     String filename = parts[1];
                     int readtime = Integer.parseInt(parts[2]);
+                    // 尝试获取文件读锁
+                    if (file_disk_management.FileLockManager.getInstance().acquireReadLock(filename)) {
+                        try {
+                            System.out.println("CPU-" + cpuId + " 进程 " + currentPCB.getPid() + 
+                                    " 开始读取文件: " + filename + "，预计耗时: " + readtime + "ms");
+                            
+                            // 模拟读取文件的时间
+                            Thread.sleep(readtime);
+                            
+                            // 更新进程已使用的时间片
+                            currentPCB.incrementTimeUsed(readtime);
+                            
+                            System.out.println("CPU-" + cpuId + " 进程 " + currentPCB.getPid() + 
+                                    " 完成文件读取: " + filename);
+                        } catch (InterruptedException e) {
+                            System.out.println("CPU-" + cpuId + " 读取文件被中断: " + filename);
+                            Thread.currentThread().interrupt();
+                        } finally {
+                            // 释放文件读锁
+                            file_disk_management.FileLockManager.getInstance().releaseReadLock(filename);
+                        }
+                    } else {
+                        System.out.println("CPU-" + cpuId + " 进程 " + currentPCB.getPid() + 
+                                " 无法获取文件读锁: " + filename + "，进程阻塞");
+                        
+                        // 将PC值回退，使下次执行时重新执行该指令
+                        int currentPC = currentPCB.getPc();
+                        // 计算指令长度（包括结束符#）
+                        int instructionLength = instruction.length() + 1;
+                        currentPCB.setPc(currentPC - instructionLength);
+                        
+                        // 阻塞进程
+                        currentPCB.setState(ProcessState.WAITING);
+                        
+                        // 将进程添加到文件锁等待队列
+                        file_disk_management.FileLockManager.getInstance().addReadWaitingProcess(filename, currentPCB);
+                        
+                        // 请求新进程执行
+                        PCB nextProcess = scheduler.getNextProcess();
+                        if (nextProcess != null) {
+                            nextProcess.setState(ProcessState.RUNNING);
+                            changeProcess(nextProcess);
+                        } else {
+                            // 没有可用进程，CPU进入空闲状态
+                            currentPCB = null;
+                            System.out.println("CPU-" + cpuId + " 进入空闲状态");
+                        }
+                    }
+                    break;
+                case "W":
+                    filename = parts[1];
+                    int writeTime = Integer.parseInt(parts[2]);
                     
+                    // 尝试获取文件写锁
+                    if (file_disk_management.FileLockManager.getInstance().acquireWriteLock(filename)) {
+                        try {
+                            System.out.println("CPU-" + cpuId + " 进程 " + currentPCB.getPid() + 
+                                    " 开始写入文件: " + filename + "，预计耗时: " + writeTime + "ms");
+                            
+                            // 模拟写入文件的时间
+                            Thread.sleep(writeTime);
+                            
+                            // 更新进程已使用的时间片
+                            currentPCB.incrementTimeUsed(writeTime);
+                            
+                            System.out.println("CPU-" + cpuId + " 进程 " + currentPCB.getPid() + 
+                                    " 完成文件写入: " + filename);
+                        } catch (InterruptedException e) {
+                            System.out.println("CPU-" + cpuId + " 写入文件被中断: " + filename);
+                            Thread.currentThread().interrupt();
+                        } finally {
+                            // 释放文件写锁
+                            file_disk_management.FileLockManager.getInstance().releaseWriteLock(filename);
+                        }
+                    } else {
+                        System.out.println("CPU-" + cpuId + " 进程 " + currentPCB.getPid() + 
+                                " 无法获取文件写锁: " + filename + "，进程阻塞");
+                        
+                        // 将PC值回退，使下次执行时重新执行该指令
+                        int currentPC = currentPCB.getPc();
+                        // 计算指令长度（包括结束符#）
+                        int instructionLength = instruction.length() + 1;
+                        currentPCB.setPc(currentPC - instructionLength);
+                        
+                        // 阻塞进程
+                        currentPCB.setState(ProcessState.WAITING);
+                        
+                        // 将进程添加到文件锁等待队列
+                        file_disk_management.FileLockManager.getInstance().addWriteWaitingProcess(filename, currentPCB);
+                        
+                        // 请求新进程执行
+                        PCB nextProcess = scheduler.getNextProcess();
+                        if (nextProcess != null) {
+                            nextProcess.setState(ProcessState.RUNNING);
+                            changeProcess(nextProcess);
+                        } else {
+                            // 没有可用进程，CPU进入空闲状态
+                            currentPCB = null;
+                            System.out.println("CPU-" + cpuId + " 进入空闲状态");
+                        }
+                    }
                     break;
                 default:
                     break;
