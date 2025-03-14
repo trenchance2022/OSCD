@@ -28,18 +28,6 @@ public class PCB {
         this.pageTableSize = (codeSize - 1) / Constants.PAGE_SIZE_BYTES + 1;
         this.innerFragmentation = Constants.PAGE_SIZE_BYTES * pageTableSize - codeSize;
         this.pageTableAddress = PageTableArea.getInstance().addPageTable(pid, codeSize, diskAddressBlock);
-        setTimeSliceByPriority();
-    }
-
-    private void setTimeSliceByPriority() {
-        // 优先级越高，时间片越小
-        // 确保时间片是时钟中断间隔的整倍数
-        switch (priority) {
-            case 0: this.timeSlice = 2 * Constants.CLOCK_INTERRUPT_INTERVAL_MS; break;  // 最高优先级
-            case 1: this.timeSlice = 4 * Constants.CLOCK_INTERRUPT_INTERVAL_MS; break;
-            case 2: this.timeSlice = 8 * Constants.CLOCK_INTERRUPT_INTERVAL_MS; break;
-            default: this.timeSlice = 16 * Constants.CLOCK_INTERRUPT_INTERVAL_MS; break; // 最低优先级，FCFS
-        }
     }
 
     public int getPid() {
@@ -60,7 +48,6 @@ public class PCB {
 
     public void setPriority(int priority) {
         this.priority = priority;
-        setTimeSliceByPriority();
     }
 
     public ProcessState getState() {
@@ -73,6 +60,10 @@ public class PCB {
 
     public int getTimeSlice() {
         return timeSlice;
+    }
+
+    public void setTimeSlice(int timeSlice) {
+        this.timeSlice = timeSlice;
     }
 
     public int getTimeUsed() {

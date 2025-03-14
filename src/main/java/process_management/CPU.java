@@ -269,6 +269,30 @@ public class CPU extends Thread {
                         System.out.println("CPU-" + cpuId + " 请求的设备 " + deviceId + " 不存在");
                     }
                     break;
+                case "Q":
+                    // 进程结束指令
+                    System.out.println("CPU-" + cpuId + " 进程 " + currentPCB.getPid() + " 执行结束指令，即将退出");
+                    
+                    // 保存当前进程的引用
+                    PCB terminatingProcess = currentPCB;
+                    
+                    // 将进程状态设置为TERMINATED
+                    terminatingProcess.setState(ProcessState.TERMINATED);
+                    
+                    // 清理进程占用的所有资源
+                    scheduler.terminateProcess(terminatingProcess);
+                    
+                    // 请求新进程执行
+                    PCB nextProc = scheduler.getNextProcess();
+                    if (nextProc != null) {
+                        nextProc.setState(ProcessState.RUNNING);
+                        changeProcess(nextProc);
+                    } else {
+                        // 没有可用进程，CPU进入空闲状态
+                        currentPCB = null;
+                        System.out.println("CPU-" + cpuId + " 进入空闲状态");
+                    }
+                    break;
                 default:
                     break;
             }
