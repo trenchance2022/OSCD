@@ -111,9 +111,6 @@ public class CPU extends Thread {
             case CLOCK:
                 handleClockInterrupt();
                 break;
-            case IO:
-                handleIOInterrupt(interrupt.getDeviceId());
-                break;
         }
     }
 
@@ -243,6 +240,35 @@ public class CPU extends Thread {
                         }
                     }
                     break;
+                case "D":
+                    int deviceId = Integer.parseInt(parts[1]);
+                    int ioTime = Integer.parseInt(parts[2]);
+                    
+                    System.out.println("CPU-" + cpuId + " 进程 " + currentPCB.getPid() + 
+                            " 请求设备 " + deviceId + " 进行IO操作，预计耗时: " + ioTime + "ms");
+                    
+                    // 检查设备是否存在
+                    if (deviceManager.deviceExists(deviceId)) {
+                        // 保存当前进程的状态
+                        PCB currentProcess = currentPCB;
+                        
+                        // 将进程交给设备管理器处理，并传递IO操作时间
+                        deviceManager.requestIO(currentProcess, deviceId, ioTime);
+                        
+                        // 请求新进程执行
+                        PCB nextProcess = scheduler.getNextProcess();
+                        if (nextProcess != null) {
+                            nextProcess.setState(ProcessState.RUNNING);
+                            changeProcess(nextProcess);
+                        } else {
+                            // 没有可用进程，CPU进入空闲状态
+                            currentPCB = null;
+                            System.out.println("CPU-" + cpuId + " 进入空闲状态");
+                        }
+                    } else {
+                        System.out.println("CPU-" + cpuId + " 请求的设备 " + deviceId + " 不存在");
+                    }
+                    break;
                 default:
                     break;
             }
@@ -286,20 +312,6 @@ public class CPU extends Thread {
                 }
             }
         }
-    }
-
-    private void handleIOInterrupt(int deviceId) {
-        if (currentPCB != null) {
-            System.out.println("CPU-" + cpuId + " IO中断：进程 " + currentPCB.getPid() + " 请求设备 " + deviceId);
-            
-            // 将进程交给设备管理器处理
-            deviceManager.requestIO(currentPCB, deviceId);
-        }
-    }
-
-    public void generateIOInterrupt(int deviceId) {
-        InterruptRequestLine.getInstance().sendInterrupt(
-            cpuId, new Interrupt(Interrupt.InterruptType.IO, deviceId));
     }
 
     public int getCpuId() {

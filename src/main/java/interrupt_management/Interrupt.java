@@ -2,7 +2,7 @@ package interrupt_management;
 
 public class Interrupt {
     public enum InterruptType {
-        CLOCK, IO
+        CLOCK
     }
 
     private InterruptType type;

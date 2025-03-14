@@ -9,19 +9,19 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 public class IODevice extends Thread {
     private int deviceId;
-    private BlockingQueue<PCB> deviceQueue;
-    private int processingTime; // 模拟IO操作的处理时间（毫秒）
+    private BlockingQueue<IORequest> requestQueue;
     private volatile boolean running = true;
 
-    public IODevice(int deviceId, BlockingQueue<PCB> readyQueue, int processingTime) {
+    public IODevice(int deviceId) {
         this.deviceId = deviceId;
-        this.deviceQueue = new LinkedBlockingQueue<>();
-        this.processingTime = processingTime;
+        this.requestQueue = new LinkedBlockingQueue<>();
     }
 
-    public void addProcess(PCB pcb) {
+    public void addRequest(IORequest request) {
         try {
-            deviceQueue.put(pcb);
+            requestQueue.put(request);
+            System.out.println("设备 " + deviceId + " 接收到进程 " + request.getPcb().getPid() + 
+                    " 的IO请求，处理时间: " + request.getProcessingTime() + "ms");
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
@@ -31,8 +31,12 @@ public class IODevice extends Thread {
     public void run() {
         try {
             while (running) {
-                PCB pcb = deviceQueue.take();
-                System.out.println("设备 " + deviceId + " 正在处理进程 " + pcb.getPid());
+                IORequest request = requestQueue.take();
+                PCB pcb = request.getPcb();
+                int processingTime = request.getProcessingTime();
+                
+                System.out.println("设备 " + deviceId + " 正在处理进程 " + pcb.getPid() + 
+                        " 的IO请求，预计耗时: " + processingTime + "ms");
                 
                 // 模拟IO操作时间
                 Thread.sleep(processingTime);
@@ -44,7 +48,8 @@ public class IODevice extends Thread {
                 // 使用调度器的addReadyProcess方法
                 Scheduler.getInstance().addReadyProcess(pcb);
                 
-                System.out.println("设备 " + deviceId + " 完成进程 " + pcb.getPid() + " 的IO操作，进程已放回就绪队列");
+                System.out.println("设备 " + deviceId + " 完成进程 " + pcb.getPid() + 
+                        " 的IO操作，进程已放回就绪队列");
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
@@ -54,5 +59,9 @@ public class IODevice extends Thread {
     public void shutdown() {
         running = false;
         interrupt();
+    }
+    
+    public int getDeviceId() {
+        return deviceId;
     }
 }
