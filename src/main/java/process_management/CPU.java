@@ -56,6 +56,9 @@ public class CPU extends Thread {
                 if (currentPCB != null) {
                     execute();
                 }
+                else {
+                    Thread.sleep(100); // 空闲时等待
+                }
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
