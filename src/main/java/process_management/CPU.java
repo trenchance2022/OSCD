@@ -37,6 +37,7 @@ public class CPU extends Thread {
                     Interrupt interrupt = interruptQueue.peek();
                     
                     // 如果是时钟中断且已经处理过一个时钟中断，则跳过
+                    // 本程序指令为原子操作，指令结束后可能积累多个时钟中断，若积累，则统一视作一个时钟中断
                     if (interrupt.getType() == Interrupt.InterruptType.CLOCK && clockInterruptHandled) {
                         interruptQueue.take(); // 移除但不处理
                         continue;
@@ -139,7 +140,7 @@ public class CPU extends Thread {
                     String filename = parts[1];
                     int readtime = Integer.parseInt(parts[2]);
                     // 尝试获取文件读锁
-                    if (file_disk_management.FileLockManager.getInstance().acquireReadLock(filename)) {
+                    if (file_disk_management.FileLockManager.getInstance().acquireReadLock(filename, currentPCB.getPid())) {
                         try {
                             System.out.println("CPU-" + cpuId + " 进程 " + currentPCB.getPid() + 
                                     " 开始读取文件: " + filename + "，预计耗时: " + readtime + "ms");
@@ -157,7 +158,7 @@ public class CPU extends Thread {
                             Thread.currentThread().interrupt();
                         } finally {
                             // 释放文件读锁
-                            file_disk_management.FileLockManager.getInstance().releaseReadLock(filename);
+                            file_disk_management.FileLockManager.getInstance().releaseReadLock(filename, currentPCB.getPid());
                         }
                     } else {
                         System.out.println("CPU-" + cpuId + " 进程 " + currentPCB.getPid() + 
@@ -192,7 +193,7 @@ public class CPU extends Thread {
                     int writeTime = Integer.parseInt(parts[2]);
                     
                     // 尝试获取文件写锁
-                    if (file_disk_management.FileLockManager.getInstance().acquireWriteLock(filename)) {
+                    if (file_disk_management.FileLockManager.getInstance().acquireWriteLock(filename, currentPCB.getPid())) {
                         try {
                             System.out.println("CPU-" + cpuId + " 进程 " + currentPCB.getPid() + 
                                     " 开始写入文件: " + filename + "，预计耗时: " + writeTime + "ms");
@@ -210,7 +211,7 @@ public class CPU extends Thread {
                             Thread.currentThread().interrupt();
                         } finally {
                             // 释放文件写锁
-                            file_disk_management.FileLockManager.getInstance().releaseWriteLock(filename);
+                            file_disk_management.FileLockManager.getInstance().releaseWriteLock(filename, currentPCB.getPid());
                         }
                     } else {
                         System.out.println("CPU-" + cpuId + " 进程 " + currentPCB.getPid() + 

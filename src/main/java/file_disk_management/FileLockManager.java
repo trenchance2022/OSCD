@@ -42,27 +42,13 @@ public class FileLockManager {
         getOrCreateLock(filename).addWriteWaitingProcess(process);
     }
     
-    // 获取文件的读锁
-    public boolean acquireReadLock(String filename) {
-        return getOrCreateLock(filename).acquireReadLock();
-    }
-    
     // 获取文件的读锁（指定进程ID）
-    public boolean acquireReadLock(String filename, int pid) {
+    public synchronized boolean acquireReadLock(String filename, int pid) {
         return getOrCreateLock(filename).acquireReadLock(pid);
     }
     
-    // 释放文件的读锁
-    public void releaseReadLock(String filename) {
-        FileLock lock = lockMap.get(filename);
-        if (lock != null) {
-            lock.releaseReadLock();
-            notifyWaitingProcesses(filename);
-        }
-    }
-    
     // 释放文件的读锁（指定进程ID）
-    public void releaseReadLock(String filename, int pid) {
+    public synchronized void releaseReadLock(String filename, int pid) {
         FileLock lock = lockMap.get(filename);
         if (lock != null) {
             lock.releaseReadLock(pid);
@@ -70,21 +56,16 @@ public class FileLockManager {
         }
     }
     
-    // 获取文件的写锁
-    public boolean acquireWriteLock(String filename) {
-        return getOrCreateLock(filename).acquireWriteLock();
-    }
-    
     // 获取文件的写锁（指定进程ID）
-    public boolean acquireWriteLock(String filename, int pid) {
+    public synchronized boolean acquireWriteLock(String filename, int pid) {
         return getOrCreateLock(filename).acquireWriteLock(pid);
     }
     
-    // 释放文件的写锁
-    public void releaseWriteLock(String filename) {
+    // 释放文件的写锁（指定进程ID）
+    public synchronized void releaseWriteLock(String filename, int pid) {
         FileLock lock = lockMap.get(filename);
         if (lock != null) {
-            lock.releaseWriteLock();
+            lock.releaseWriteLock(pid);
             notifyWaitingProcesses(filename);
         }
     }
@@ -136,7 +117,7 @@ public class FileLockManager {
             
             // 检查并释放写锁
             if (lock.isWriteLockHeldBy(pid)) {
-                lock.releaseWriteLock();
+                lock.releaseWriteLock(pid);
                 System.out.println("进程 " + pid + " 终止，释放文件 " + filename + " 的写锁");
                 notifyWaitingProcesses(filename);
             }
@@ -178,15 +159,6 @@ public class FileLockManager {
             return writeLockHolder == -1 && readLockHolders.isEmpty();
         }
         
-        // 获取读锁
-        public boolean acquireReadLock() {
-            if (canAcquireReadLock()) {
-                // 不记录持有者，由调用者负责
-                return true;
-            }
-            return false;
-        }
-        
         // 获取读锁（指定进程ID）
         public boolean acquireReadLock(int pid) {
             if (canAcquireReadLock()) {
@@ -196,23 +168,9 @@ public class FileLockManager {
             return false;
         }
         
-        // 释放读锁
-        public void releaseReadLock() {
-            // 不指定进程ID，由调用者负责
-        }
-        
         // 释放读锁（指定进程ID）
         public void releaseReadLock(int pid) {
             readLockHolders.remove(Integer.valueOf(pid));
-        }
-        
-        // 获取写锁
-        public boolean acquireWriteLock() {
-            if (canAcquireWriteLock()) {
-                // 不记录持有者，由调用者负责
-                return true;
-            }
-            return false;
         }
         
         // 获取写锁（指定进程ID）
@@ -224,9 +182,11 @@ public class FileLockManager {
             return false;
         }
         
-        // 释放写锁
-        public void releaseWriteLock() {
-            writeLockHolder = -1;
+        // 释放写锁（指定进程ID）
+        public void releaseWriteLock(int pid) {
+            if (writeLockHolder == pid) {
+                writeLockHolder = -1;
+            }
         }
         
         // 添加等待读锁的进程
@@ -282,26 +242,6 @@ public class FileLockManager {
                 }
             }
             writeWaitingQueue = newWriteQueue;
-        }
-        
-        // 获取读锁等待队列
-        public Queue<PCB> getReadWaitingQueue() {
-            return readWaitingQueue;
-        }
-        
-        // 获取写锁等待队列
-        public Queue<PCB> getWriteWaitingQueue() {
-            return writeWaitingQueue;
-        }
-        
-        // 获取读锁持有者列表
-        public List<Integer> getReadLockHolders() {
-            return readLockHolders;
-        }
-        
-        // 获取写锁持有者
-        public int getWriteLockHolder() {
-            return writeLockHolder;
         }
     }
 }
