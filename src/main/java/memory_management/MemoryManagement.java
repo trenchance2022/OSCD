@@ -61,4 +61,7 @@ public interface MemoryManagement {
      */
     public void showPageUse(int start, int end);
 
+    void releaseMemory(int pid);
+
+    boolean allocateMemory(int pid, int bytes);
 }

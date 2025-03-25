@@ -5,6 +5,8 @@ import file_disk_management.FileDiskManagement;
 import file_disk_management.FileSystemImpl;
 import main.Constants;
 
+import static main.Main.fileSystem;
+
 // 每个CPU都有一个MMU，MMU负责地址转换，内含TLB缓冲区，页表寄存器
 public class MMU {
 
@@ -252,7 +254,6 @@ class PageFaultHandler {
     // 将磁盘块读入内存
     // 更新页表项，更新TLB
     static public boolean handlePageFault(int pageTableAddress, TLB tlb, int pageNumber) {
-        FileDiskManagement fileDiskManagement = new FileSystemImpl();
         // 读取页表
         PageTable pageTable = PageTableArea.getInstance().getPageTable(pageTableAddress);
         // 读取出错的页表项
@@ -282,12 +283,12 @@ class PageFaultHandler {
             if (replacePageTableEntry.isDirty()) {
                 // 如果被修改的页面此前没有对应，需要分配磁盘块
                 if (!replacePageTableEntry.isAllocatedDisk()) {
-                    int diskAddress = fileDiskManagement.allocateBlock();
+                    int diskAddress = fileSystem.allocateBlock();
                     replacePageTableEntry.setDiskAddress(diskAddress);
                     replacePageTableEntry.AllocatedDisk();
 
                 }
-                fileDiskManagement.writeBlock(replacePageTableEntry.getDiskAddress(), Memory.getInstance().readBlock(replacePageTableEntry.getFrameNumber()));
+                fileSystem.writeBlock(replacePageTableEntry.getDiskAddress(), Memory.getInstance().readBlock(replacePageTableEntry.getFrameNumber()));
             }
             // 更新内存
             Memory.getInstance().freeBlock(freeFrame);
@@ -304,7 +305,7 @@ class PageFaultHandler {
 
         // 将磁盘块读入内存
         if (faultPageTableEntry.getDiskAddress() != -1)
-            Memory.getInstance().writeBlock(freeFrame, fileDiskManagement.readBlock(faultPageTableEntry.getDiskAddress()), pageTable.getPid(), pageNumber);
+            Memory.getInstance().writeBlock(freeFrame, fileSystem.readBlock(faultPageTableEntry.getDiskAddress()), pageTable.getPid(), pageNumber);
 
         // 更新页表项，
         faultPageTableEntry.setFrameNumber(freeFrame);

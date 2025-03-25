@@ -1,23 +1,26 @@
 package main;
 
-import file_disk_management.FileDiskManagement;
+import file_disk_management.FileSystemImpl;
 import memory_management.MemoryManagement;
+import device_management.DeviceManager;
 
 import java.util.Scanner;
 
 class Shell {
-    FileDiskManagement fileDiskManagement;
+    FileSystemImpl fileSystem;
     MemoryManagement memoryManagement;
+    DeviceManager deviceManager;
 
-    public Shell(FileDiskManagement fileDiskManagement, MemoryManagement memoryManagement) {
-        this.fileDiskManagement = fileDiskManagement;
+    public Shell(FileSystemImpl fileSystem, MemoryManagement memoryManagement, DeviceManager deviceManager) {
+        this.fileSystem = fileSystem;
         this.memoryManagement = memoryManagement;
+        this.deviceManager = deviceManager;
     }
 
     public void start() {
         Scanner scanner = new Scanner(System.in);
         while (true) {
-            System.out.print(fileDiskManagement.getCurrentPath() + "> ");  // 显示当前路径
+            System.out.print(fileSystem.getCurrentPath() + "> ");
             String command = scanner.nextLine();
             parseCommand(command);
         }
@@ -28,7 +31,7 @@ class Shell {
         switch (parts[0]) {
             case "mkdir":
                 if (parts.length == 2) {
-                    fileDiskManagement.createDirectory(parts[1]);
+                    fileSystem.createDirectory(parts[1]);
                 } else {
                     System.out.println("Usage: mkdir <directory>");
                 }
@@ -37,91 +40,133 @@ class Shell {
                 if (parts.length == 3) {
                     String fileName = parts[1];
                     int size = Integer.parseInt(parts[2]);
-                    fileDiskManagement.createFile(fileName, size);
+                    fileSystem.createFile(fileName, size);
                 } else {
                     System.out.println("Usage: mkf <filename> <size>");
                 }
                 break;
             case "cd":
                 if (parts.length == 2) {
-                    fileDiskManagement.changeDirectory(parts[1]);
+                    fileSystem.changeDirectory(parts[1]);
                 } else {
                     System.out.println("Usage: cd <directory>");
                 }
                 break;
             case "cd..":
-                fileDiskManagement.goBack();
+                fileSystem.goBack();
                 break;
             case "cat":
                 if (parts.length == 2) {
-                    fileDiskManagement.showFileData(parts[1]);
+                    fileSystem.showFileData(parts[1]);
                 } else {
                     System.out.println("Usage: cat <filename>");
                 }
                 break;
             case "ls":
-                fileDiskManagement.listDirectory();
+                fileSystem.listDirectory();
                 break;
             case "rm":
                 if (parts.length == 2) {
-                    fileDiskManagement.removeFile(parts[1]);
+                    fileSystem.removeFile(parts[1]);
                 } else {
                     System.out.println("Usage: rm <filename>");
                 }
                 break;
             case "rmdir":
                 if (parts.length == 2) {
-                    fileDiskManagement.removeDirectory(parts[1]);
+                    fileSystem.removeDirectory(parts[1]);
                 } else {
                     System.out.println("Usage: rmdir <directory>");
                 }
                 break;
             case "rmrdir":
                 if (parts.length == 2) {
-                    fileDiskManagement.removeDirectoryRecursively(parts[1]);
+                    fileSystem.removeDirectoryRecursively(parts[1]);
                 } else {
                     System.out.println("Usage: rmrdir <directory>");
                 }
                 break;
             case "shf":
                 if (parts.length == 2) {
-                    fileDiskManagement.showFileBlock(parts[1]);
+                    fileSystem.showFileBlock(parts[1]);
                 } else {
                     System.out.println("Usage: shf <filename>");
                 }
                 break;
             case "vi":
                 if (parts.length == 2) {
-                    fileDiskManagement.editFile(parts[1]);
+                    fileSystem.editFile(parts[1]);
                 } else {
                     System.out.println("Usage: vi <filename>");
                 }
                 break;
             case "exec":
-                if (parts.length == 2) {
+                if (parts.length == 3) {
                     String filename = parts[1];
-                    // 检查文件是否存在
-                    String fileContent = fileDiskManagement.readFileData(filename);
-                    if (!fileContent.equals("-1")) {
-                        // 文件存在，创建进程
-                        process_management.Scheduler.getInstance().createProcess(filename);
-                    } else {
-                        System.out.println("文件 " + filename + " 不存在或无法读取");
+                    int priority;
+                    try {
+                        priority = Integer.parseInt(parts[2]);
+                        // 检查文件是否存在
+                        String fileContent = fileSystem.readFileData(filename);
+                        if (!fileContent.equals("-1")) {
+                            // 文件存在，创建进程
+                            process_management.Scheduler.getInstance().createProcess(filename, priority);
+                        } else {
+                            System.out.println("文件 " + filename + " 不存在或无法读取");
+                        }
+                    } catch (NumberFormatException e) {
+                        System.out.println("优先级必须是整数");
                     }
                 } else {
-                    System.out.println("Usage: exec <filename>");
+                    System.out.println("Usage: exec <filename> <priority>");
                 }
                 break;
             case "info":
                 if (parts.length == 2 && parts[1].equals("dir")) {
-                    fileDiskManagement.showDirectoryStructure();
+                    fileSystem.showDirectoryStructure();
                 } else if (parts.length == 2 && parts[1].equals("disk")) {
-                    fileDiskManagement.displayDiskInfo();
+                    fileSystem.displayDiskInfo();
                 } else {
                     System.out.println("Unknown info command.");
                 }
                 break;
-            
+            case "addevc":
+                if (parts.length == 3) {
+                    String deviceName = parts[1];
+                    try {
+                        int deviceId = Integer.parseInt(parts[2]);
+                        deviceManager.addDevice(deviceId, deviceName);
+                    } catch (NumberFormatException e) {
+                        System.out.println("设备ID必须是整数");
+                    }
+                } else {
+                    System.out.println("Usage: addevc <deviceName> <deviceId>");
+                }
+                break;
+            case "rmdevc":
+                if (parts.length == 2) {
+                    try {
+                        int deviceId = Integer.parseInt(parts[1]);
+                        deviceManager.removeDevice(deviceId);
+                    } catch (NumberFormatException e) {
+                        System.out.println("设备ID必须是整数");
+                    }
+                } else {
+                    System.out.println("Usage: rmdevc <deviceId>");
+                }
+                break;
+            case "kill":
+                if (parts.length == 2) {
+                    try {
+                        int pid = Integer.parseInt(parts[1]);
+                        process_management.Scheduler.getInstance().terminateProcess(process_management.PCB.getPCB(pid));
+                    } catch (NumberFormatException e) {
+                        System.out.println("进程ID必须是整数");
+                    }
+                } else {
+                    System.out.println("Usage: kill <pid>");
+                }
+                break;
             default:
                 System.out.println("Unknown command.");
         }

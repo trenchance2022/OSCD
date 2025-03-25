@@ -9,11 +9,16 @@ import process_management.Scheduler;
 import device_management.DeviceManager;
 import interrupt_management.InterruptRequestLine;
 
+import java.util.Scanner;
+
 public class Main {
+    // 初始化文件系统和内存管理模块
+    public static FileSystemImpl fileSystem = new FileSystemImpl();
+    public static MemoryManagement memoryManagement = new MemoryManagementImpl(fileSystem);
+
     public static void main(String[] args) {
         // 初始化文件系统和内存管理模块
-        FileDiskManagement fileDiskManagement = new FileSystemImpl();
-        MemoryManagement memoryManagement = new MemoryManagementImpl();
+        MemoryManagement memoryManagement = new MemoryManagementImpl(fileSystem);
 
         // 初始化设备管理器
         DeviceManager deviceManager = new DeviceManager();
@@ -24,11 +29,35 @@ public class Main {
         // 初始化调度器
         Scheduler scheduler = Scheduler.getInstance();
 
-        // 设置每个队列的调度策略
-        scheduler.setQueuePolicy(0, Scheduler.SchedulingPolicy.FCFS); // 队列0：FCFS
-        scheduler.setQueuePolicy(1, Scheduler.SchedulingPolicy.SJF);  // 队列1：SJF
-        scheduler.setQueuePolicy(2, Scheduler.SchedulingPolicy.RR);   // 队列2：RR
-        scheduler.setQueuePolicy(3, Scheduler.SchedulingPolicy.PRIORITY); // 队列3：优先级调度
+        // 用户选择调度算法
+        Scanner scanner = new Scanner(System.in);
+        System.out.println("请选择进程调度算法：");
+        System.out.println("1. FCFS");
+        System.out.println("2. SJF");
+        System.out.println("3. RR");
+        System.out.println("4. PRIORITY");
+        System.out.println("5. MLFQ（4个队列，优先级从高到低，时间片逐渐增多）");
+        System.out.print("输入数字选择：");
+        int choice = 0;
+        while (true) {
+            try {
+                choice = scanner.nextInt();
+                if (choice >= 1 && choice <= 5) break;
+                System.out.println("无效选择，请重新输入：");
+            } catch (Exception e) {
+                scanner.next();
+            }
+        }
+        scanner.nextLine(); // 消耗换行符
+
+        // 配置调度策略
+        switch (choice) {
+            case 1 -> scheduler.configure(Scheduler.SchedulingPolicy.FCFS);
+            case 2 -> scheduler.configure(Scheduler.SchedulingPolicy.SJF);
+            case 3 -> scheduler.configure(Scheduler.SchedulingPolicy.RR);
+            case 4 -> scheduler.configure(Scheduler.SchedulingPolicy.PRIORITY);
+            case 5 -> scheduler.configure(Scheduler.SchedulingPolicy.MLFQ);
+        }
 
         // 初始化 4 个 CPU
         for (int i = 0; i < 4; i++) {
@@ -38,7 +67,8 @@ public class Main {
         }
 
         // 启动 Shell
-        Shell shell = new Shell(fileDiskManagement, memoryManagement);
+        Shell shell = new Shell(fileSystem, memoryManagement, deviceManager);
         shell.start();
+        Scheduler.getInstance().start();
     }
 }

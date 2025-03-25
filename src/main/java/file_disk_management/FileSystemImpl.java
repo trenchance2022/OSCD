@@ -4,9 +4,9 @@ import java.util.Scanner;
 import java.util.Arrays;
 
 public class FileSystemImpl implements FileDiskManagement {
-    Disk disk;
-    Directory root;
-    Directory currentDirectory;
+    public static Disk disk;
+    public static Directory root;
+    public static Directory currentDirectory;
 
     public FileSystemImpl() {
         disk = Disk.getInstance();
@@ -143,6 +143,7 @@ public class FileSystemImpl implements FileDiskManagement {
         while (true) {
             String line = scanner.nextLine();
             if (line.equals(":wq")) {
+                newContent.append("*");
                 break;  // 如果用户输入 ':wq'，则保存并退出编辑
             }
             newContent.append(line).append("\n");

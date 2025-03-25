@@ -10,6 +10,12 @@ import java.util.Arrays;
 
 public class MemoryManagementImpl implements MemoryManagement {
 
+    private final FileDiskManagement fileDiskManagement;
+
+    public MemoryManagementImpl(FileDiskManagement fileDiskManagement) {
+        this.fileDiskManagement = fileDiskManagement;
+    }
+
     @Override
     public boolean Allocate(CPU cpu, int size) {
         // 分配内存，需要更新页表，更新MMU，更新PCB
@@ -43,24 +49,18 @@ public class MemoryManagementImpl implements MemoryManagement {
     }
 
     @Override
-    // 释放进程，需要释放物理内存，释放虚拟内存，释放页表，释放PID
-
     public boolean FreeProcess(CPU cpu) {
-        FileDiskManagement fileDiskManagement = new FileSystemImpl();
         int pageTableAddress = cpu.getCurrentPCB().getPageTableAddress();
         PageTable pageTable = PageTableArea.getInstance().getPageTable(pageTableAddress);
-        // 释放物理内存和虚拟内存
         for (int i = 0; i < pageTable.getPageTableSize(); i++) {
             PageTableEntry entry = pageTable.getEntry(i, false);
-            if (entry.isValid()) {// 页表项有效，需要释放物理内存
+            if (entry.isValid()) {
                 Memory.getInstance().freeBlock(entry.getFrameNumber());
-            } else {// 页表项无效，需要释放虚拟内存(磁盘)
+            } else {
                 fileDiskManagement.freeBlock(entry.getDiskAddress());
             }
         }
-        // 释放页表
         PageTableArea.getInstance().removePageTable(pageTableAddress);
-        // 释放PID
         PIDBitmap.getInstance().freePID(cpu.getCurrentPCB().getPid());
         return true;
     }
@@ -132,6 +132,16 @@ public class MemoryManagementImpl implements MemoryManagement {
     @Override
     public void showPageUse(int start, int end) {
         Memory.getInstance().showPageUse(start, end);
+    }
+
+    @Override
+    public void releaseMemory(int pid) {
+
+    }
+
+    @Override
+    public boolean allocateMemory(int pid, int bytes) {
+        return false;
     }
 
 }

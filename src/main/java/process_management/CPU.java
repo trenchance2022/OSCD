@@ -1,62 +1,47 @@
 package process_management;
 
 import device_management.DeviceManager;
+import file_disk_management.FileSystemImpl;
 import interrupt_management.Interrupt;
 import interrupt_management.InterruptRequestLine;
+import main.Constants;
+import main.Main;
 import memory_management.MMU;
 import memory_management.MemoryManagement;
 import java.util.concurrent.BlockingQueue;
-import main.Constants;
+import java.util.Random;
 
 public class CPU extends Thread {
-    private int cpuId;
-    private PCB currentPCB;
-    private Scheduler scheduler;
-    private DeviceManager deviceManager;
-    private BlockingQueue<Interrupt> interruptQueue;
-    private MemoryManagement memoryManagement = new memory_management.MemoryManagementImpl();
-
-    // 有多个CPU，每个CPU都有一个MMU，并且有一个PCB标识当前运行的进程
-    private final MMU mmu = new MMU();
+    private int cpuId; // CPU 的唯一标识符
+    private PCB currentPCB; // 当前正在执行的进程
+    private Scheduler scheduler; // 调度器
+    private DeviceManager deviceManager; // 设备管理器
+    private BlockingQueue<Interrupt> interruptQueue; // 中断队列
+    private MemoryManagement memoryManagement; // 内存管理模块
+    private final MMU mmu = new MMU(); // 内存管理单元
 
     public CPU(int cpuId, Scheduler scheduler, DeviceManager deviceManager, InterruptRequestLine interruptQueue) {
         this.cpuId = cpuId;
         this.scheduler = scheduler;
         this.deviceManager = deviceManager;
-        // 通过中断请求线注册CPU并获取中断队列
-        this.interruptQueue = InterruptRequestLine.getInstance().registerCPU(cpuId);
+        this.interruptQueue = interruptQueue.registerCPU(cpuId);
+        this.memoryManagement = Main.memoryManagement;
     }
 
     @Override
     public void run() {
         try {
             while (true) {
-                // 检查中断队列，但只处理一个时钟中断
-                boolean clockInterruptHandled = false;
+                // 检查中断队列，处理中断
                 while (!interruptQueue.isEmpty()) {
-                    Interrupt interrupt = interruptQueue.peek();
-
-                    // 如果是时钟中断且已经处理过一个时钟中断，则跳过
-                    // 本程序指令为原子操作，指令结束后可能积累多个时钟中断，若积累，则统一视作一个时钟中断
-                    if (interrupt.getType() == Interrupt.InterruptType.CLOCK && clockInterruptHandled) {
-                        interruptQueue.take(); // 移除但不处理
-                        continue;
-                    }
-
-                    // 处理中断
-                    handleInterrupt(interruptQueue.take());
-
-                    // 如果处理的是时钟中断，标记为已处理
-                    if (interrupt.getType() == Interrupt.InterruptType.CLOCK) {
-                        clockInterruptHandled = true;
-                    }
+                    Interrupt interrupt = interruptQueue.take();
+                    handleInterrupt(interrupt);
                 }
 
                 // 执行当前进程
                 if (currentPCB != null) {
                     execute();
-                }
-                else {
+                } else {
                     Thread.sleep(100); // 空闲时等待
                 }
             }
@@ -65,6 +50,7 @@ public class CPU extends Thread {
         }
     }
 
+    // 执行当前进程
     private void execute() {
         String instruction = InstructionFetch();
         if (instruction != null) {
@@ -72,7 +58,17 @@ public class CPU extends Thread {
         }
     }
 
+    // 从当前进程的程序计数器中获取指令
     private String InstructionFetch() {
+        if (currentPCB == null) {
+            return null;
+        }
+
+        // 如果有剩余指令未执行完，则继续执行剩余指令
+        if (!currentPCB.getRemainInstruction().isEmpty()) {
+            return currentPCB.getRemainInstruction();
+        }
+
         // 获取当前进程的PC值（程序计数器）
         int pc = currentPCB.getPc();
 
@@ -92,8 +88,10 @@ public class CPU extends Thread {
             currentAddress++;
 
             if (c == '#') {
+                System.out.println(instruction);
                 break;
             }
+
 
             instruction.append(c);
 
@@ -110,15 +108,83 @@ public class CPU extends Thread {
         return instruction.toString();
     }
 
+    // 处理中断
     private void handleInterrupt(Interrupt interrupt) {
         switch (interrupt.getType()) {
             case CLOCK:
                 handleClockInterrupt();
                 break;
+            case IO:
+                handleIOInterrupt(interrupt);
+                break;
+            default:
+                System.out.println("CPU-" + cpuId + " 未知中断类型: " + interrupt.getType());
+        }
+    }
+
+    // 处理时钟中断
+    private void handleClockInterrupt() {
+        if (currentPCB != null) {
+            // 获取当前队列的时间片
+            int queueIndex = currentPCB.getCurrentQueue();
+            int timeSlice = scheduler.getTimeSlice(queueIndex);
+
+            // 更新进程已使用的时间片
+            currentPCB.incrementTimeUsed(Constants.CLOCK_INTERRUPT_INTERVAL_MS);
+            System.out.println("CPU-" + cpuId + " 时钟中断：进程 " + currentPCB.getPid() +
+                    " 已使用时间片 " + currentPCB.getTimeUsed() + "/" + timeSlice);
+
+            // 检查时间片是否用尽
+            if (currentPCB.getTimeUsed() >= timeSlice) {
+                System.out.println("CPU-" + cpuId + " 进程 " + currentPCB.getPid() + " 时间片用尽，进行进程切换");
+
+                // 时间片用尽，将进程放回就绪队列
+                currentPCB.setState(ProcessState.READY);
+                currentPCB.resetTimeUsed();
+
+                // 如果不是最低优先级，降低优先级
+                if (scheduler.getCurrentPolicy() == Scheduler.SchedulingPolicy.MLFQ && queueIndex < 3) {
+                    currentPCB.setCurrentQueue(queueIndex + 1);
+                    System.out.println("CPU-" + cpuId + " 进程 " + currentPCB.getPid() + " 优先级降低为 " + currentPCB.getCurrentQueue());
+                }
+
+                scheduler.addReadyProcess(currentPCB);
+
+                // 请求新进程执行
+                PCB nextProcess = scheduler.getNextProcess();
+                if (nextProcess != null) {
+                    nextProcess.setState(ProcessState.RUNNING);
+                    changeProcess(nextProcess);
+                } else {
+                    // 没有可用进程，CPU进入空闲状态
+                    currentPCB = null;
+                    System.out.println("CPU-" + cpuId + " 进入空闲状态");
+                }
+            }
+        }
+    }
+
+    // 处理I/O中断
+    private void handleIOInterrupt(Interrupt interrupt) {
+        if (currentPCB != null) {
+            System.out.println("CPU-" + cpuId + " 进程 " + currentPCB.getPid() + " 完成I/O操作，重新加入就绪队列");
+            currentPCB.setState(ProcessState.READY);
+            scheduler.addReadyProcess(currentPCB);
+
+            // 请求新进程执行
+            PCB nextProcess = scheduler.getNextProcess();
+            if (nextProcess != null) {
+                nextProcess.setState(ProcessState.RUNNING);
+                changeProcess(nextProcess);
+            } else {
+                currentPCB = null;
+                System.out.println("CPU-" + cpuId + " 进入空闲状态");
+            }
         }
     }
 
     // 解析并执行指令
+    // 在 CPU 类中完善 executeInstruction 方法
     private void executeInstruction(String instruction) {
         System.out.println("CPU-" + cpuId + " 执行指令: " + instruction);
 
@@ -131,53 +197,59 @@ public class CPU extends Thread {
 
         String opcode = parts[0].toUpperCase();
 
-        try{
+        try {
             // 根据操作码执行相应操作
             switch (opcode) {
-                case "C":
+                case "C": // 计算指令
                     int computeTime = Integer.parseInt(parts[1]);
-                    Thread.sleep(computeTime);
-                    currentPCB.incrementTimeUsed(computeTime);
-                    break;
-                case "R":
-                    String filename = parts[1];
-                    int readtime = Integer.parseInt(parts[2]);
-                    // 尝试获取文件读锁
-                    if (file_disk_management.FileLockManager.getInstance().acquireReadLock(filename, currentPCB.getPid())) {
-                        try {
-                            System.out.println("CPU-" + cpuId + " 进程 " + currentPCB.getPid() +
-                                    " 开始读取文件: " + filename + "，预计耗时: " + readtime + "ms");
+                    // 如果是从中断恢复的指令，使用保存的剩余时间
+                    if (!currentPCB.getRemainInstruction().isEmpty()) {
+                        computeTime = Integer.parseInt(currentPCB.getRemainInstruction().split("\\s+")[1]);
+                        currentPCB.setRemainInstruction("");
+                    }
 
-                            // 模拟读取文件的时间
-                            Thread.sleep(readtime);
+                    // 计算本次能执行的时间
+                    int remainingTimeSlice = currentPCB.getTimeSlice() - currentPCB.getTimeUsed();
+                    int executeTime = Math.min(computeTime, remainingTimeSlice);
 
-                            // 更新进程已使用的时间片
-                            currentPCB.incrementTimeUsed(readtime);
+                    Thread.sleep(executeTime);
+                    currentPCB.incrementTimeUsed(executeTime);
 
-                            System.out.println("CPU-" + cpuId + " 进程 " + currentPCB.getPid() +
-                                    " 完成文件读取: " + filename);
-                        } catch (InterruptedException e) {
-                            System.out.println("CPU-" + cpuId + " 读取文件被中断: " + filename);
-                            Thread.currentThread().interrupt();
-                        } finally {
-                            // 释放文件读锁
-                            file_disk_management.FileLockManager.getInstance().releaseReadLock(filename, currentPCB.getPid());
-                        }
-                    } else {
-                        System.out.println("CPU-" + cpuId + " 进程 " + currentPCB.getPid() +
-                                " 无法获取文件读锁: " + filename + "，进程阻塞");
-
+                    // 如果还有剩余时间未执行完，保存剩余时间
+                    if (executeTime < computeTime) {
+                        currentPCB.setRemainInstruction("C " + (computeTime - executeTime));
                         // 将PC值回退，使下次执行时重新执行该指令
                         int currentPC = currentPCB.getPc();
-                        // 计算指令长度（包括结束符#）
                         int instructionLength = instruction.length() + 1;
                         currentPCB.setPc(currentPC - instructionLength);
+                    }
 
-                        // 阻塞进程
+                    break;
+                case "R": // 读取文件指令
+                    String filename = parts[1];
+                    int readtime = Integer.parseInt(parts[2]);
+
+                    // 尝试获取文件读锁
+                    if (file_disk_management.FileLockManager.getInstance().acquireReadLock(filename, currentPCB.getPid())) {
+                        // 将进程设置为阻塞状态
                         currentPCB.setState(ProcessState.WAITING);
+                        // 拷贝变量（避免被主线程修改）
+                        final PCB pcbToRelease = currentPCB;
+                        final String fileToRead = filename;
 
-                        // 将进程添加到文件锁等待队列
-                        file_disk_management.FileLockManager.getInstance().addReadWaitingProcess(filename, currentPCB);
+                        // 创建一个新线程来处理文件读取
+                        new Thread(() -> {
+                            try {
+                                Thread.sleep(readtime);
+                                System.out.println("进程"+pcbToRelease.getPid()+"读取完毕");
+                                // 读取完成后，释放锁并将进程加入就绪队列
+                                file_disk_management.FileLockManager.getInstance().releaseReadLock(fileToRead, pcbToRelease.getPid());
+                                pcbToRelease.setState(ProcessState.READY);
+                                scheduler.addReadyProcess(pcbToRelease);
+                            } catch (InterruptedException e) {
+                                Thread.currentThread().interrupt();
+                            }
+                        }).start();
 
                         // 请求新进程执行
                         PCB nextProcess = scheduler.getNextProcess();
@@ -185,52 +257,69 @@ public class CPU extends Thread {
                             nextProcess.setState(ProcessState.RUNNING);
                             changeProcess(nextProcess);
                         } else {
-                            // 没有可用进程，CPU进入空闲状态
                             currentPCB = null;
-                            System.out.println("CPU-" + cpuId + " 进入空闲状态");
+                        }
+                    } else {
+                        // 无法获取锁，将进程加入等待队列
+                        currentPCB.setState(ProcessState.WAITING);
+                        file_disk_management.FileLockManager.getInstance().addReadWaitingProcess(filename, currentPCB);
+
+                        // 将PC值回退
+                        int currentPC = currentPCB.getPc();
+                        int instructionLength = instruction.length() + 1;
+                        currentPCB.setPc(currentPC - instructionLength);
+
+                        // 请求新进程执行
+                        PCB nextProcess = scheduler.getNextProcess();
+                        if (nextProcess != null) {
+                            nextProcess.setState(ProcessState.RUNNING);
+                            changeProcess(nextProcess);
+                        } else {
+                            currentPCB = null;
                         }
                     }
                     break;
-                case "W":
+                case "W": // 写入文件指令
                     filename = parts[1];
                     int writeTime = Integer.parseInt(parts[2]);
 
                     // 尝试获取文件写锁
                     if (file_disk_management.FileLockManager.getInstance().acquireWriteLock(filename, currentPCB.getPid())) {
-                        try {
-                            System.out.println("CPU-" + cpuId + " 进程 " + currentPCB.getPid() +
-                                    " 开始写入文件: " + filename + "，预计耗时: " + writeTime + "ms");
-
-                            // 模拟写入文件的时间
-                            Thread.sleep(writeTime);
-
-                            // 更新进程已使用的时间片
-                            currentPCB.incrementTimeUsed(writeTime);
-
-                            System.out.println("CPU-" + cpuId + " 进程 " + currentPCB.getPid() +
-                                    " 完成文件写入: " + filename);
-                        } catch (InterruptedException e) {
-                            System.out.println("CPU-" + cpuId + " 写入文件被中断: " + filename);
-                            Thread.currentThread().interrupt();
-                        } finally {
-                            // 释放文件写锁
-                            file_disk_management.FileLockManager.getInstance().releaseWriteLock(filename, currentPCB.getPid());
-                        }
-                    } else {
-                        System.out.println("CPU-" + cpuId + " 进程 " + currentPCB.getPid() +
-                                " 无法获取文件写锁: " + filename + "，进程阻塞");
-
-                        // 将PC值回退，使下次执行时重新执行该指令
-                        int currentPC = currentPCB.getPc();
-                        // 计算指令长度（包括结束符#）
-                        int instructionLength = instruction.length() + 1;
-                        currentPCB.setPc(currentPC - instructionLength);
-
-                        // 阻塞进程
                         currentPCB.setState(ProcessState.WAITING);
 
-                        // 将进程添加到文件锁等待队列
+                        // 拷贝变量（避免被主线程修改）
+                        final PCB pcbToRelease = currentPCB;
+                        final String fileToWrite = filename;
+
+                        new Thread(() -> {
+                            try {
+                                Thread.sleep(writeTime);
+                                System.out.println("进程"+pcbToRelease.getPid()+"写入完毕");
+                                file_disk_management.FileLockManager.getInstance().releaseWriteLock(fileToWrite, pcbToRelease.getPid());
+                                pcbToRelease.setState(ProcessState.READY);
+                                scheduler.addReadyProcess(pcbToRelease);
+                            } catch (InterruptedException e) {
+                                Thread.currentThread().interrupt();
+                            }
+                        }).start();
+
+                        // 切换进程
+                        PCB nextProcess = scheduler.getNextProcess();
+                        if (nextProcess != null) {
+                            nextProcess.setState(ProcessState.RUNNING);
+                            changeProcess(nextProcess);
+                        } else {
+                            currentPCB = null; // 这里不会影响子线程的 pcbToRelease
+                        }
+                    } else {
+                        // 无法获取锁，将进程加入等待队列
+                        currentPCB.setState(ProcessState.WAITING);
                         file_disk_management.FileLockManager.getInstance().addWriteWaitingProcess(filename, currentPCB);
+
+                        // 将PC值回退
+                        int currentPC = currentPCB.getPc();
+                        int instructionLength = instruction.length() + 1;
+                        currentPCB.setPc(currentPC - instructionLength);
 
                         // 请求新进程执行
                         PCB nextProcess = scheduler.getNextProcess();
@@ -238,18 +327,16 @@ public class CPU extends Thread {
                             nextProcess.setState(ProcessState.RUNNING);
                             changeProcess(nextProcess);
                         } else {
-                            // 没有可用进程，CPU进入空闲状态
                             currentPCB = null;
-                            System.out.println("CPU-" + cpuId + " 进入空闲状态");
                         }
                     }
                     break;
-                case "D":
+                case "D": // 设备I/O指令
                     int deviceId = Integer.parseInt(parts[1]);
                     int ioTime = Integer.parseInt(parts[2]);
 
                     System.out.println("CPU-" + cpuId + " 进程 " + currentPCB.getPid() +
-                            " 请求设备 " + deviceId + " 进行IO操作，预计耗时: " + ioTime + "ms");
+                            " 请求设备 " + deviceId + " 进行I/O操作，预计耗时: " + ioTime + "ms");
 
                     // 检查设备是否存在
                     if (deviceManager.deviceExists(deviceId)) {
@@ -273,8 +360,7 @@ public class CPU extends Thread {
                         System.out.println("CPU-" + cpuId + " 请求的设备 " + deviceId + " 不存在");
                     }
                     break;
-                case "Q":
-                    // 进程结束指令
+                case "Q": // 结束进程指令
                     System.out.println("CPU-" + cpuId + " 进程 " + currentPCB.getPid() + " 执行结束指令，即将退出");
 
                     // 保存当前进程的引用
@@ -283,8 +369,13 @@ public class CPU extends Thread {
                     // 将进程状态设置为TERMINATED
                     terminatingProcess.setState(ProcessState.TERMINATED);
 
-                    // 清理进程占用的所有资源
-                    scheduler.terminateProcess(terminatingProcess);
+                    // 释放进程占用的所有资源
+                    memoryManagement.releaseMemory(terminatingProcess.getPid());
+                    PIDBitmap.getInstance().freePID(terminatingProcess.getPid());
+                    file_disk_management.FileLockManager.getInstance().releaseAllLocks(terminatingProcess.getPid());
+
+                    // 从活跃PCB列表中移除
+                    terminatingProcess.removePCB();
 
                     // 请求新进程执行
                     PCB nextProc = scheduler.getNextProcess();
@@ -292,77 +383,68 @@ public class CPU extends Thread {
                         nextProc.setState(ProcessState.RUNNING);
                         changeProcess(nextProc);
                     } else {
-                        // 没有可用进程，CPU进入空闲状态
                         currentPCB = null;
                         System.out.println("CPU-" + cpuId + " 进入空闲状态");
                     }
                     break;
-                default:
+                case "M": // 内存分配指令
+                    int bytes = Integer.parseInt(parts[1]);
+                    if (!memoryManagement.Allocate(this, bytes)) {
+                        System.out.println("CPU-" + cpuId + " 内存分配失败");
+                    }
                     break;
+                case "MW": // 内存写入指令
+                    int logicAddress = Integer.parseInt(parts[1]);
+                    int writeBytes = Integer.parseInt(parts[2]);
+                    byte[] randomData = new byte[writeBytes];
+                    new Random().nextBytes(randomData);
+                    if (!memoryManagement.Write(this, logicAddress, randomData, writeBytes)) {
+                        System.out.println("CPU-" + cpuId + " 内存写入失败");
+                    }
+                    break;
+                case "MR": // 内存读取指令
+                    logicAddress = Integer.parseInt(parts[1]);
+                    int readBytes = Integer.parseInt(parts[2]);
+                    byte[] readData = new byte[readBytes];
+                    if (!memoryManagement.Read(this, logicAddress, readData, readBytes)) {
+                        System.out.println("CPU-" + cpuId + " 内存读取失败");
+                    }
+                    break;
+                default:
+                    System.out.println("CPU-" + cpuId + " 未知指令: " + opcode);
             }
         } catch (Exception e) {
             System.out.println("CPU-" + cpuId + " 指令解析错误: " + instruction);
+            e.printStackTrace();
         }
     }
 
-    private void handleClockInterrupt() {
-        if (currentPCB != null) {
-            // 更新进程已使用的时间片
-            currentPCB.incrementTimeUsed(Constants.CLOCK_INTERRUPT_INTERVAL_MS);
-            System.out.println("CPU-" + cpuId + " 时钟中断：进程 " + currentPCB.getPid() +
-                    " 已使用时间片 " + currentPCB.getTimeUsed() + "/" + currentPCB.getTimeSlice());
-
-            // 检查时间片是否用尽
-            if (currentPCB.getTimeUsed() >= currentPCB.getTimeSlice()) {
-                System.out.println("CPU-" + cpuId + " 进程 " + currentPCB.getPid() + " 时间片用尽，进行进程切换");
-
-                // 时间片用尽，将进程放回就绪队列
-                currentPCB.setState(ProcessState.READY);
-                currentPCB.resetTimeUsed();
-
-                // 如果不是最低优先级，降低优先级
-                if (currentPCB.getPriority() < 3) {
-                    currentPCB.setPriority(currentPCB.getPriority() + 1);
-                    System.out.println("CPU-" + cpuId + " 进程 " + currentPCB.getPid() + " 优先级降低为 " + currentPCB.getPriority());
-                }
-
-                scheduler.addReadyProcess(currentPCB);
-
-                // 立即请求新进程执行
-                PCB nextProcess = scheduler.getNextProcess();
-                if (nextProcess != null) {
-                    nextProcess.setState(ProcessState.RUNNING);
-                    changeProcess(nextProcess);
-                } else {
-                    // 没有可用进程，CPU进入空闲状态
-                    currentPCB = null;
-                    System.out.println("CPU-" + cpuId + " 进入空闲状态");
-                }
-            }
-        }
-    }
-
-    public int getCpuId() {
-        return cpuId;
-    }
-
-    public boolean isIdle() {
-        return currentPCB == null;
-    }
-
-    public PCB getCurrentPCB() {
-        return currentPCB;
-    }
-
-    public MMU getMMU() {
-        return mmu;
-    }
-
+    // 切换当前进程
     public void changeProcess(PCB newPCB) {
         if (newPCB != null) {
             mmu.update(newPCB);
             this.currentPCB = newPCB;
             System.out.println("CPU-" + cpuId + " 开始执行进程 " + currentPCB.getPid());
         }
+    }
+
+    // 获取当前CPU的ID
+    public int getCpuId() {
+        return cpuId;
+    }
+
+    // 判断CPU是否空闲
+    public boolean isIdle() {
+        return currentPCB == null;
+    }
+
+    // 获取当前正在执行的进程
+    public PCB getCurrentPCB() {
+        return currentPCB;
+    }
+
+    // 获取内存管理单元
+    public MMU getMMU() {
+        return mmu;
     }
 }
