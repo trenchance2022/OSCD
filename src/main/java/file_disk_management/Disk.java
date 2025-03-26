@@ -9,7 +9,6 @@ class Disk {
     private int blockSize = Constants.BLOCK_SIZE_BYTES;  // 块大小为1KB
     private Bitmap bitmap;        // 位图管理空闲块
     private byte[] diskData;      // 模拟磁盘的数据数组
-    private int occupiedBlocks = 0;  // 已分配的块数
 
     // 使用单例模式，私有化构造方法
     private static final Disk INSTANCE = new Disk();
@@ -27,8 +26,9 @@ class Disk {
     // 分配一个块
     public int allocateBlock() {
         int blockIndex = bitmap.allocateBlock();
-        if(blockIndex != -1) {
-            occupiedBlocks++;
+        if (blockIndex == -1) {
+            System.out.println("No free disk block available.");
+            return -1;
         }
         return blockIndex;
     }
@@ -72,12 +72,12 @@ class Disk {
 
     // 显示磁盘的空闲块情况
     public void displayDiskInfo() {
-        System.out.println("Occupied blocks: " + occupiedBlocks + ", Free blocks: " + (diskSize - occupiedBlocks));
+        System.out.println("Occupied blocks: " + bitmap.getOccupiedBlocks() + ", Free blocks: " + bitmap.getFreeBlocks());
         bitmap.displayBitmap();
     }
 
     public int getOccupiedBlocks() {
-        return occupiedBlocks;
+        return bitmap.getOccupiedBlocks();
     }
 
     public int getDiskSize() {
@@ -88,12 +88,8 @@ class Disk {
         this.diskSize = diskSize;
     }
 
-    public void setOccupiedBlocks(int occupiedBlocks) {
-        this.occupiedBlocks = occupiedBlocks;
-    }
-
     public int getFreeSpace() {
-        return (diskSize - occupiedBlocks) * 1024;
+        return bitmap.getFreeBlocks() * 1024;
     }
 
     public byte[] getDiskData() {

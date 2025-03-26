@@ -16,6 +16,13 @@ public class FileSystemImpl implements FileDiskManagement {
 
     // 创建文件
     public void createFile(String fileName, int fileSize) {
+        // 检查是否已存在同名文件
+        for (Inode inode : currentDirectory.files) {
+            if (inode.fileName.equals(fileName)) {
+                System.out.println("File " + fileName + " already exists.");
+                return;
+            }
+        }
         int inodeNumber = currentDirectory.files.size() + 1;  // 生成新的inode编号
         currentDirectory.createFile(disk, fileName, fileSize, inodeNumber);
     }
@@ -134,7 +141,6 @@ public class FileSystemImpl implements FileDiskManagement {
             return;
         }
 
-        disk.setOccupiedBlocks(disk.getOccupiedBlocks() - fileInode.size / 1024 -1);
 
         // 进入vi模式，编辑文件
         Scanner scanner = new Scanner(System.in);
@@ -179,8 +185,6 @@ public class FileSystemImpl implements FileDiskManagement {
         }
 
         fileInode.size = newData.length;  // 更新文件大小
-
-        disk.setOccupiedBlocks(disk.getOccupiedBlocks() + blocksRequired);
         System.out.println("File " + fileName + " has been updated.");
     }
 

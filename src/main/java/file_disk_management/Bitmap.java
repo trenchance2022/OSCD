@@ -32,4 +32,18 @@ class Bitmap {
         }
         System.out.println();
     }
+
+    public int getOccupiedBlocks() {
+        int count = 0;
+        for (int i = 0; i < size; i++) {
+            if (bitmap[i] == 1) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    public int getFreeBlocks() {
+        return size - getOccupiedBlocks();
+    }
 }

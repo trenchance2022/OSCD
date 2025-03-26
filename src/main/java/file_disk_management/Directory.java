@@ -52,6 +52,13 @@ class Directory {
 
     // 创建子目录
     public void createDirectory(String directoryName) {
+        // 检查是否已存在同名目录
+        for (Directory dir : subdirectories) {
+            if (dir.name.equals(directoryName)) {
+                System.out.println("Directory " + directoryName + " already exists.");
+                return;
+            }
+        }
         Directory dir = new Directory(directoryName, this);
         subdirectories.add(dir);
         System.out.println("Directory " + directoryName + " created.");
@@ -63,7 +70,6 @@ class Directory {
             Inode inode = files.get(i);
             if (inode.fileName.equals(fileName)) {
                 // 释放磁盘块
-                disk.setOccupiedBlocks(disk.getOccupiedBlocks() - inode.blockIndexes.length);
                 for (int blockIndex : inode.blockIndexes) {
                     disk.freeBlock(blockIndex);
                 }
@@ -120,7 +126,6 @@ class Directory {
 
             // 先删除当前目录中的所有文件
             for (Inode inode : currentDir.files) {
-                disk.setOccupiedBlocks(disk.getOccupiedBlocks() - inode.blockIndexes.length);
                 for (int blockIndex : inode.blockIndexes) {
                     disk.freeBlock(blockIndex);
                 }
