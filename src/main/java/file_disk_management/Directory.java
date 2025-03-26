@@ -45,7 +45,6 @@ class Directory {
             }
         }
 
-        disk.setOccupiedBlocks(disk.getOccupiedBlocks() + totalBlocksNeeded);
         files.add(inode);
         System.out.println("File " + fileName + " created with size " + fileSize + "B.");
     }

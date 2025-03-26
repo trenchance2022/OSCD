@@ -312,6 +312,7 @@ public class CPU extends Thread {
                             currentPCB = null; // 这里不会影响子线程的 pcbToRelease
                         }
                     } else {
+                        System.out.println("Waiting!!!!");
                         // 无法获取锁，将进程加入等待队列
                         currentPCB.setState(ProcessState.WAITING);
                         file_disk_management.FileLockManager.getInstance().addWriteWaitingProcess(filename, currentPCB);

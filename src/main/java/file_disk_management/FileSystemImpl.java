@@ -134,6 +134,8 @@ public class FileSystemImpl implements FileDiskManagement {
             return;
         }
 
+        disk.setOccupiedBlocks(disk.getOccupiedBlocks() - fileInode.size / 1024 -1);
+
         // 进入vi模式，编辑文件
         Scanner scanner = new Scanner(System.in);
         System.out.println("Editing file " + fileName + ". Type ':wq' to save and exit.");

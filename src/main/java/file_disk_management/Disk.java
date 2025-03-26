@@ -26,7 +26,11 @@ class Disk {
 
     // 分配一个块
     public int allocateBlock() {
-        return bitmap.allocateBlock();
+        int blockIndex = bitmap.allocateBlock();
+        if(blockIndex != -1) {
+            occupiedBlocks++;
+        }
+        return blockIndex;
     }
 
     // 释放一个块
