@@ -10,6 +10,10 @@ public class DeviceManager {
     private Map<Integer, IODevice> devices = new HashMap<>();
 
     public void addDevice(int deviceId, String deviceName) {
+        if(devices.containsKey(deviceId)){
+            System.out.println("添加失败：已存在id为"+deviceId+"的设备");
+            return;
+        }
         IODevice device = new IODevice(deviceId, deviceName);
         devices.put(deviceId, device);
         device.start();
