@@ -126,6 +126,8 @@ class Shell {
                     fileSystem.showDirectoryStructure();
                 } else if (parts.length == 2 && parts[1].equals("disk")) {
                     fileSystem.displayDiskInfo();
+                } else if (parts.length == 2 && parts[1].equals("memory")) {
+                    memoryManagement.showPageUse(0, Constants.MEMORY_PAGE_SIZE);
                 } else {
                     System.out.println("Unknown info command.");
                 }

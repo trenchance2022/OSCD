@@ -21,10 +21,12 @@ public class PCB {
     private String executedFile;  //执行文件
     private int pc;         //程序计数器
     // 下面的属性会传给PTR
-    private int codeSize;//代码段大小
-    private int innerFragmentation;//内部碎片(代码段与数据段之间的碎片)
-    private int pageTableSize;
-    private int pageTableAddress;
+    private final int codeSize;//代码段大小
+    private final int innerFragmentation;//内部碎片(代码段与数据段之间的碎片)
+    private int lastPageSize;//数据段最后一页的大小
+    private int pageTableSize;//页表大小
+    private int pageTableAddress;//页表地址
+
     private String originalInstruction; // 当前正在执行的指令
     private String remainInstruction;   // 被抢占后剩余的执行时间的执行指令
 
@@ -35,13 +37,14 @@ public class PCB {
         this.timeUsed = 0;
         this.codeSize = codeSize;
         this.size = codeSize;
-        this.pageTableSize = (codeSize - 1) / Constants.PAGE_SIZE_BYTES + 1;
+        this.pageTableSize = (codeSize-1) / Constants.PAGE_SIZE_BYTES + 1;
         this.innerFragmentation = Constants.PAGE_SIZE_BYTES * pageTableSize - codeSize;
-        this.pageTableAddress = PageTableArea.getInstance().addPageTable(pid, codeSize, diskAddressBlock);
+        this.pageTableSize += 1;//增加一个页表项用于存放数据段
+        this.lastPageSize = 0;//数据段最后一页的大小,初始为0
+        this.pageTableAddress = PageTableArea.getInstance().addPageTable(this.pid, this.pageTableSize, diskAddressBlock);
         this.originalInstruction = "";
         this.remainInstruction = "";
-        
-        
+
     }
 
     // 获取所有活跃PCB的列表
@@ -131,6 +134,14 @@ public class PCB {
 
     public int getInnerFragmentation() {
         return innerFragmentation;
+    }
+
+    public int getLastPageSize() {
+        return lastPageSize;
+    }
+
+    public void setLastPageSize(int lastPageSize) {
+        this.lastPageSize = lastPageSize;
     }
 
     public void addPage(int addSize) {

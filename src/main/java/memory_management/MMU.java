@@ -18,31 +18,38 @@ public class MMU {
     public void update(PCB pcb) {
         ptr.update(pcb);
         tlb.refresh();
-
     }
 
     // 更新寄存器的页表大小，分配内存时会调用
     public void addPageSize(int pageSize) {
         ptr.addPageSize(pageSize);
     }
+    public void setLastPageSize(int lastPageSize) {
+        ptr.setLastPageSize(lastPageSize);
+    }
+
+    public int getLastPageSize() {
+        return ptr.getLastPageSize();
+    }
 
     // 转换逻辑地址为物理地址，如果缺页，会调用PageFaultHandler处理，然后重新运行函数
     public int addressTranslation(int logicalAddress, boolean dirty) {
+        int logicalAddress1 = logicalAddress;
+
         if (logicalAddress < 0) {
             System.out.println("逻辑地址小于0 MMU");
             return -1;
         }
 
-        // 更新逻辑地址
+        // 更新逻辑地址:如果访问的是代码段之后数据段，逻辑地址加上内部碎片
         if (logicalAddress >= ptr.getCodeSize()) {
-            logicalAddress -= ptr.getInnerFragmentation();
+            logicalAddress += ptr.getInnerFragmentation();
         }
 
         int pageNumber = logicalAddress / Constants.PAGE_SIZE_BYTES;
         int offset = logicalAddress % Constants.PAGE_SIZE_BYTES;
-        if (pageNumber >= ptr.getPageTableSize()) {
+        if (pageNumber >= ptr.getPageTableSize()||pageNumber== ptr.getPageTableSize()-1&&offset>=ptr.getLastPageSize()) {
             System.out.println("逻辑地址超出范围 MMU");
-            exit(1);
             return -2;
         }
 
@@ -62,7 +69,7 @@ public class MMU {
                     System.out.println("缺页中断处理失败");
                     return -3;
                 }
-                return addressTranslation(logicalAddress, dirty);//中断处理完毕后重新读取
+                return addressTranslation(logicalAddress1, dirty);//中断处理完毕后重新读取
             }
 
             // 页表项有效,更新TLB,如果写操作
@@ -79,12 +86,14 @@ class PTR {
     private int pageTableSize;//页表大小
     private int codeSize;//代码段大小
     private int innerFragmentation;//内部碎片(代码段与数据段之间的碎片)
+    private int lastPageSize;//数据段最后一页的大小
 
     public void update(PCB pcb) {
         pageTableAddress = pcb.getPageTableAddress();
         pageTableSize = pcb.getPageTableSize();
         codeSize = pcb.getCodeSize();
         innerFragmentation = pcb.getInnerFragmentation();
+        lastPageSize = pcb.getLastPageSize();
     }
 
     public int getPageTableAddress() {
@@ -105,6 +114,13 @@ class PTR {
 
     public void addPageSize(int pageSize) {
         pageTableSize += pageSize;
+    }
+
+    public int getLastPageSize() {
+        return lastPageSize;
+    }
+    public void setLastPageSize(int lastPageSize) {
+        this.lastPageSize = lastPageSize;
     }
 }
 
@@ -248,9 +264,9 @@ class TLBEntry {
 class PageFaultHandler {
     // 处理缺页中断，参数：页表地址，tlb，页号
 
-    // 1. 如果物理内存已满，且进程没有被调入物理内存的页面，无法局部替换，返回-1;
-    // 2. 如果物理内存有空，且进程还有未使完分配的物理内存，直接分配，无需调出
-    // 3. 如果物理内存已满，或进程以及使用完分配的物理内存，需要调出页面
+    // 1. 如果物理内存已满，且该进程没有被调入物理内存的页面，无法局部替换，返回-1;
+    // 2. 如果物理内存有空，且该进程还有未使完分配的物理内存，直接分配，无需调出
+    // 3. 如果物理内存已满，或该进程已经使用完分配的物理内存，需要调出页面
     //      只有被修改的页面才需要写回磁盘，否则直接替换
     //      如果被修改的页面此前没有对应的磁盘块（第一次被调出），需要分配空闲磁盘块
     // 将磁盘块读入内存

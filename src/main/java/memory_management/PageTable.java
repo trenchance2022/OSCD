@@ -12,28 +12,18 @@ public class PageTable {
     private final int memoryBlockSize;//实际分配的内存块数
     private int memoryBlockUsed;//内存已使用大小
     private int pointer;// 二次机会算法指针
-    private int lastPageSize;//最后一页的大小
 
-    public PageTable(int pid, int codeSize, int[] diskAddressBlock) {// 用于初始化页表，传入进程号，进程大小，磁盘地址，在加载进程时调用
+    public PageTable(int pid, int pageTableSize, int[] diskAddressBlock) {// 用于初始化页表，传入进程号，进程大小，磁盘地址，在加载进程时调用
         this.pid = pid;
-        this.lastPageSize = Constants.PAGE_SIZE_BYTES;//最后一页的大小
-        int pageTableSize = (codeSize - 1) / Constants.PAGE_SIZE_BYTES + 1;
         entries = new ArrayList<>(pageTableSize);
         // 初始化页表项
-        for (int i = 0; i < pageTableSize; i++) {
+        for (int i = 0; i < pageTableSize-1; i++) {
             entries.add(new PageTableEntry(diskAddressBlock[i]));
         }
+        entries.add(new PageTableEntry(-1));//数据段页表项
         memoryBlockUsed = 0;
         memoryBlockSize = 4;
 
-    }
-
-    public int getLastPageSize() {
-        return lastPageSize;
-    }
-
-    public void setLastPageSize(int lastPageSize) {
-        this.lastPageSize = lastPageSize;
     }
 
     public boolean hasValidPage() {
@@ -114,9 +104,15 @@ public class PageTable {
         return entries.get(pageNumber);
     }
 
+    // 添加页表项
     public void addEntry() {
         PageTableEntry entry = new PageTableEntry(-1);
         entries.add(entry);
+    }
+    public void addEntries(int size) {
+        for (int i = 0; i < size; i++) {
+            addEntry();
+        }
     }
 
     // 获取进程号

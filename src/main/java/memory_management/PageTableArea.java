@@ -22,11 +22,11 @@ public class PageTableArea {
     private int addressSpace = 1000;//页表区域的地址空间大小
 
     // 添加页表,返回页表的起始地址
-    public int addPageTable(int pid, int size, int[] diskAddressBlock) {
+    public int addPageTable(int pid, int pageTableSize, int[] diskAddressBlock) {
         // 添加页表,返回页表的起始地址
         int pageTableAddress = getAddress();
         // 添加页表
-        pageTables.put(pageTableAddress, new PageTable(pid, size, diskAddressBlock));
+        pageTables.put(pageTableAddress, new PageTable(pid, pageTableSize, diskAddressBlock));
         return pageTableAddress;
 
     }

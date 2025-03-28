@@ -81,6 +81,7 @@ public class CPU extends Thread {
         while (true) {
             if (!memoryManagement.Read(this, currentAddress, buffer, 1)) {
                 System.out.println("CPU-" + cpuId + " 读取内存失败，地址: " + currentAddress);
+                System.exit(-1);
                 return null;
             }
 
@@ -371,7 +372,7 @@ public class CPU extends Thread {
                     terminatingProcess.setState(ProcessState.TERMINATED);
 
                     // 释放进程占用的所有资源
-                    memoryManagement.releaseMemory(terminatingProcess.getPid());
+                    memoryManagement.FreeProcess(this);
                     PIDBitmap.getInstance().freePID(terminatingProcess.getPid());
                     file_disk_management.FileLockManager.getInstance().releaseAllLocks(terminatingProcess.getPid());
 
