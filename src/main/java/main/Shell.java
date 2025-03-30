@@ -1,0 +1,180 @@
+package main;
+
+import file_disk_management.FileSystemImpl;
+import memory_management.MemoryManagement;
+import device_management.DeviceManager;
+
+import java.util.Scanner;
+
+class Shell {
+    FileSystemImpl fileSystem;
+    MemoryManagement memoryManagement;
+    DeviceManager deviceManager;
+
+    public Shell(FileSystemImpl fileSystem, MemoryManagement memoryManagement, DeviceManager deviceManager) {
+        this.fileSystem = fileSystem;
+        this.memoryManagement = memoryManagement;
+        this.deviceManager = deviceManager;
+    }
+
+    public void start() {
+        Scanner scanner = new Scanner(System.in);
+        while (true) {
+            System.out.print(fileSystem.getCurrentPath() + "> ");
+            String command = scanner.nextLine();
+            parseCommand(command);
+        }
+    }
+
+    public void parseCommand(String command) {
+        String[] parts = command.split(" ");
+        switch (parts[0]) {
+            case "mkdir":
+                if (parts.length == 2) {
+                    fileSystem.createDirectory(parts[1]);
+                } else {
+                    System.out.println("Usage: mkdir <directory>");
+                }
+                break;
+            case "mkf":
+                if (parts.length == 3) {
+                    String fileName = parts[1];
+                    int size = Integer.parseInt(parts[2]);
+                    fileSystem.createFile(fileName, size);
+                } else {
+                    System.out.println("Usage: mkf <filename> <size>");
+                }
+                break;
+            case "cd":
+                if (parts.length == 2) {
+                    fileSystem.changeDirectory(parts[1]);
+                } else {
+                    System.out.println("Usage: cd <directory>");
+                }
+                break;
+            case "cd..":
+                fileSystem.goBack();
+                break;
+            case "cat":
+                if (parts.length == 2) {
+                    fileSystem.showFileData(parts[1]);
+                } else {
+                    System.out.println("Usage: cat <filename>");
+                }
+                break;
+            case "ls":
+                fileSystem.listDirectory();
+                break;
+            case "rm":
+                if (parts.length == 2) {
+                    fileSystem.removeFile(parts[1]);
+                } else {
+                    System.out.println("Usage: rm <filename>");
+                }
+                break;
+            case "rmdir":
+                if (parts.length == 2) {
+                    fileSystem.removeDirectory(parts[1]);
+                } else {
+                    System.out.println("Usage: rmdir <directory>");
+                }
+                break;
+            case "rmrdir":
+                if (parts.length == 2) {
+                    fileSystem.removeDirectoryRecursively(parts[1]);
+                } else {
+                    System.out.println("Usage: rmrdir <directory>");
+                }
+                break;
+            case "shf":
+                if (parts.length == 2) {
+                    fileSystem.showFileBlock(parts[1]);
+                } else {
+                    System.out.println("Usage: shf <filename>");
+                }
+                break;
+            case "vi":
+                if (parts.length == 2) {
+                    fileSystem.editFile(parts[1]);
+                } else {
+                    System.out.println("Usage: vi <filename>");
+                }
+                break;
+            case "exec":
+                if (parts.length >= 3 && (parts.length - 1) % 2 == 0) {
+                    try {
+                        // 遍历所有文件名和优先级对
+                        for (int i = 1; i < parts.length; i += 2) {
+                            String filename = parts[i];
+                            int priority = Integer.parseInt(parts[i + 1]);
+                            
+                            // 检查文件是否存在
+                            String fileContent = fileSystem.readFileData(filename);
+                            if (!fileContent.equals("-1")) {
+                                // 文件存在，创建进程
+                                process_management.Scheduler.getInstance().createProcess(filename, priority);
+                            } else {
+                                System.out.println("文件 " + filename + " 不存在或无法读取");
+                            }
+                        }
+                    } catch (NumberFormatException e) {
+                        System.out.println("优先级必须是整数");
+                    }
+                } else {
+                    System.out.println("Usage: exec <filename1> <priority1> [<filename2> <priority2> ...]");
+                }
+                break;
+            case "info":
+                if (parts.length == 2 && parts[1].equals("dir")) {
+                    fileSystem.showDirectoryStructure();
+                } else if (parts.length == 2 && parts[1].equals("disk")) {
+                    fileSystem.displayDiskInfo();
+                } else if (parts.length == 2 && parts[1].equals("memory")) {
+                    memoryManagement.showPageUse(0, Constants.MEMORY_PAGE_SIZE);
+                } else {
+                    System.out.println("Unknown info command.");
+                }
+                break;
+            case "addevc":
+                if (parts.length == 3) {
+                    String deviceName = parts[1];
+                    try {
+                        int deviceId = Integer.parseInt(parts[2]);
+                        deviceManager.addDevice(deviceId, deviceName);
+                    } catch (NumberFormatException e) {
+                        System.out.println("设备ID必须是整数");
+                    }
+                } else {
+                    System.out.println("Usage: addevc <deviceName> <deviceId>");
+                }
+                break;
+            case "rmdevc":
+                if (parts.length == 3) {
+                    String deviceName = parts[1];
+                    try {
+                        int deviceId = Integer.parseInt(parts[2]);
+                        deviceManager.removeDevice(deviceId, deviceName);
+                    } catch (NumberFormatException e) {
+                        System.out.println("设备ID必须是整数");
+                    }
+                } else {
+                    System.out.println("Usage: rmdevc <deviceName> <deviceId>");
+                }
+                break;
+            case "kill":
+                if (parts.length == 2) {
+                    try {
+                        int pid = Integer.parseInt(parts[1]);
+                        process_management.Scheduler.getInstance().terminateProcess(process_management.PCB.getPCB(pid));
+                    } catch (NumberFormatException e) {
+                        System.out.println("进程ID必须是整数");
+                    }
+                } else {
+                    System.out.println("Usage: kill <pid>");
+                }
+                break;
+            default:
+                System.out.println("Unknown command.");
+        }
+    }
+}
