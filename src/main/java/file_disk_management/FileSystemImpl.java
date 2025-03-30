@@ -137,7 +137,17 @@ public class FileSystemImpl implements FileDiskManagement {
         }
 
         if (fileInode == null) {
-            System.out.println("File " + fileName + " not found.");
+            System.out.println("File " + fileName + " not found.\nDou you want to create a new File called:"+fileName+"?");
+            Scanner scanner=new Scanner(System.in);
+            while (true){
+            System.out.println("Y/N:");
+            String key=scanner.nextLine();
+            if(key.equals("Y")){
+                createFile(fileName, 1);
+                break;
+            }else if(key.equals("N")){
+                break;
+            }}
             return;
         }
 
