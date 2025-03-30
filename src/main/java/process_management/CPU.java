@@ -135,53 +135,62 @@ public class CPU extends Thread {
     // 处理时钟中断
     private void handleClockInterrupt() {
         if (currentPCB != null) {
-            // 获取当前队列的时间片
-            int queueIndex = currentPCB.getCurrentQueue();
-            int timeSlice = scheduler.getTimeSlice(queueIndex);
+                // 获取当前队列的时间片
+                int queueIndex = currentPCB.getCurrentQueue();
+                int timeSlice = scheduler.getTimeSlice(queueIndex);
 
 
-            //System.out.println("CPU-" + cpuId + " 时钟中断：进程 " + currentPCB.getPid() +" 已使用时间片 " + currentPCB.getTimeUsed() + "/" + timeSlice);
-            // 更新进程已使用的时间片
-            currentPCB.incrementTimeUsed(Constants.CLOCK_INTERRUPT_INTERVAL_MS);
-            // 获取原始指令和剩余指令的时间差作为已使用时间片
-            String[] originalParts = currentPCB.getOriginalInstruction().split("\\s+");
-            String[] remainParts = currentPCB.getRemainInstruction().isEmpty() ? 
-                                 originalParts : currentPCB.getRemainInstruction().split("\\s+");
-            int originalTime = Integer.parseInt(originalParts[1]);
-            int remainTime = remainParts.length > 1 ? Integer.parseInt(remainParts[1]) : 0;
-            int usedTime = originalTime - remainTime;
-            if(usedTime == 0)usedTime = originalTime;
-            System.out.println("CPU-" + cpuId + " 时钟中断：进程 " + currentPCB.getPid() + " 已使用时间片 " + usedTime + "/" + timeSlice);
+                //System.out.println("CPU-" + cpuId + " 时钟中断：进程 " + currentPCB.getPid() +" 已使用时间片 " + currentPCB.getTimeUsed() + "/" + timeSlice);
 
+                // 获取原始指令和剩余指令的时间差作为已使用时间片
+                String[] originalParts = currentPCB.getOriginalInstruction().split("\\s+");
+                String[] remainParts = currentPCB.getRemainInstruction().isEmpty() ?
+                        originalParts : currentPCB.getRemainInstruction().split("\\s+");
+                int originalTime = Integer.parseInt(originalParts[1]);
+                int remainTime = remainParts.length > 1 ? Integer.parseInt(remainParts[1]) : 0;
+                int usedTime = originalTime - remainTime;
+                if (usedTime == 0) usedTime = originalTime;
+                if(scheduler.getCurrentPolicy()==Scheduler.SchedulingPolicy.PRIORITY_Preemptive) {
+                    PCB nextProcess = scheduler.getNextProcess();
+                    if(nextProcess!=null&&nextProcess.getPriority()<currentPCB.getPriority()){
+                        System.out.println("CPU-" + cpuId + " 进程 " + currentPCB.getPid() + "被抢占 已使用时间片 " + usedTime + "/" + originalTime);
+                        currentPCB.setState(ProcessState.READY);
+                        scheduler.addReadyProcess(currentPCB);
+                        nextProcess.setState(ProcessState.RUNNING);
+                        changeProcess(nextProcess);
+                    }else if(nextProcess!=null){
+                        scheduler.putPCBback(nextProcess);
+                    }
+                }else {
+                    System.out.println("CPU-" + cpuId + " 时钟中断：进程 " + currentPCB.getPid() + " 已使用时间片 " + usedTime + "/" + originalTime);
+                    // 检查时间片是否用尽
+                    if (currentPCB.getTimeUsed() >= timeSlice) {
+                        System.out.println("CPU-" + cpuId + " 进程 " + currentPCB.getPid() + " 时间片用尽，进行进程切换");
 
-            
-            // 检查时间片是否用尽
-            if (currentPCB.getTimeUsed() >= timeSlice) {
-                System.out.println("CPU-" + cpuId + " 进程 " + currentPCB.getPid() + " 时间片用尽，进行进程切换");
+                        // 时间片用尽，将进程放回就绪队列
+                        currentPCB.setState(ProcessState.READY);
+                        currentPCB.resetTimeUsed();
 
-                // 时间片用尽，将进程放回就绪队列
-                currentPCB.setState(ProcessState.READY);
-                currentPCB.resetTimeUsed();
+                        // 如果不是最低优先级，降低优先级
+                        if (scheduler.getCurrentPolicy() == Scheduler.SchedulingPolicy.MLFQ && queueIndex < 3) {
+                            currentPCB.setCurrentQueue(queueIndex + 1);
+                            System.out.println("CPU-" + cpuId + " 进程 " + currentPCB.getPid() + " 优先级降低为 " + currentPCB.getCurrentQueue());
+                        }
 
-                // 如果不是最低优先级，降低优先级
-                if (scheduler.getCurrentPolicy() == Scheduler.SchedulingPolicy.MLFQ && queueIndex < 3) {
-                    currentPCB.setCurrentQueue(queueIndex + 1);
-                    System.out.println("CPU-" + cpuId + " 进程 " + currentPCB.getPid() + " 优先级降低为 " + currentPCB.getCurrentQueue());
+                        scheduler.addReadyProcess(currentPCB);
+
+                        // 请求新进程执行
+                        PCB nextProcess = scheduler.getNextProcess();
+                        if (nextProcess != null) {
+                            nextProcess.setState(ProcessState.RUNNING);
+                            changeProcess(nextProcess);
+                        } else {
+                            // 没有可用进程，CPU进入空闲状态
+                            currentPCB = null;
+                            System.out.println("CPU-" + cpuId + " 进入空闲状态");
+                        }
+                    }
                 }
-
-                scheduler.addReadyProcess(currentPCB);
-
-                // 请求新进程执行
-                PCB nextProcess = scheduler.getNextProcess();
-                if (nextProcess != null) {
-                    nextProcess.setState(ProcessState.RUNNING);
-                    changeProcess(nextProcess);
-                } else {
-                    // 没有可用进程，CPU进入空闲状态
-                    currentPCB = null;
-                    System.out.println("CPU-" + cpuId + " 进入空闲状态");
-                }
-            }
         }
     }
 
@@ -229,24 +238,23 @@ public class CPU extends Thread {
                         currentPCB.setOriginalInstruction(instruction);
                         currentPCB.setRemainInstruction(instruction);
                     }
+                    if(scheduler.getCurrentPolicy()!=Scheduler.SchedulingPolicy.RR&&scheduler.getCurrentPolicy()!=Scheduler.SchedulingPolicy.PRIORITY_Preemptive&&scheduler.getCurrentPolicy()!=Scheduler.SchedulingPolicy.MLFQ) {
+                            // 计算本次能执行的时间
+                            int remainingTimeSlice = currentPCB.getTimeSlice() - currentPCB.getTimeUsed();
+                            int executeTime = Math.min(computeTime, remainingTimeSlice);
 
-                    // 计算本次能执行的时间
-                    int remainingTimeSlice = currentPCB.getTimeSlice() - currentPCB.getTimeUsed();
-                    int executeTime = Math.min(computeTime, remainingTimeSlice);
-
-                    Thread.sleep(executeTime);
-                    currentPCB.incrementTimeUsed(executeTime);
-
-                    // 如果还有剩余时间未执行完，保存剩余时间
-                    if (executeTime < computeTime) {
-                        currentPCB.setRemainInstruction("C " + (computeTime - executeTime));
-                    }
-                    else{
-                        currentPCB.setRemainInstruction("");
-                    }
-
-                    // 如果是RR调度模式，执行时钟中断
-                    if (scheduler.getCurrentPolicy() == Scheduler.SchedulingPolicy.RR) {
+                            Thread.sleep(executeTime);
+                            currentPCB.setRemainInstruction("");
+                            currentPCB.incrementTimeUsed(executeTime);
+                    }else{
+                        Thread.sleep(Constants.CLOCK_INTERRUPT_INTERVAL_MS);
+                        currentPCB.incrementTimeUsed(Constants.CLOCK_INTERRUPT_INTERVAL_MS);
+                        // 如果还有剩余时间未执行完，保存剩余时间
+                        if (Constants.CLOCK_INTERRUPT_INTERVAL_MS < computeTime) {
+                            currentPCB.setRemainInstruction("C " + (computeTime - Constants.CLOCK_INTERRUPT_INTERVAL_MS));
+                        } else {
+                            currentPCB.setRemainInstruction("");
+                        }
                         handleClockInterrupt();
                     }
                     
