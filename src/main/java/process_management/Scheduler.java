@@ -14,7 +14,7 @@ public class Scheduler extends Thread {
 
 
 
-    public enum SchedulingPolicy { FCFS, SJF, RR, PRIORITY, MLFQ }
+    public enum SchedulingPolicy { FCFS, SJF, RR, PRIORITY, MLFQ ,PRIORITY_Preemptive}
     private static Scheduler instance;
     private List<BlockingQueue<PCB>> readyQueues; // 多级反馈队列
     private List<CPU> cpus; // 管理多个 CPU
@@ -112,7 +112,12 @@ public class Scheduler extends Thread {
                     timeSlices[0] = 100;
                     timeSlices[1] = 200;
                     timeSlices[2] = 400;
-                    timeSlices[3] = Integer.MAX_VALUE;
+                    timeSlices[3] = 800;
+                }
+                case PRIORITY_Preemptive -> {
+                    readyQueues.add(new PriorityBlockingQueue<>(11, Comparator.comparingInt(PCB::getPriority)
+                    ));
+                    timeSlices[0] = Integer.MAX_VALUE;
                 }
             }
             System.out.println("调度策略已设置为: " + policy);
@@ -290,6 +295,9 @@ public class Scheduler extends Thread {
 
     SchedulingPolicy getCurrentPolicy(){
         return currentPolicy;
+    }
+    public void putPCBback(PCB pcb){
+        readyQueues.get(pcb.getCurrentQueue()).add(pcb);
     }
 
 }
