@@ -49,12 +49,13 @@ public class Main {
         System.out.println("3. RR");
         System.out.println("4. PRIORITY");
         System.out.println("5. MLFQ（4个队列，优先级从高到低，时间片逐渐增多）");
+        System.out.println("6. PRIORITY_Preemptive");
         System.out.print("输入数字选择：");
         int choice = 0;
         while (true) {
             try {
                 choice = scanner.nextInt();
-                if (choice >= 1 && choice <= 5) break;
+                if (choice >= 1 && choice <= 6) break;
                 System.out.println("无效选择，请重新输入：");
             } catch (Exception e) {
                 scanner.next();
@@ -69,6 +70,7 @@ public class Main {
             case 3 -> scheduler.configure(Scheduler.SchedulingPolicy.RR);
             case 4 -> scheduler.configure(Scheduler.SchedulingPolicy.PRIORITY);
             case 5 -> scheduler.configure(Scheduler.SchedulingPolicy.MLFQ);
+            case 6 -> scheduler.configure(Scheduler.SchedulingPolicy.PRIORITY_Preemptive);
         }
 
         // 初始化 4 个 CPU
