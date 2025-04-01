@@ -144,6 +144,7 @@ public class FileSystemImpl implements FileDiskManagement {
             String key=scanner.nextLine();
             if(key.equals("Y")){
                 createFile(fileName, 1);
+                fileSystem.editFile(fileName);
                 break;
             }else if(key.equals("N")){
                 break;
