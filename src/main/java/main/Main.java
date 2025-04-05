@@ -17,8 +17,6 @@ public class Main {
     public static MemoryManagement memoryManagement = new MemoryManagementImpl(fileSystem);
 
     public static void main(String[] args) {
-        // 初始化文件系统和内存管理模块
-        MemoryManagement memoryManagement = new MemoryManagementImpl(fileSystem);
 
         // 初始化设备管理器
         DeviceManager deviceManager = new DeviceManager();
@@ -29,6 +27,12 @@ public class Main {
         // 初始化调度器
         Scheduler scheduler = Scheduler.getInstance();
 
+        Library.setFileSystem(fileSystem);
+        Library.setDeviceManager(deviceManager);
+        Library.setMemoryManagement(memoryManagement);
+        Library.setScheduler(scheduler);
+        Library.setInterruptRequestLine(interruptRequestLine);
+        
         int cpuNum = 0;//待输入的cpu个数
 
 
