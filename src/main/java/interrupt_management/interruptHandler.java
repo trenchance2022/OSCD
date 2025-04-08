@@ -3,79 +3,105 @@ package interrupt_management;
 import process_management.PCB;
 import process_management.ProcessState;
 import process_management.Scheduler;
+import process_management.CPU;
 
-public class interruptHandler {
+public class InterruptHandler {
     // 单例模式
-    private static interruptHandler instance;
+    private static InterruptHandler instance;
     
-    private interruptHandler() {}
+    private InterruptHandler() {}
     
-    public static synchronized interruptHandler getInstance() {
+    public static synchronized InterruptHandler getInstance() {
         if (instance == null) {
-            instance = new interruptHandler();
+            instance = new InterruptHandler();
         }
         return instance;
     }
 
-    /**
-     * 处理时钟中断
-     * @param currentPCB 当前运行的进程
-     * @param scheduler 调度器实例
-     * @return 是否需要进行进程切换
-     */
-    public boolean handleClockInterrupt(PCB currentPCB, Scheduler scheduler) {
-        if (currentPCB == null) {
-            return false;
-        }
+    // 处理时钟中断方法
+    public void handleClockInterrupt(CPU cpu, PCB currentPCB, Scheduler scheduler) {
+        if (currentPCB != null) {
+            // 获取当前队列的时间片
+            int queueIndex = currentPCB.getCurrentQueue();
+            int timeSlice = scheduler.getTimeSlice(queueIndex);
 
-        // 检查进程是否用完时间片
-        if (currentPCB.getTimeUsed() >= currentPCB.getTimeSlice()) {
-            // 时间片用完，需要进行进程切换
-            System.out.println("进程 " + currentPCB.getPid() + " 时间片用完");
+            // 获取原始指令和剩余指令的时间差作为已使用时间片
+            String[] originalParts = currentPCB.getOriginalInstruction().split("\\s+");
+            String[] remainParts = currentPCB.getRemainInstruction().isEmpty() ?
+                    originalParts : currentPCB.getRemainInstruction().split("\\s+");
+            int originalTime = Integer.parseInt(originalParts[1]);
+            int remainTime = remainParts.length > 1 ? Integer.parseInt(remainParts[1]) : 0;
+            int usedTime = originalTime - remainTime;
+            if (usedTime == 0) usedTime = originalTime;
             
-            // 降低优先级
-            int currentPriority = currentPCB.getPriority();
-            int newPriority = Math.min(currentPriority + 1, 3); // 最低优先级为3
-            currentPCB.setPriority(newPriority);
-            
-            // 重置进程状态
-            currentPCB.setState(ProcessState.READY);
-            currentPCB.resetTimeUsed();
-            
-            // 将进程重新加入就绪队列
-            scheduler.addReadyProcess(currentPCB);
-            
-            return true;
+            if(scheduler.getCurrentPolicy()==Scheduler.SchedulingPolicy.PRIORITY_Preemptive) {
+                PCB nextProcess = scheduler.getNextProcess();
+                if(nextProcess!=null && nextProcess.getPriority() < currentPCB.getPriority()) {
+                    System.out.println("CPU-" + cpu.getCpuId() + " 进程 " + currentPCB.getPid() + "被抢占 已使用时间片 " + usedTime + "/" + originalTime);
+                    currentPCB.setState(ProcessState.READY);
+                    scheduler.addReadyProcess(currentPCB);
+                    nextProcess.setState(ProcessState.RUNNING);
+                    cpu.changeProcess(nextProcess);
+                } else if(nextProcess!=null) {
+                    scheduler.putPCBback(nextProcess);
+                }
+            } else {
+                System.out.println("CPU-" + cpu.getCpuId() + " 时钟中断：进程 " + currentPCB.getPid() + " 已使用时间片 " + usedTime + "/" + originalTime);
+                // 检查时间片是否用尽
+                if (currentPCB.getTimeUsed() >= timeSlice) {
+                    System.out.println("CPU-" + cpu.getCpuId() + " 进程 " + currentPCB.getPid() + " 时间片用尽，进行进程切换");
+
+                    // 时间片用尽，将进程放回就绪队列
+                    currentPCB.setState(ProcessState.READY);
+                    currentPCB.resetTimeUsed();
+
+                    // 如果不是最低优先级，降低优先级
+                    if (scheduler.getCurrentPolicy() == Scheduler.SchedulingPolicy.MLFQ && queueIndex < 3) {
+                        currentPCB.setCurrentQueue(queueIndex + 1);
+                        System.out.println("CPU-" + cpu.getCpuId() + " 进程 " + currentPCB.getPid() + " 优先级降低为 " + currentPCB.getCurrentQueue());
+                    }
+
+                    scheduler.addReadyProcess(currentPCB);
+
+                    // 请求新进程执行
+                    PCB nextProcess = scheduler.getNextProcess();
+                    if (nextProcess != null) {
+                        nextProcess.setState(ProcessState.RUNNING);
+                        cpu.changeProcess(nextProcess);
+                    } else {
+                        // 没有可用进程，CPU进入空闲状态
+                        System.out.println("CPU-" + cpu.getCpuId() + " 进入空闲状态");
+                    }
+                }
+            }
+        }
+    }
+
+    // 处理设备中断方法
+    public void handleDeviceInterrupt(PCB pcb, Scheduler scheduler) {
+        pcb.setState(ProcessState.READY);
+        scheduler.addReadyProcess(pcb);
+        System.out.println("设备中断：进程 " + pcb.getPid() + " I/O操作完成，进入就绪状态");
+    }
+
+    // 处理IO中断方法
+    public void handleIOInterrupt(PCB pcb, String fileName, Scheduler scheduler, boolean isReadOperation) {
+        // 判断是否需要释放读锁或写锁
+        file_disk_management.FileLockManager lockManager = file_disk_management.FileLockManager.getInstance();
+        
+        if (isReadOperation) {
+            // 释放读锁
+            lockManager.releaseReadLock(fileName, pcb.getPid());
+            System.out.println("IO中断：进程 " + pcb.getPid() + " 读取文件 " + fileName + " 完成");
+        } else {
+            // 释放写锁
+            lockManager.releaseWriteLock(fileName, pcb.getPid());
+            System.out.println("IO中断：进程 " + pcb.getPid() + " 写入文件 " + fileName + " 完成");
         }
         
-        return false;
+        // 然后设置进程状态并加入就绪队列
+        pcb.setState(ProcessState.READY);
+        scheduler.addReadyProcess(pcb);
     }
-
-    /**
-     * 处理设备中断
-     * @param interrupt 设备中断对象
-     */
-    public void handleDeviceInterrupt(deviceInterrupt interrupt) {
-        PCB pcb = interrupt.getPcb();
-        if (pcb != null) {
-            // 将进程状态改为就绪
-            pcb.setState(ProcessState.READY);
-            pcb.resetTimeUsed();
-            
-            // 将进程放入就绪队列
-            Scheduler.getInstance().addReadyProcess(pcb);
-        }
-    }
-
-    /**
-     * 处理IO中断
-     * @param deviceId 设备ID
-     * @param currentPCB 当前运行的进程
-     */
-    public void handleIOInterrupt(int deviceId, PCB currentPCB) {
-        if (currentPCB != null) {
-            System.out.println("处理设备 " + deviceId + " 的IO中断，进程ID: " + currentPCB.getPid());
-            // TODO: 实现IO中断处理逻辑
-        }
-    }
+    
 }

@@ -1,8 +1,8 @@
 package device_management;
 
 import process_management.PCB;
-import process_management.ProcessState;
 import process_management.Scheduler;
+import interrupt_management.InterruptHandler;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -27,10 +27,9 @@ public class IODevice extends Thread {
             while (!isInterrupted()) {
                 IORequest request = requests.take();
                 Thread.sleep(request.getProcessingTime());
-                // TODO: 设备中断
+                // 触发设备中断
                 PCB pcb = request.getPcb();
-                pcb.setState(ProcessState.READY);
-                Scheduler.getInstance().addReadyProcess(pcb);
+                InterruptHandler.getInstance().handleDeviceInterrupt(pcb, Scheduler.getInstance());
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();

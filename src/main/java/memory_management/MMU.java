@@ -1,11 +1,8 @@
 package memory_management;
 
 import process_management.PCB;
-import file_disk_management.FileDiskManagement;
-import file_disk_management.FileSystemImpl;
 import main.Constants;
 
-import static java.lang.System.exit;
 import static main.Main.fileSystem;
 
 // 每个CPU都有一个MMU，MMU负责地址转换，内含TLB缓冲区，页表寄存器

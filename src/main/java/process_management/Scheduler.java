@@ -291,7 +291,7 @@ public class Scheduler extends Thread {
     }
 
 
-    SchedulingPolicy getCurrentPolicy(){
+    public SchedulingPolicy getCurrentPolicy(){
         return currentPolicy;
     }
     public void putPCBback(PCB pcb){

@@ -1,12 +1,12 @@
 package process_management;
 
 import device_management.DeviceManager;
-import interrupt_management.Interrupt;
+import interrupt_management.InterruptHandler;
 import main.Constants;
 import main.Main;
 import memory_management.MMU;
 import memory_management.MemoryManagement;
-import java.util.concurrent.BlockingQueue;
+
 import java.util.Random;
 
 public class CPU extends Thread {
@@ -15,7 +15,6 @@ public class CPU extends Thread {
     private PCB currentPCB; // 当前正在执行的进程
     private Scheduler scheduler; // 调度器
     private DeviceManager deviceManager; // 设备管理器
-    private BlockingQueue<Interrupt> interruptQueue; // 中断队列
     private MemoryManagement memoryManagement; // 内存管理模块
     private final MMU mmu = new MMU(); // 内存管理单元
 
@@ -109,68 +108,6 @@ public class CPU extends Thread {
         return instruction.toString();
     }
 
-    // 处理时钟中断
-    private void handleClockInterrupt() {
-        if (currentPCB != null) {
-                // 获取当前队列的时间片
-                int queueIndex = currentPCB.getCurrentQueue();
-                int timeSlice = scheduler.getTimeSlice(queueIndex);
-
-
-                //System.out.println("CPU-" + cpuId + " 时钟中断：进程 " + currentPCB.getPid() +" 已使用时间片 " + currentPCB.getTimeUsed() + "/" + timeSlice);
-
-                // 获取原始指令和剩余指令的时间差作为已使用时间片
-                String[] originalParts = currentPCB.getOriginalInstruction().split("\\s+");
-                String[] remainParts = currentPCB.getRemainInstruction().isEmpty() ?
-                        originalParts : currentPCB.getRemainInstruction().split("\\s+");
-                int originalTime = Integer.parseInt(originalParts[1]);
-                int remainTime = remainParts.length > 1 ? Integer.parseInt(remainParts[1]) : 0;
-                int usedTime = originalTime - remainTime;
-                if (usedTime == 0) usedTime = originalTime;
-                if(scheduler.getCurrentPolicy()==Scheduler.SchedulingPolicy.PRIORITY_Preemptive) {
-                    PCB nextProcess = scheduler.getNextProcess();
-                    if(nextProcess!=null&&nextProcess.getPriority()<currentPCB.getPriority()){
-                        System.out.println("CPU-" + cpuId + " 进程 " + currentPCB.getPid() + "被抢占 已使用时间片 " + usedTime + "/" + originalTime);
-                        currentPCB.setState(ProcessState.READY);
-                        scheduler.addReadyProcess(currentPCB);
-                        nextProcess.setState(ProcessState.RUNNING);
-                        changeProcess(nextProcess);
-                    }else if(nextProcess!=null){
-                        scheduler.putPCBback(nextProcess);
-                    }
-                }else {
-                    System.out.println("CPU-" + cpuId + " 时钟中断：进程 " + currentPCB.getPid() + " 已使用时间片 " + usedTime + "/" + originalTime);
-                    // 检查时间片是否用尽
-                    if (currentPCB.getTimeUsed() >= timeSlice) {
-                        System.out.println("CPU-" + cpuId + " 进程 " + currentPCB.getPid() + " 时间片用尽，进行进程切换");
-
-                        // 时间片用尽，将进程放回就绪队列
-                        currentPCB.setState(ProcessState.READY);
-                        currentPCB.resetTimeUsed();
-
-                        // 如果不是最低优先级，降低优先级
-                        if (scheduler.getCurrentPolicy() == Scheduler.SchedulingPolicy.MLFQ && queueIndex < 3) {
-                            currentPCB.setCurrentQueue(queueIndex + 1);
-                            System.out.println("CPU-" + cpuId + " 进程 " + currentPCB.getPid() + " 优先级降低为 " + currentPCB.getCurrentQueue());
-                        }
-
-                        scheduler.addReadyProcess(currentPCB);
-
-                        // 请求新进程执行
-                        PCB nextProcess = scheduler.getNextProcess();
-                        if (nextProcess != null) {
-                            nextProcess.setState(ProcessState.RUNNING);
-                            changeProcess(nextProcess);
-                        } else {
-                            // 没有可用进程，CPU进入空闲状态
-                            currentPCB = null;
-                            System.out.println("CPU-" + cpuId + " 进入空闲状态");
-                        }
-                    }
-                }
-        }
-    }
-
     // 解析并执行指令
     // 在 CPU 类中完善 executeInstruction 方法
     private void executeInstruction(String instruction) {
@@ -213,8 +150,8 @@ public class CPU extends Thread {
                         } else {
                             currentPCB.setRemainInstruction("");
                         }
-                        // TODO: 时钟中断
-                        handleClockInterrupt();
+                        // 触发时钟中断
+                        InterruptHandler.getInstance().handleClockInterrupt(this, currentPCB, scheduler);
                     }
                     
                     break;
@@ -236,11 +173,8 @@ public class CPU extends Thread {
                             try {
                                 Thread.sleep(readtime);
                                 System.out.println("进程"+pcbToRelease.getPid()+"读取完毕");
-                                // 读取完成后，释放锁并将进程加入就绪队列
-                                // TODO: IO中断
-                                file_disk_management.FileLockManager.getInstance().releaseReadLock(fileToRead, pcbToRelease.getPid());
-                                pcbToRelease.setState(ProcessState.READY);
-                                scheduler.addReadyProcess(pcbToRelease);
+                                // 读取完成后，触发IO中断，第四个参数为true表示是读操作
+                                InterruptHandler.getInstance().handleIOInterrupt(pcbToRelease, fileToRead, scheduler, true);
                             } catch (InterruptedException e) {
                                 Thread.currentThread().interrupt();
                             }
@@ -290,9 +224,8 @@ public class CPU extends Thread {
                             try {
                                 Thread.sleep(writeTime);
                                 System.out.println("进程"+pcbToRelease.getPid()+"写入完毕");
-                                file_disk_management.FileLockManager.getInstance().releaseWriteLock(fileToWrite, pcbToRelease.getPid());
-                                pcbToRelease.setState(ProcessState.READY);
-                                scheduler.addReadyProcess(pcbToRelease);
+                                // 写入完成后，触发IO中断，第四个参数为false表示是写操作
+                                InterruptHandler.getInstance().handleIOInterrupt(pcbToRelease, fileToWrite, scheduler, false);
                             } catch (InterruptedException e) {
                                 Thread.currentThread().interrupt();
                             }
