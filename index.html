@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+	<head>
+		<meta charset="UTF-8">
+		<title>操作系统模拟器</title>
+		<link rel="stylesheet" href="css/style.css">
+	</head>
+	<body>
+		<div class="background-blobs">
+			<div class="blob blob1"></div>
+			<div class="blob blob2"></div>
+			<div class="blob blob3"></div>
+			<div class="blob blob4"></div>
+		</div>
+
+		<div class="container">
+			<div class="box" id="process">
+				<h2>进程管理</h2>
+				<table class="process-table">
+					<thead>
+						<tr>
+							<th>核</th>
+							<th>PID</th>
+							<th>名称</th>
+							<th>指令</th>
+							<th>剩余时间</th>
+							<th>优先级</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<td>核1</td>
+							<td colspan="5">--</td>
+						</tr>
+						<tr>
+							<td>核2</td>
+							<td colspan="5">--</td>
+						</tr>
+						<tr>
+							<td>核3</td>
+							<td colspan="5">--</td>
+						</tr>
+						<tr>
+							<td>核4</td>
+							<td colspan="5">--</td>
+						</tr>
+					</tbody>
+				</table>
+				<div class="queue"><strong>CPU running:</strong> 进程A</div>
+				<div class="queue"><strong>Ready queue:</strong> 进程B, 进程C</div>
+				<div class="queue"><strong>Waiting queue:</strong> 进程D</div>
+			</div>
+
+			<div class="box" id="memory">
+				<h2>内存管理</h2>
+				<select>
+					<option>核1</option>
+					<option>核2</option>
+					<option>核3</option>
+					<option>核4</option>
+				</select>
+				<div class="grid-64" id="memory-grid"></div>
+			</div>
+
+			<script src="js/memory.js"></script>
+
+			<div class="box" id="filesystem">
+				<h2>文件目录</h2>
+				<ul class="tree">
+					<li>root
+						<ul>
+							<li>program1</li>
+						</ul>
+					</li>
+				</ul>
+			</div>
+
+			<div class="box" id="shell">
+				<h2>Shell</h2>
+				<div class="terminal" id="terminal">
+					<p id="command-line">root&gt; <span contenteditable="true" id="input-line"></span></p>
+				</div>
+			</div>
+			<script src="js/shell.js"></script>
+			<div class="box" id="disk">
+				<h2>磁盘管理</h2>
+				<div class="grid-16" id="disk-grid"></div>
+			</div>
+
+			<script src="js/disk.js"></script>
+
+			<div class="box" id="devices">
+				<h2>设备列表</h2>
+				<table class="device-table">
+					<thead>
+						<tr>
+							<th>设备</th>
+							<th>运行进程</th>
+							<th>等待队列</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr>
+							<td>device1</td>
+							<td>prog1</td>
+							<td>prog2</td>
+						</tr>
+						<tr>
+							<td>device2</td>
+							<td>-</td>
+							<td>prog3</td>
+						</tr>
+						<tr>
+							<td>device3</td>
+							<td>prog4</td>
+							<td>-</td>
+						</tr>
+					</tbody>
+				</table>
+			</div>
+		</div>
+	</body>
+</html>
