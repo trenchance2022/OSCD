@@ -373,6 +373,11 @@ public class CPU extends Thread {
         return currentPCB;
     }
 
+    // 设置当前正在执行的进程
+    public void setCurrentPCB(PCB currentPCB) {
+        this.currentPCB = currentPCB;
+    }
+
     // 获取内存管理单元
     public MMU getMMU() {
         return mmu;

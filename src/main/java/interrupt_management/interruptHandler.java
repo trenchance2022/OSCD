@@ -70,6 +70,7 @@ public class InterruptHandler {
                         cpu.changeProcess(nextProcess);
                     } else {
                         // 没有可用进程，CPU进入空闲状态
+                        cpu.setCurrentPCB(null);
                         System.out.println("CPU-" + cpu.getCpuId() + " 进入空闲状态");
                     }
                 }
