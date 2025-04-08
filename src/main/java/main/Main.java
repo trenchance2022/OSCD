@@ -1,13 +1,11 @@
 package main;
 
-import file_disk_management.FileDiskManagement;
 import file_disk_management.FileSystemImpl;
 import memory_management.MemoryManagement;
 import memory_management.MemoryManagementImpl;
 import process_management.CPU;
 import process_management.Scheduler;
 import device_management.DeviceManager;
-import interrupt_management.InterruptRequestLine;
 
 import java.util.Scanner;
 
@@ -21,9 +19,6 @@ public class Main {
         // 初始化设备管理器
         DeviceManager deviceManager = new DeviceManager();
 
-        // 初始化中断请求线
-        InterruptRequestLine interruptRequestLine = InterruptRequestLine.getInstance();
-
         // 初始化调度器
         Scheduler scheduler = Scheduler.getInstance();
 
@@ -31,7 +26,6 @@ public class Main {
         Library.setDeviceManager(deviceManager);
         Library.setMemoryManagement(memoryManagement);
         Library.setScheduler(scheduler);
-        Library.setInterruptRequestLine(interruptRequestLine);
         
         int cpuNum = 0;//待输入的cpu个数
 
@@ -79,7 +73,7 @@ public class Main {
 
         // 初始化 4 个 CPU
         for (int i = 0; i < cpuNum; i++) {
-            CPU cpu = new CPU(i, scheduler, deviceManager, interruptRequestLine);
+            CPU cpu = new CPU(i, scheduler, deviceManager);
             scheduler.addCPU(cpu); // 将 CPU 注册到调度器
             cpu.start(); // 启动 CPU 线程
         }

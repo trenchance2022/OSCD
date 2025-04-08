@@ -27,6 +27,7 @@ public class IODevice extends Thread {
             while (!isInterrupted()) {
                 IORequest request = requests.take();
                 Thread.sleep(request.getProcessingTime());
+                // TODO: 设备中断
                 PCB pcb = request.getPcb();
                 pcb.setState(ProcessState.READY);
                 Scheduler.getInstance().addReadyProcess(pcb);

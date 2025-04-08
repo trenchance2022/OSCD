@@ -1,9 +1,7 @@
 package process_management;
 
 import device_management.DeviceManager;
-import file_disk_management.FileSystemImpl;
 import interrupt_management.Interrupt;
-import interrupt_management.InterruptRequestLine;
 import main.Constants;
 import main.Main;
 import memory_management.MMU;
@@ -29,11 +27,10 @@ public class CPU extends Thread {
         return cpuNum;
     }
 
-    public CPU(int cpuId, Scheduler scheduler, DeviceManager deviceManager, InterruptRequestLine interruptQueue) {
+    public CPU(int cpuId, Scheduler scheduler, DeviceManager deviceManager) {
         this.cpuId = cpuId;
         this.scheduler = scheduler;
         this.deviceManager = deviceManager;
-        this.interruptQueue = interruptQueue.registerCPU(cpuId);
         this.memoryManagement = Main.memoryManagement;
     }
 
@@ -41,12 +38,6 @@ public class CPU extends Thread {
     public void run() {
         try {
             while (true) {
-                // 检查中断队列，处理中断
-                while (!interruptQueue.isEmpty()) {
-                    Interrupt interrupt = interruptQueue.take();
-                    handleInterrupt(interrupt);
-                }
-
                 // 执行当前进程
                 if (currentPCB != null) {
                     execute();
@@ -118,20 +109,6 @@ public class CPU extends Thread {
         return instruction.toString();
     }
 
-    // 处理中断
-    private void handleInterrupt(Interrupt interrupt) {
-        switch (interrupt.getType()) {
-            case CLOCK:
-                handleClockInterrupt();
-                break;
-            case IO:
-                handleIOInterrupt(interrupt);
-                break;
-            default:
-                System.out.println("CPU-" + cpuId + " 未知中断类型: " + interrupt.getType());
-        }
-    }
-
     // 处理时钟中断
     private void handleClockInterrupt() {
         if (currentPCB != null) {
@@ -194,25 +171,6 @@ public class CPU extends Thread {
         }
     }
 
-    // 处理I/O中断
-    private void handleIOInterrupt(Interrupt interrupt) {
-        if (currentPCB != null) {
-            System.out.println("CPU-" + cpuId + " 进程 " + currentPCB.getPid() + " 完成I/O操作，重新加入就绪队列");
-            currentPCB.setState(ProcessState.READY);
-            scheduler.addReadyProcess(currentPCB);
-
-            // 请求新进程执行
-            PCB nextProcess = scheduler.getNextProcess();
-            if (nextProcess != null) {
-                nextProcess.setState(ProcessState.RUNNING);
-                changeProcess(nextProcess);
-            } else {
-                currentPCB = null;
-                System.out.println("CPU-" + cpuId + " 进入空闲状态");
-            }
-        }
-    }
-
     // 解析并执行指令
     // 在 CPU 类中完善 executeInstruction 方法
     private void executeInstruction(String instruction) {
@@ -255,6 +213,7 @@ public class CPU extends Thread {
                         } else {
                             currentPCB.setRemainInstruction("");
                         }
+                        // TODO: 时钟中断
                         handleClockInterrupt();
                     }
                     
@@ -278,6 +237,7 @@ public class CPU extends Thread {
                                 Thread.sleep(readtime);
                                 System.out.println("进程"+pcbToRelease.getPid()+"读取完毕");
                                 // 读取完成后，释放锁并将进程加入就绪队列
+                                // TODO: IO中断
                                 file_disk_management.FileLockManager.getInstance().releaseReadLock(fileToRead, pcbToRelease.getPid());
                                 pcbToRelease.setState(ProcessState.READY);
                                 scheduler.addReadyProcess(pcbToRelease);

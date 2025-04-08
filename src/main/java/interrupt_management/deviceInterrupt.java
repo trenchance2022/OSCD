@@ -8,7 +8,7 @@ public class deviceInterrupt extends Interrupt {
     private PCB pcb;
 
     public deviceInterrupt(int deviceId, PCB pcb) {
-        super(InterruptType.DEVICE, deviceId);
+        super(InterruptType.DEVICE);
         this.pcb = pcb;
     }
 
@@ -27,8 +27,6 @@ public class deviceInterrupt extends Interrupt {
         
         // 将进程放入就绪队列
         Scheduler.getInstance().addReadyProcess(pcb);
-        
-        System.out.println("设备中断处理: 设备 " + getDeviceId() + 
-                " 的IO操作完成，进程 " + pcb.getPid() + " 已放回就绪队列");
+
     }
 }

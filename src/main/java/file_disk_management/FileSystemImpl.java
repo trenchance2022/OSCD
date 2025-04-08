@@ -3,6 +3,8 @@ package file_disk_management;
 import java.util.Scanner;
 import java.util.Arrays;
 
+import static main.Main.fileSystem;
+
 public class FileSystemImpl implements FileDiskManagement {
     public static Disk disk;
     public static Directory root;

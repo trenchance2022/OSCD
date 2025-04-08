@@ -1,7 +1,6 @@
 package main;
 import device_management.DeviceManager;
 import file_disk_management.FileSystemImpl;
-import interrupt_management.InterruptRequestLine;
 import lombok.Data;
 import lombok.Getter;
 import memory_management.MemoryManagement;
@@ -17,8 +16,6 @@ public class Library {
     private static DeviceManager deviceManager;
     //调度器
     private static Scheduler scheduler;
-    //中断请求线
-    private static InterruptRequestLine interruptRequestLine;
 
     public static FileSystemImpl getFileSystem() {
         return fileSystem;
@@ -50,14 +47,6 @@ public class Library {
 
     public static void setScheduler(Scheduler scheduler) {
         Library.scheduler = scheduler;
-    }
-
-    public static InterruptRequestLine getInterruptRequestLine() {
-        return interruptRequestLine;
-    }
-
-    public static void setInterruptRequestLine(InterruptRequestLine interruptRequestLine) {
-        Library.interruptRequestLine = interruptRequestLine;
     }
 
 }

@@ -64,9 +64,6 @@ public class interruptHandler {
             
             // 将进程放入就绪队列
             Scheduler.getInstance().addReadyProcess(pcb);
-            
-            System.out.println("设备中断处理: 设备 " + interrupt.getDeviceId() + 
-                    " 的IO操作完成，进程 " + pcb.getPid() + " 已放回就绪队列");
         }
     }
 
