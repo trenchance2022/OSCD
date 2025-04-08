@@ -1,4 +1,3 @@
-// 模拟内存块内容（你可以换成从后台传的数据）
 const memoryData = [
   45, 103, 104, 105, 106, 107, 46, 47,
   102, "", 10, 5, 7, "", "", "",
@@ -10,7 +9,6 @@ const memoryData = [
   "", "", "", "", "", "", "", ""
 ];
 
-// 数值映射颜色（简化版）
 function getColorClass(value) {
   if (value === "") return "color-empty";
   if (value === 0) return "color-0";
@@ -21,10 +19,9 @@ function getColorClass(value) {
   if (value === 10) return "color-5";
   if (value === 45 || value === 46 || value === 47) return "color-6";
   if (value >= 100) return "color-7";
-  return "color-8"; // default
+  return "color-8"; 
 }
 
-// 动态生成内存块
 const grid = document.getElementById('memory-grid');
 memoryData.forEach(val => {
   const div = document.createElement('div');

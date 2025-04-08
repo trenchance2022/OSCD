@@ -1,4 +1,3 @@
-// 模拟内存块内容（你可以换成从后台传的数据）
 const diskData = [
   5, 45, 104, 10, "", 1, 7, 7,
   102, "", 10, 5, 7, "", 10, "",
@@ -10,7 +9,6 @@ const diskData = [
   "", "", "", "", "", "", "", ""
 ];
 
-// 数值映射颜色（简化版）
 function getColorClass(value) {
   if (value === "") return "color-empty";
   if (value === 0) return "color-0";
@@ -21,10 +19,9 @@ function getColorClass(value) {
   if (value === 10) return "color-5";
   if (value === 45 || value === 46 || value === 47) return "color-6";
   if (value >= 100) return "color-7";
-  return "color-8"; // default
+  return "color-8"; 
 }
 
-// 动态生成内存块
 const diskGrid = document.getElementById('disk-grid');
 diskData.forEach(val => {
   const div = document.createElement('div');
@@ -33,7 +30,7 @@ diskData.forEach(val => {
   diskGrid.appendChild(div);
 });
 
-const requiredBlocks = 64; // 例如，我们期望有64个块
+const requiredBlocks = 64; 
 while (diskData.length < requiredBlocks) {
-  diskData.push(""); // 添加空块
+  diskData.push(""); 
 }

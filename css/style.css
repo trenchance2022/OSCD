@@ -1,6 +1,6 @@
 body {
 	font-family: "Arial", sans-serif;
-	background-color: #fefefe; /* 白底 */
+	background-color: #fefefe;
 	margin: 0;
 	padding: 10px;
 	position: relative;
@@ -22,21 +22,21 @@ body {
 	width: 300px;
 	height: 300px;
 	border-radius: 50%;
-	filter: blur(80px); /* 缩小模糊，保留彩色感 */
+	filter: blur(80px); 
 	opacity: 0.7;
 	animation: floatBlob 10s infinite ease-in-out;
-	mix-blend-mode: multiply; /* 关键：增强颜色融合 */
+	mix-blend-mode: multiply; 
 }
 
 .blob1 {
-	background: #32e89e; /* 更鲜亮的绿色 */
+	background: #32e89e; 
 	top: 10%;
 	left: 5%;
 	animation-delay: 0s;
 }
 
 .blob2 {
-	background: #b466ff; /* 鲜亮紫色 */
+	background: #b466ff; 
 	top: 20%;
 	right: 10%;
 	animation-delay: 5s;
@@ -44,8 +44,8 @@ body {
 
 .blob3 {
 	background: #3c8cff;
-	bottom: 5%;   /* 更靠近底部 */
-	right: 35%;   /* 从 left 改为 right，靠右一点 */
+	bottom: 5%;   
+	right: 35%;   
 	animation-delay: 10s;
 }
 
@@ -126,7 +126,6 @@ h2 {
 	margin: 3px 0;
 }
 
-/* Memory & Disk Grids */
 .grid-16 {
 	display: grid;
 	grid-template-columns: repeat(8, 40px);
@@ -199,17 +198,14 @@ h2 {
 
 .color-empty {
 	background-color: #e0e0e0;
-	/* 比如淡灰色 */
 }
 
-/* File Tree */
 .tree {
 	font-family: monospace;
 	font-size: 14px;
 	padding-left: 20px;
 }
 
-/* Terminal */
 .terminal {
 	background-color: rgba(0, 0, 0, 0.7);
 	color: #9f9;
