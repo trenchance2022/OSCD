@@ -10,21 +10,12 @@ import memory_management.MemoryManagement;
 import java.util.Random;
 
 public class CPU extends Thread {
-    private static int cpuNum;//当前CPU个数
     private int cpuId; // CPU 的唯一标识符
     private PCB currentPCB; // 当前正在执行的进程
     private Scheduler scheduler; // 调度器
     private DeviceManager deviceManager; // 设备管理器
     private MemoryManagement memoryManagement; // 内存管理模块
     private final MMU mmu = new MMU(); // 内存管理单元
-
-    public static void setCpuNum(int cpuNum) {
-        CPU.cpuNum = cpuNum;
-    }
-
-    public static int getCpuNum() {
-        return cpuNum;
-    }
 
     public CPU(int cpuId, Scheduler scheduler, DeviceManager deviceManager) {
         this.cpuId = cpuId;

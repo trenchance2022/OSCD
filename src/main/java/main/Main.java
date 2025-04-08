@@ -71,13 +71,12 @@ public class Main {
             case 6 -> scheduler.configure(Scheduler.SchedulingPolicy.PRIORITY_Preemptive);
         }
 
-        // 初始化 4 个 CPU
+        // 初始化 CPU
         for (int i = 0; i < cpuNum; i++) {
             CPU cpu = new CPU(i, scheduler, deviceManager);
             scheduler.addCPU(cpu); // 将 CPU 注册到调度器
             cpu.start(); // 启动 CPU 线程
         }
-        CPU.setCpuNum(cpuNum);// 设置当前cpu个数
 
         // 启动 Shell
         Shell shell = new Shell(fileSystem, memoryManagement, deviceManager);
