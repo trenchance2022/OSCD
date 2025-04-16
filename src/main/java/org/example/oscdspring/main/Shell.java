@@ -201,7 +201,7 @@ public class Shell {
                 logEmitterService.sendLog("Unknown command.");
         }
         if (!"vi".equals(parts[0])) {
-            //logEmitterService.sendLog("PROMPT:" + fileSystem.getCurrentPath() + ">");
+            logEmitterService.sendLog("PROMPT:" + fileSystem.getCurrentPath() + ">");
         }
     }
 
