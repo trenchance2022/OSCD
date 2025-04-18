@@ -1,4 +1,4 @@
-body {
+这是现在的css代码，，请你修改，使得每行有16个block，block大小可以相应缩小一些：body {
 	font-family: "Arial", sans-serif;
 	background-color: #fefefe;
 	margin: 0;
@@ -125,33 +125,42 @@ h2 {
 
 .grid-16 {
 	display: grid;
-	grid-template-columns: repeat(8, 40px);
-	grid-template-rows: repeat(8, 40px);
-	gap: 5px;
+	grid-template-columns: repeat(16, 1fr); /* 每行16格，平均分配宽度 */
+	gap: 4px;
 	margin-top: 10px;
+	overflow-y: auto;
+	max-height: 100%; /* 支持垂直滚动 */
+	overflow-x: hidden; /* 禁止水平滚动 */
+	padding-right: 25px;
 }
+
 
 .grid-64 {
 	display: grid;
-	grid-template-columns: repeat(8, 40px);
-	grid-template-rows: repeat(8, 40px);
-	gap: 5px;
+	grid-template-columns: repeat(16, 1fr); /* 每行16格，平均分配宽度 */
+	gap: 4px;
 	margin-top: 10px;
+	overflow-y: hidden;
+	max-height: 100%; /* 支持垂直滚动 */
+	overflow-x: hidden; /* 禁止水平滚动 */
+	padding-right: 25px;
+	padding-bottom: 25px;
 }
 
 .block {
-	width: 40px;
-	height: 40px;
-	border-radius: 6px;
+	aspect-ratio: 1 / 1; /* 保持正方形 */
+	width: 100%;         /* 填满单元格 */
+	border-radius: 4px;
 	display: flex;
 	justify-content: center;
 	align-items: center;
-	font-size: 14px;
+	font-size: 12px;
 	font-weight: bold;
 	color: #222;
 	border: 1px solid rgba(255, 255, 255, 0.2);
-	box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
+
 
 .color-0 {
 	background-color: #ffccff;
@@ -310,3 +319,12 @@ pre.tree {
 	white-space: pre;
 }
 
+#disk {
+	overflow-y: auto;
+	overflow-x: hidden;
+}
+
+#memory {
+	overflow-y: hidden;
+	overflow-x: hidden;
+}

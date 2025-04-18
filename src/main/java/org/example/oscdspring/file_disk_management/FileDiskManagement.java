@@ -1,5 +1,7 @@
 package org.example.oscdspring.file_disk_management;
 
+import java.util.List;
+
 public interface FileDiskManagement {
 
         // 创建文件
@@ -59,5 +61,8 @@ public interface FileDiskManagement {
 
         //返回文件占用磁盘块号
         int[] getFileDiskBlock(String filename);
+
+        // 返回磁盘占用块号
+        List<Integer> getOccupiedBlockIndices();
 
 }

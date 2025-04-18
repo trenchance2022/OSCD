@@ -3,6 +3,7 @@ package org.example.oscdspring.file_disk_management;
 import org.example.oscdspring.main.Constants;
 import org.example.oscdspring.util.LogEmitterService;
 
+import java.util.List;
 import java.util.Random;
 
 class Disk {
@@ -75,6 +76,11 @@ class Disk {
     public void displayDiskInfo() {
         LogEmitterService.getInstance().sendLog("Occupied blocks: " + bitmap.getOccupiedBlocks() + ", Free blocks: " + bitmap.getFreeBlocks());
         bitmap.displayBitmap();
+    }
+
+    // 获取磁盘的占用块号
+    public List<Integer> getOccupiedBlockIndices() {
+        return bitmap.getOccupiedBlockIndices();
     }
 
     public int getOccupiedBlocks() {

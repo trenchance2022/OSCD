@@ -1,31 +1,51 @@
-const memoryData = [
-  45, 103, 104, 105, 106, 107, 46, 47,
-  102, "", 10, 5, 7, "", "", "",
-  "", "", 1, 0, 4, 1, 0, "",
-  "", "", 1, 0, "", 1, "", "",
-  "", "", 1, "", "", "", 1, "",
-  "", "", "", "", "", "", "", "",
-  "", "", "", "", "", "", "", "",
-  "", "", "", "", "", "", "", ""
-];
+document.addEventListener("DOMContentLoaded", function () {
+  const memoryGrid = document.getElementById("memory-grid");
 
-function getColorClass(value) {
-  if (value === "") return "color-empty";
-  if (value === 0) return "color-0";
-  if (value === 1) return "color-1";
-  if (value === 4) return "color-2";
-  if (value === 5) return "color-3";
-  if (value === 7) return "color-4";
-  if (value === 10) return "color-5";
-  if (value === 45 || value === 46 || value === 47) return "color-6";
-  if (value >= 100) return "color-7";
-  return "color-8"; 
-}
+  document.addEventListener("snapshot-update", function (event) {
+    const snapshot = event.detail;
+    const memory = snapshot.memoryManagement;
+    const frameInfo = memory.frameInfo || [];
+    const totalFrames = memory.totalFrames || 64;
 
-const grid = document.getElementById('memory-grid');
-memoryData.forEach(val => {
-  const div = document.createElement('div');
-  div.classList.add('block', getColorClass(val));
-  div.textContent = val !== "" ? val : "";
-  grid.appendChild(div);
+    memoryGrid.innerHTML = ""; // 清空旧显示
+
+    // 构建 pid 到颜色 class 的映射
+    const colorClasses = [
+      "color-0", "color-1", "color-2", "color-3",
+      "color-4", "color-5", "color-6", "color-7", "color-9"
+    ];
+    const pidColorMap = {};
+    let colorIndex = 0;
+
+    // 构建 frameId 到 frame 的完整映射
+    const frameMap = {};
+    frameInfo.forEach(frame => {
+      const pid = frame.pid;
+      const frameId = frame.frameId;
+      frameMap[frameId] = frame;
+      if (!(pid in pidColorMap)) {
+        pidColorMap[pid] = colorClasses[colorIndex % colorClasses.length];
+        colorIndex++;
+      }
+    });
+
+    for (let i = 0; i < totalFrames; i++) {
+      const div = document.createElement("div");
+      div.classList.add("block");
+      div.style.pointerEvents = "auto"; // 保证 hover 时 tooltip 能出现
+
+      if (frameMap.hasOwnProperty(i)) {
+        const { pid, page } = frameMap[i];
+        div.classList.add(pidColorMap[pid]);
+        div.textContent = pid;
+        div.title = `Frame: ${i}\nPID: ${pid}\nPage: ${page}`;
+      } else {
+        div.classList.add("color-empty");
+        div.textContent = "";
+        div.title = `Frame: ${i} (空闲)`;
+      }
+
+      memoryGrid.appendChild(div);
+    }
+  });
 });

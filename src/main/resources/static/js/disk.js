@@ -1,36 +1,24 @@
-const diskData = [
-  5, 45, 104, 10, "", 1, 7, 7,
-  102, "", 10, 5, 7, "", 10, "",
-  "", "", 1, 0, 4, 1, 0, "",
-  "", "", 105, 0, 5, "", "", "",
-  "", "", "", "", "", "", 102, "",
-  "", "", "", "", "", "", "", "",
-  "", "", "", "", "", "", "", "",
-  "", "", "", "", "", "", "", ""
-];
+document.addEventListener("DOMContentLoaded", function () {
+  const diskGrid = document.getElementById("disk-grid");
 
-function getColorClass(value) {
-  if (value === "") return "color-empty";
-  if (value === 0) return "color-0";
-  if (value === 1) return "color-1";
-  if (value === 4) return "color-2";
-  if (value === 5) return "color-3";
-  if (value === 7) return "color-4";
-  if (value === 10) return "color-5";
-  if (value === 45 || value === 46 || value === 47) return "color-6";
-  if (value >= 100) return "color-7";
-  return "color-8"; 
-}
+  document.addEventListener("snapshot-update", function (event) {
+    const snapshot = event.detail;
+    const disk = snapshot.diskManagement;
+    const occupiedBlocks = disk.occupiedBlocks || [];
+    const totalBlocks = disk.totalBlocks || 1024;
 
-const diskGrid = document.getElementById('disk-grid');
-diskData.forEach(val => {
-  const div = document.createElement('div');
-  div.classList.add('block', getColorClass(val));
-  div.textContent = val !== "" ? val : "";
-  diskGrid.appendChild(div);
+    diskGrid.innerHTML = ""; // 清空旧显示
+
+    for (let i = 0; i < totalBlocks; i++) {
+      const div = document.createElement("div");
+      if (occupiedBlocks.includes(i)) {
+        div.classList.add("block", "color-4");
+        div.textContent = i; // 显示块号
+      } else {
+        div.classList.add("block", "color-empty");
+        div.textContent = ""; // 空闲块不显示数字
+      }
+      diskGrid.appendChild(div);
+    }
+  });
 });
-
-const requiredBlocks = 64; 
-while (diskData.length < requiredBlocks) {
-  diskData.push(""); 
-}

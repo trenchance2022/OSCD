@@ -2,6 +2,9 @@ package org.example.oscdspring.file_disk_management;
 
 import org.example.oscdspring.util.LogEmitterService;
 
+import java.util.ArrayList;
+import java.util.List;
+
 class Bitmap {
     private int[] bitmap;   // 位图，1表示已分配，0表示空闲
     private int size;       // 位图的大小（即磁盘块的总数）
@@ -45,6 +48,16 @@ class Bitmap {
             }
         }
         return count;
+    }
+
+    public List<Integer> getOccupiedBlockIndices() {
+        List<Integer> occupied = new ArrayList<>();
+        for (int i = 0; i < bitmap.length; i++) {
+            if (bitmap[i] == 1) {
+                occupied.add(i);
+            }
+        }
+        return occupied;
     }
 
     public int getFreeBlocks() {

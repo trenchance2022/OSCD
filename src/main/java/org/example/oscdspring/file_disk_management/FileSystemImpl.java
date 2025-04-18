@@ -3,6 +3,8 @@ package org.example.oscdspring.file_disk_management;
 import java.util.Arrays;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.util.List;
+
 import org.springframework.stereotype.Component;
 import org.example.oscdspring.util.LogEmitterService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -244,6 +246,10 @@ public class FileSystemImpl implements FileDiskManagement {
 
     public int[] getFileDiskBlock(String filename){
         return currentDirectory.getFileDiskBlock(filename);
+    }
+
+    public List<Integer> getOccupiedBlockIndices() {
+        return disk.getOccupiedBlockIndices();
     }
 
 }
