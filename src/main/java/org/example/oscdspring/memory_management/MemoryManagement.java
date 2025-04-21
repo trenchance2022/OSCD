@@ -1,6 +1,7 @@
 package org.example.oscdspring.memory_management;
 
 import org.example.oscdspring.process_management.CPU;
+import java.util.Map;
 
 //内存管理模块对外接口
 public interface MemoryManagement {
@@ -46,11 +47,18 @@ public interface MemoryManagement {
     public boolean Write(CPU cpu, int logicAddress, byte[] data, int length);
 
     /**
+     * 获取内存的页面使用情况。
+     *
+     */
+    public Map<String, Object> getPageUse();
+
+    /**
      * 获取内存的页面使用情况位图。 这里直接打印出来,是由Memory实现的
      *
      * @param start 起始页号
      * @param end 结束页号(不包括)
      */
     public void showPageUse(int start, int end);
+
 
 }
