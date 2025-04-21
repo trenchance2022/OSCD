@@ -320,8 +320,12 @@ class PageFaultHandler {
         }
 
         // 将磁盘块读入内存
-        if (faultPageTableEntry.getDiskAddress() != -1)
+        if (faultPageTableEntry.getDiskAddress() != -1) {
             Memory.getInstance().writeBlock(freeFrame, getFileSystem().readBlock(faultPageTableEntry.getDiskAddress()), pageTable.getPid(), pageNumber);
+        }
+        else{// 更新内存块状态
+            Memory.getInstance().updateBlock(freeFrame, pageTable.getPid(), pageNumber);
+        }
 
         // 更新页表项，
         faultPageTableEntry.setFrameNumber(freeFrame);
@@ -331,7 +335,6 @@ class PageFaultHandler {
 
         // 更新TLB
         tlb.addEntry(pageNumber, freeFrame);
-
         return true;
 
     }

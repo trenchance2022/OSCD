@@ -48,14 +48,20 @@ public class Memory {
         blockStatus[blockNumber].setPageId(pageId);
     }
 
+    // 更新块内容
+    public void updateBlock(int blockNumber,  int pid, int pageId) {
+        blockStatus[blockNumber].setPid(pid);
+        blockStatus[blockNumber].setPageId(pageId);
+    }
+
     // 读取一个块，返回数据，用于缺页中断处理,将数据写入磁盘
     public byte[] readBlock(int blockNumber) {
         if (blockNumber < Constants.SYSTEM_MEMORY_PAGE_SIZE) {
             return null;
         }
-        if (blockStatus[blockNumber].getPid() == PIDBitmap.EMPTY_PID) {
-            return null;
-        }
+        //if (blockStatus[blockNumber].getPid() == PIDBitmap.EMPTY_PID) {
+        //    return null;
+        //}
         byte[] data = new byte[Constants.PAGE_SIZE_BYTES];
         System.arraycopy(this.memoryData[blockNumber], 0, data, 0, Constants.PAGE_SIZE_BYTES);
         return data;
