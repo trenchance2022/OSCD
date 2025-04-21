@@ -2,6 +2,8 @@ package org.example.oscdspring.snapshot;
 
 import org.example.oscdspring.file_disk_management.FileSystemImpl;
 import org.example.oscdspring.process_management.CPU;
+import org.example.oscdspring.memory_management.MemoryManagement;
+import org.example.oscdspring.memory_management.MemoryManagementImpl;
 import org.example.oscdspring.util.SnapshotEmitterService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -15,11 +17,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 public class SystemSnapshot {
 
     private final FileSystemImpl fileSystem;
+    private final MemoryManagement memoryManagement;
     private final SnapshotEmitterService snapshotEmitterService;
 
     @Autowired
-    public SystemSnapshot(FileSystemImpl fileSystem, SnapshotEmitterService snapshotEmitterService) {
+    public SystemSnapshot(FileSystemImpl fileSystem,MemoryManagement memoryManagement, SnapshotEmitterService snapshotEmitterService) {
         this.fileSystem = fileSystem;
+        this.memoryManagement = memoryManagement;
         this.snapshotEmitterService = snapshotEmitterService;
     }
 
@@ -86,37 +90,9 @@ public class SystemSnapshot {
             snapshot.put("processManagement", processManagement);
 
 
-            // 模拟内存管理示例数据
-            Map<String, Object> memoryManagement = new HashMap<>();
-            memoryManagement.put("totalFrames", Constants.MEMORY_PAGE_SIZE);  // 内存帧总数
-            List<Map<String, Object>> frameInfo = new ArrayList<>();
+            // 内存管理数据
 
-            Map<String, Object> frame1 = new HashMap<>();
-            frame1.put("frameId", 1);
-            frame1.put("pid", 1);
-            frame1.put("page", 2);
-            frameInfo.add(frame1);
-
-            Map<String, Object> frame2 = new HashMap<>();
-            frame2.put("frameId", 4);
-            frame2.put("pid", 2);
-            frame2.put("page", 1);
-            frameInfo.add(frame2);
-
-            Map<String, Object> frame3 = new HashMap<>();
-            frame3.put("frameId", 20);
-            frame3.put("pid", 3);
-            frame3.put("page", 0);
-            frameInfo.add(frame3);
-
-            Map<String, Object> frame4 = new HashMap<>();
-            frame4.put("frameId", 35);
-            frame4.put("pid", 1);
-            frame4.put("page", 3);
-            frameInfo.add(frame4);
-
-            memoryManagement.put("frameInfo", frameInfo);
-            snapshot.put("memoryManagement", memoryManagement);
+            snapshot.put("memoryManagement", memoryManagement.getPageUse());
 
 
             // 获取文件目录结构字符串

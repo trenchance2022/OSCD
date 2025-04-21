@@ -4,6 +4,11 @@ import org.example.oscdspring.main.Constants;
 import org.example.oscdspring.process_management.PIDBitmap;
 import org.example.oscdspring.util.LogEmitterService;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 public class Memory {
     byte[][] memoryData = new byte[Constants.MEMORY_PAGE_SIZE][Constants.PAGE_SIZE_BYTES];
     MemoryBlockStatus[] blockStatus = new MemoryBlockStatus[Constants.MEMORY_PAGE_SIZE];
@@ -102,6 +107,25 @@ public class Memory {
         for (int i = start; i < end; i++) {
             LogEmitterService.getInstance().sendLog("Page " + i + " pid: " + blockStatus[i].getPid() + " pageId:" + blockStatus[i].getPageId());
         }
+    }
+
+    // 展示内存使用情况
+    public Map<String, Object> getPageUse() {
+        Map<String, Object> result = new HashMap<>();
+        result.put("totalFrames", Constants.MEMORY_PAGE_SIZE);  //  内存帧总数
+        List<Map<String, Object>> frameInfo = new ArrayList<>();
+
+        for (int i = 0; i < Constants.MEMORY_PAGE_SIZE; i++) {
+            if(blockStatus[i].getPid()==-1) continue;
+            Map<String, Object> frame = new HashMap<>();
+            frame.put("frameId", blockStatus[i].getFrameNumber());
+            frame.put("pid", blockStatus[i].getPid());
+            frame.put("page", blockStatus[i].getPageId());
+            frameInfo.add(frame);
+        }
+        result.put("frameInfo", frameInfo);
+
+        return result;
     }
 
 }

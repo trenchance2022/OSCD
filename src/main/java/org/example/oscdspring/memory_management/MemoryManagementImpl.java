@@ -7,6 +7,7 @@ import org.example.oscdspring.process_management.PIDBitmap;
 import org.springframework.stereotype.Component;
 
 import java.util.Arrays;
+import java.util.Map;
 
 @Component
 public class MemoryManagementImpl implements MemoryManagement {
@@ -136,8 +137,14 @@ public class MemoryManagementImpl implements MemoryManagement {
 
 
     @Override
+    public Map<String, Object> getPageUse() {
+        return Memory.getInstance().getPageUse();
+    }
+
+    @Override
     public void showPageUse(int start, int end) {
         Memory.getInstance().showPageUse(start, end);
     }
+
 
 }
