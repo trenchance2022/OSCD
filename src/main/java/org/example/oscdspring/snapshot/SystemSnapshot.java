@@ -1,6 +1,7 @@
 package org.example.oscdspring.snapshot;
 
 import org.example.oscdspring.file_disk_management.FileSystemImpl;
+import org.example.oscdspring.process_management.CPU;
 import org.example.oscdspring.util.SnapshotEmitterService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Scheduled;
@@ -33,38 +34,53 @@ public class SystemSnapshot {
             Map<String, Object> processManagement = new HashMap<>();
             processManagement.put("cpuRunning", "进程A");
             processManagement.put("readyQueue", Arrays.asList("进程B", "进程C"));
-            processManagement.put("waitingQueue", Collections.singletonList("进程D"));
+            processManagement.put("waitingQueue", Arrays.asList("进程D"));
             // 添加 CPU 数量和调度策略
+            int cpuCount = 123;
             processManagement.put("cpuCount", 3); // 新增：CPU 数量
             processManagement.put("schedulingPolicy", "FCFS"); // 新增：调度策略
             // 添加 CPU 详细信息
             List<Map<String, Object>> cpuDetails = new ArrayList<>();
-            Map<String, Object> cpu1 = new HashMap<>();
-            cpu1.put("cpuId", 1);
-            cpu1.put("pid", 1001);
-            cpu1.put("name", "进程A");
-            cpu1.put("instruction", "exec");
-            cpu1.put("remainingTime", 10);
-            cpu1.put("priority", 1);
-            cpuDetails.add(cpu1);
 
-            Map<String, Object> cpu2 = new HashMap<>();
-            cpu2.put("cpuId", 2);
-            cpu2.put("pid", 1002);
-            cpu2.put("name", "进程B");
-            cpu2.put("instruction", "calc");
-            cpu2.put("remainingTime", 5);
-            cpu2.put("priority", 2);
-            cpuDetails.add(cpu2);
+            List<CPU> cpus = scheduler.getCpus();
 
-            Map<String, Object> cpu3 = new HashMap<>();
-            cpu3.put("cpuId", 3);
-            cpu3.put("pid", 1003);
-            cpu3.put("name", "进程C");
-            cpu3.put("instruction", "io");
-            cpu3.put("remainingTime", 8);
-            cpu3.put("priority", 3);
-            cpuDetails.add(cpu3);
+            for(int i = 0; i < cpuCount; i++){
+                Map<String, Object> temp = new HashMap<>();
+                temp.put("cpuId", 1);
+                temp.put("pid", 1001);
+                temp.put("name", "进程A");
+                temp.put("instruction", "exec");
+                temp.put("remainingTime", 10);
+                temp.put("priority", 1);
+                cpuDetails.add(temp);
+            }
+
+//            Map<String, Object> cpu1 = new HashMap<>();
+//            cpu1.put("cpuId", 1);
+//            cpu1.put("pid", 1001);
+//            cpu1.put("name", "进程A");
+//            cpu1.put("instruction", "exec");
+//            cpu1.put("remainingTime", 10);
+//            cpu1.put("priority", 1);
+//            cpuDetails.add(cpu1);
+//
+//            Map<String, Object> cpu2 = new HashMap<>();
+//            cpu2.put("cpuId", 2);
+//            cpu2.put("pid", 1002);
+//            cpu2.put("name", "进程B");
+//            cpu2.put("instruction", "calc");
+//            cpu2.put("remainingTime", 5);
+//            cpu2.put("priority", 2);
+//            cpuDetails.add(cpu2);
+//
+//            Map<String, Object> cpu3 = new HashMap<>();
+//            cpu3.put("cpuId", 3);
+//            cpu3.put("pid", 1003);
+//            cpu3.put("name", "进程C");
+//            cpu3.put("instruction", "io");
+//            cpu3.put("remainingTime", 8);
+//            cpu3.put("priority", 3);
+//            cpuDetails.add(cpu3);
 
             processManagement.put("cpuDetails", cpuDetails);
             snapshot.put("processManagement", processManagement);
