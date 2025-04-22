@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+	<head>
+		<meta charset="UTF-8">
+		<title>操作系统模拟器</title>
+		<link rel="stylesheet" href="css/style.css">
+	</head>
+	<body>
+	<script src="js/snapshotManager.js"></script>
+
+	<div class="background-blobs">
+			<div class="blob blob1"></div>
+			<div class="blob blob2"></div>
+			<div class="blob blob3"></div>
+			<div class="blob blob4"></div>
+		</div>
+
+		<div class="container">
+			<div class="box" id="process">
+				<h2>进程管理</h2>
+				<table class="process-table">
+					<thead>
+					<tr>
+						<th>核</th>
+						<th>PID</th>
+						<th>名称</th>
+						<th>指令</th>
+						<th>剩余时间</th>
+						<th>优先级</th>
+					</tr>
+					</thead>
+					<tbody id="cpu-table-body">
+					<!-- 由 JS 动态填充 -->
+					</tbody>
+				</table>
+				<div class="queue"><strong>CPU running:</strong> <span id="cpu-running"></span></div>
+				<div class="queue"><strong>Ready queue:</strong> <span id="ready-queue"></span></div>
+				<div class="queue"><strong>Waiting queue:</strong> <span id="waiting-queue"></span></div>
+				<div class="queue"><strong>Scheduling Policy:</strong> <span id="scheduling-policy"></span></div>
+			</div>
+			<script src="js/process.js"></script>
+
+
+			<div class="box" id="memory">
+				<h2>内存管理</h2>
+				<div class="grid-64" id="memory-grid">
+				</div>
+			</div>
+			<script src="js/memory.js"></script>
+
+
+			<div class="box" id="filesystem">
+				<h2>文件目录</h2>
+				<pre class="tree"></pre>
+			</div>
+			<script src="js/filesystem.js"></script>
+
+			<div class="box" id="shell">
+				<div class="terminal" id="terminal">
+					<!-- 固定顶部的输入区域 -->
+					<div id="command-line">
+						&gt; <span contenteditable="true" id="input-line"></span>
+					</div>
+					<!-- 下方滚动显示日志输出 -->
+					<div id="terminal-output"></div>
+				</div>
+			</div>
+			<script src="js/shell.js"></script>
+
+			<div class="box" id="disk">
+				<h2>磁盘管理</h2>
+				<div class="grid-16" id="disk-grid"></div>
+			</div>
+			<script src="js/disk.js"></script>
+
+			<div class="box" id="devices">
+				<h2>设备列表</h2>
+				<table class="device-table">
+					<thead>
+					<tr>
+						<th>设备</th>
+						<th>运行进程</th>
+						<th>等待队列</th>
+					</tr>
+					</thead>
+					<tbody id="device-table-body">
+					<!-- 由 JS 动态填充 -->
+					</tbody>
+				</table>
+			</div>
+			<script src="js/device.js"></script>
+
+			<!-- Modal Dialog for vi Editor -->
+		<div id="viModal" class="modal">
+			<div class="modal-content">
+				<h3>Edit File: <span id="viFilename"></span></h3>
+				<textarea id="viTextarea" rows="10"></textarea>
+				<div class="modal-buttons">
+					<button id="viOk" class="ok">OK</button>
+					<button id="viCancel" class="cancel">Cancel</button>
+				</div>
+			</div>
+		</div>
+	</body>
+</html>
