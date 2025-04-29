@@ -31,8 +31,8 @@ public class SystemSnapshot {
         this.snapshotEmitterService = snapshotEmitterService;
     }
 
-    // 每500毫秒采集一次快照
-    @Scheduled(fixedRate = 500)
+    // 每100毫秒采集一次快照
+    @Scheduled(fixedRate = 100)
     public void updateSnapshot() {
         try {
             ObjectMapper mapper = new ObjectMapper();
@@ -67,7 +67,6 @@ public class SystemSnapshot {
 
 
             // 内存管理数据
-
             snapshot.put("memoryManagement", memoryManagement.getPageUse());
 
 
@@ -75,11 +74,13 @@ public class SystemSnapshot {
             String fileDir = fileSystem.getDirectoryStructure();
             snapshot.put("fileDirectory", fileDir);
 
+
             // 模拟磁盘管理示例数据
             Map<String, Object> diskManagement = new HashMap<>();
             diskManagement.put("totalBlocks", Constants.DISK_SIZE);  // 磁盘块总数
             diskManagement.put("occupiedBlocks", fileSystem.getOccupiedBlockIndices()); // 占用块
             snapshot.put("diskManagement", diskManagement);
+
 
             // 模拟设备列表示例数据
             Map<String, Object> deviceManagement = new HashMap<>();

@@ -73,6 +73,35 @@ public class StartupInitializer implements ApplicationRunner {
             cpu.start();
         }
 
+        // 初始化测试用的设备
+        deviceManager.addDevice(1, "Printer");
+        deviceManager.addDevice(2, "Scanner");
+        deviceManager.addDevice(3, "USB");
+
+        // 初始化测试用的文件系统
+        fileSystem.createDirectory("d1");
+        fileSystem.changeDirectory("d1");
+
+        // 设备管理测试程序
+        fileSystem.createFile("t1", 1);
+        fileSystem.createFile("t2", 1);
+        fileSystem.createFile("t3", 1);
+        fileSystem.createFile("t4", 1);
+        fileSystem.editFile("t1", "M 4096#C 5000#C 10000#D Printer 1 10000#Q#");
+        fileSystem.editFile("t2", "M 4096#C 10000#C 2000#D Printer 1 10000#Q#");
+        fileSystem.editFile("t3", "M 10240#C 5000#C 10000#D USB 3 10000#Q#");
+
+        // 读写互斥测试程序
+        fileSystem.createFile("t5", 1);
+        fileSystem.editFile("t5", "M 4096#W t4 2000#Q#");
+        fileSystem.createFile("t6", 1);
+        fileSystem.editFile("t6", "M 4096#W t4 2000#Q#");
+        fileSystem.createFile("t7", 1);
+        fileSystem.editFile("t7", "M 4096#R t4 2000#Q#");
+        fileSystem.createFile("t8", 1);
+        fileSystem.editFile("t8", "M 4096#R t4 2000#Q#");
+
+
         // 启动调度器（调度器内部一般会启动自己的线程处理调度逻辑）
         scheduler.start();
     }
