@@ -74,7 +74,29 @@ public class CPU extends Thread {
         while (true) {
             if (!memoryManagement.Read(this, currentAddress, buffer, 1)) {
                 LogEmitterService.getInstance().sendLog("CPU-" + cpuId + " 读取内存失败，地址: " + currentAddress);
-                System.exit(-1);
+                // 保存当前进程的引用
+                PCB terminatingProcess = currentPCB;
+
+                // 将进程状态设置为TERMINATED
+                terminatingProcess.setState(ProcessState.TERMINATED);
+
+                // 释放进程占用的所有资源
+                memoryManagement.FreeProcess(this);
+                PIDBitmap.getInstance().freePID(terminatingProcess.getPid());
+                org.example.oscdspring.file_disk_management.FileLockManager.getInstance().releaseAllLocks(terminatingProcess.getPid());
+
+                // 从活跃PCB列表中移除
+                terminatingProcess.removePCB();
+
+                // 请求新进程执行
+                PCB nextProc = scheduler.getNextProcess();
+                if (nextProc != null) {
+                    nextProc.setState(ProcessState.RUNNING);
+                    changeProcess(nextProc);
+                } else {
+                    currentPCB = null;
+                    LogEmitterService.getInstance().sendLog("CPU-" + cpuId + " 进入空闲状态");
+                }
                 return null;
             }
 
@@ -90,10 +112,11 @@ public class CPU extends Thread {
             instruction.append(c);
 
             // 防止无限循环，设置最大指令长度
-            if (instruction.length() > 100) {
-                LogEmitterService.getInstance().sendLog("CPU-" + cpuId + " 指令过长，可能缺少结束符");
-                return null;
-            }
+//            if (instruction.length() > 100) {
+//                LogEmitterService.getInstance().sendLog("CPU-" + cpuId + " 指令过长，可能缺少结束符");
+//
+//                return null;
+//            }
         }
 
         // 更新PC值，指向下一条指令
