@@ -29,6 +29,8 @@ public class IODevice extends Thread {
                 IORequest request = requests.take();
                 runningrequest = request;
                 Thread.sleep(request.getProcessingTime());
+                // 执行完毕恢复原状
+                runningrequest = null;
                 // 触发设备中断
                 PCB pcb = request.getPcb();
                 InterruptHandler.getInstance().handleDeviceInterrupt(pcb, Scheduler.getInstance());
@@ -39,6 +41,7 @@ public class IODevice extends Thread {
     }
 
     public void shutdown() {
+        runningrequest = null;
         this.interrupt();
     }
 

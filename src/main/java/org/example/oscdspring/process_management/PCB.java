@@ -60,6 +60,7 @@ public class PCB {
 
     // 从活跃PCB列表中移除PCB
     public void removePCB() {
+        this.state = ProcessState.TERMINATED;
         activePCBs.remove(this);
     }
 
