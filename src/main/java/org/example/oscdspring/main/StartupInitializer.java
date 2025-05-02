@@ -101,7 +101,8 @@ public class StartupInitializer implements ApplicationRunner {
         fileSystem.createFile("t8", 1);
         fileSystem.editFile("t8", "M 4096#R t4 2000#Q#");
 
-
+        // 回到根目录
+        fileSystem.goBack();
         // 启动调度器（调度器内部一般会启动自己的线程处理调度逻辑）
         scheduler.start();
     }
