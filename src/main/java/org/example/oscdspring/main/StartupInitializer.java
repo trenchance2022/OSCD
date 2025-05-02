@@ -27,11 +27,11 @@ public class StartupInitializer implements ApplicationRunner {
     Scheduler scheduler = Scheduler.getInstance();
 
     // 从配置文件读取系统 CPU 数量，默认 4 个
-    @Value("${app.cpu.num:4}")
+    @Value("${app.cpu.num}")
     private int cpuNum;
 
     // 从配置文件读取调度策略，默认 FCFS
-    @Value("${app.scheduler.policy:FCFS}")
+    @Value("${app.scheduler.policy}")
     private String schedulerPolicy;
 
     @Override

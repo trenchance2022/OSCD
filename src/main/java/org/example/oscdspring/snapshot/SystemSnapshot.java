@@ -44,11 +44,12 @@ public class SystemSnapshot {
             processManagement.put("readyQueue", Library.getScheduler().getReadyProcess());
             processManagement.put("waitingQueue", Library.getScheduler().getWaitingProcess());
             // 添加 CPU 数量和调度策略
-            processManagement.put("cpuCount", 4); // 新增：CPU 数量
+            List<CPU> cpuList = Library.getScheduler().getCpus();
+            processManagement.put("cpuCount", cpuList.size()); // 新增：CPU 数量
             processManagement.put("schedulingPolicy", Library.getScheduler().getCurrentPolicy()); // 新增：调度策略
             // 添加 CPU 详细信息
             List<Map<String, Object>> cpuDetails = new ArrayList<>();
-            for(int i = 0; i < 4; i++){
+            for(int i = 0; i < cpuList.size(); i++){
                 Map<String, Object> temp = new HashMap<>();
                 temp.put("cpuId", i+1);
                 CPU cpu=Library.getScheduler().getCpus().get(i);
