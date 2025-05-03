@@ -3,6 +3,9 @@ package org.example.oscdspring.device_management;
 import org.example.oscdspring.interrupt_management.InterruptHandler;
 import org.example.oscdspring.process_management.PCB;
 import org.example.oscdspring.process_management.Scheduler;
+import org.example.oscdspring.process_management.ProcessState;
+import org.example.oscdspring.main.Library;
+import org.example.oscdspring.main.Constants;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
