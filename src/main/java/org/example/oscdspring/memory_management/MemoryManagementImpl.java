@@ -56,7 +56,7 @@ public class MemoryManagementImpl implements MemoryManagement {
             if (entry.isValid()) {
                 Memory.getInstance().freeBlock(entry.getFrameNumber());
             } else {
-                if(entry.getDiskAddress()!=-1)
+                if(entry.getDiskAddress()!=-1&&entry.isAllocatedDisk())
                     fileDiskManagement.freeBlock(entry.getDiskAddress());
             }
         }
@@ -156,7 +156,7 @@ public class MemoryManagementImpl implements MemoryManagement {
                 if (entry.isValid()) {
                     Memory.getInstance().freeBlock(entry.getFrameNumber());
                 } else {
-                    if (entry.getDiskAddress() != -1)
+                    if(entry.getDiskAddress()!=-1&&entry.isAllocatedDisk())
                         fileDiskManagement.freeBlock(entry.getDiskAddress());
                 }
             }

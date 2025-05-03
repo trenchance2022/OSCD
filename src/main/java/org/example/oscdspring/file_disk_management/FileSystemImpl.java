@@ -213,10 +213,17 @@ public class FileSystemImpl implements FileDiskManagement {
                 StringBuilder contentBuilder = new StringBuilder();
                 for (int i = 0; i < inode.blockIndexes.length; i++) {
                     int blockIndex = inode.blockIndexes[i];
-                    int bytesToRead = (i == inode.blockIndexes.length - 1) ? inode.size % 1024 : 1024;
+                    int bytesToRead;
+                    if (i == inode.blockIndexes.length - 1) {
+                        bytesToRead = (inode.size % 1024 == 0) ? 1024 : inode.size % 1024;
+                    } else {
+                        bytesToRead = 1024;
+                    }
+
                     String fileContent = disk.readDataFromDisk(blockIndex * 1024, bytesToRead);
                     contentBuilder.append(fileContent);
                 }
+                contentBuilder.append("\\EOF\\");  // 添加结束标志
                 // 将累积的内容整体发送
                 logEmitterService.sendLog(contentBuilder.toString());
                 return;
