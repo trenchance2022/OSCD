@@ -117,10 +117,10 @@ public class Scheduler extends Thread {
                     readyQueues.add(new LinkedBlockingQueue<>());
                     readyQueues.add(new LinkedBlockingQueue<>());
                     readyQueues.add(new LinkedBlockingQueue<>());
-                    timeSlices[0] = 100;
-                    timeSlices[1] = 200;
-                    timeSlices[2] = 400;
-                    timeSlices[3] = 800;
+                    timeSlices[0] = 500;
+                    timeSlices[1] = 1000;
+                    timeSlices[2] = 2000;
+                    timeSlices[3] = 4000;
                 }
                 case PRIORITY_Preemptive -> {
                     readyQueues.add(new PriorityBlockingQueue<>(11, Comparator.comparingInt(PCB::getPriority)

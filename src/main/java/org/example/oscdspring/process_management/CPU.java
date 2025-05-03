@@ -165,7 +165,7 @@ public class CPU extends Thread {
                             Thread.sleep(executeTime);
                             currentPCB.setRemainInstruction("");
                             currentPCB.incrementTimeUsed(executeTime);
-                    }else{
+                    } else {
                         Thread.sleep(Constants.CLOCK_INTERRUPT_INTERVAL_MS);
                         currentPCB.freshTimeRemain();
                         currentPCB.incrementTimeUsed(Constants.CLOCK_INTERRUPT_INTERVAL_MS);

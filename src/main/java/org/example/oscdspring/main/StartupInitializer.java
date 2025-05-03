@@ -101,6 +101,24 @@ public class StartupInitializer implements ApplicationRunner {
         fileSystem.createFile("t8", 1);
         fileSystem.editFile("t8", "M 4096#R t4 2000#Q#");
 
+        // 进程调度测试程序
+        fileSystem.createFile("t9", 1);
+        fileSystem.editFile("t9", "C 2000#Q#");
+        fileSystem.createFile("t10", 1);
+        fileSystem.editFile("t10", "C 3000#Q#");
+        fileSystem.createFile("t11", 1);
+        fileSystem.editFile("t11", "C 4000#Q#");
+        fileSystem.createFile("t12", 1);
+        fileSystem.editFile("t12", "C 1000#C 2000#Q#");
+        fileSystem.createFile("t13", 1);
+        fileSystem.editFile("t13", "C 10000#Q#");
+        fileSystem.createFile("t14", 1);
+        fileSystem.editFile("t14", "C 10000#Q#");
+        fileSystem.createFile("t15", 1);
+        fileSystem.editFile("t15", "C 10000#Q#");
+        fileSystem.createFile("t16", 1);
+        fileSystem.editFile("t16", "C 10000#Q#");
+
         // 回到根目录
         fileSystem.goBack();
         // 启动调度器（调度器内部一般会启动自己的线程处理调度逻辑）

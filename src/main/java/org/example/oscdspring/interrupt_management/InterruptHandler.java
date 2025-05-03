@@ -53,15 +53,16 @@ public class InterruptHandler {
                 if (currentPCB.getTimeUsed() >= timeSlice) {
                     LogEmitterService.getInstance().sendLog("CPU-" + cpu.getCpuId() + " 进程 " + currentPCB.getPid() + " 时间片用尽，进行进程切换");
 
-                    // 时间片用尽，将进程放回就绪队列
-                    currentPCB.setState(ProcessState.READY);
-                    currentPCB.resetTimeUsed();
-
                     // 如果不是最低优先级，降低优先级
                     if (scheduler.getCurrentPolicy() == Scheduler.SchedulingPolicy.MLFQ && queueIndex < 3) {
                         currentPCB.setCurrentQueue(queueIndex + 1);
+                        currentPCB.setPriority(queueIndex + 1);
                         LogEmitterService.getInstance().sendLog("CPU-" + cpu.getCpuId() + " 进程 " + currentPCB.getPid() + " 优先级降低为 " + currentPCB.getCurrentQueue());
                     }
+
+                    // 时间片用尽，将进程放回就绪队列
+                    currentPCB.setState(ProcessState.READY);
+                    currentPCB.resetTimeUsed();
 
                     scheduler.addReadyProcess(currentPCB);
 
