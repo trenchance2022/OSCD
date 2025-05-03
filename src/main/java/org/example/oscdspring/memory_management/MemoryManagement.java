@@ -1,6 +1,8 @@
 package org.example.oscdspring.memory_management;
 
 import org.example.oscdspring.process_management.CPU;
+import org.example.oscdspring.process_management.PCB;
+
 import java.util.Map;
 
 //内存管理模块对外接口
@@ -61,4 +63,5 @@ public interface MemoryManagement {
     public void showPageUse(int start, int end);
 
 
+    void releaseProcess(PCB pcb);
 }
