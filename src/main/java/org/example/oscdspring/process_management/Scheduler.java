@@ -1,6 +1,7 @@
 package org.example.oscdspring.process_management;
 
 import org.example.oscdspring.file_disk_management.FileLockManager;
+import static org.example.oscdspring.main.Library.getMemoryManagement;
 import org.example.oscdspring.main.Constants;
 
 import java.util.*;
@@ -9,6 +10,11 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.concurrent.locks.ReentrantLock;
 
+import org.example.oscdspring.main.Library;
+import org.example.oscdspring.memory_management.Memory;
+import org.example.oscdspring.memory_management.PageTable;
+import org.example.oscdspring.memory_management.PageTableArea;
+import org.example.oscdspring.memory_management.PageTableEntry;
 import org.example.oscdspring.util.LogEmitterService;
 import org.springframework.stereotype.Component;
 
@@ -82,6 +88,7 @@ public class Scheduler extends Thread {
         addReadyProcess(pcb);
         LogEmitterService.getInstance().sendLog("创建进程 " + pid + "，执行文件: " + filename + "，优先级为 " + priority);
 
+        pcb.addPCB_all();
         return pcb;
     }
 
@@ -188,6 +195,12 @@ public class Scheduler extends Thread {
                 for (int i = 0; i < 4; i++) {
                     if (!readyQueues.get(i).isEmpty()) {
                         PCB pcb = readyQueues.get(i).poll();
+                        while(pcb.getState() != ProcessState.READY){
+                            pcb = readyQueues.get(i).poll();
+                            if(pcb == null){
+                                break;
+                            }
+                        }
                         pcb.setCurrentQueue(i); // 记录当前所在队列
                         return pcb;
                     }
@@ -284,14 +297,38 @@ public class Scheduler extends Thread {
                 LogEmitterService.getInstance().sendLog("调度器: 终止进程 " + pcb.getPid());
 
                 // 释放资源
-                org.example.oscdspring.memory_management.PageTableArea.getInstance().removePageTable(pcb.getPid());
-                PIDBitmap.getInstance().freePID(pcb.getPid());
-                org.example.oscdspring.file_disk_management.FileLockManager.getInstance().releaseAllLocks(pcb.getPid());
 
-                // 从活跃PCB列表中移除
+                if(pcb.getState() == ProcessState.RUNNING) {
+                    Library.getMemoryManagement().releaseProcess(pcb);
+                    PIDBitmap.getInstance().freePID(pcb.getPid());
+                    org.example.oscdspring.file_disk_management.FileLockManager.getInstance().releaseAllLocks(pcb.getPid());
+                    pcb.setState(ProcessState.TERMINATED);
+                    pcb.setTimeRemain(0);
+                    pcb.setRemainInstruction("");
+                }else if(pcb.getState()==ProcessState.READY){
+                    //org.example.oscdspring.memory_management.PageTableArea.getInstance().removePageTable(pcb.getPid());
+                    Library.getMemoryManagement().releaseProcess(pcb);
+                    PIDBitmap.getInstance().freePID(pcb.getPid());
+                    org.example.oscdspring.file_disk_management.FileLockManager.getInstance().releaseAllLocks(pcb.getPid());
+                    pcb.setState(ProcessState.TERMINATED);
+                    for(BlockingQueue<PCB> queue:readyQueues){
+                        if(queue.contains(pcb)){
+                            readyQueues.get(pcb.getCurrentQueue()).remove(pcb);
+                            break;
+                        }
+                    }
+                }else if(pcb.getState()==ProcessState.WAITING){
+                    Library.getMemoryManagement().releaseProcess(pcb);
+                    PIDBitmap.getInstance().freePID(pcb.getPid());
+                    org.example.oscdspring.file_disk_management.FileLockManager.getInstance().releaseAllLocks(pcb.getPid());
+                    pcb.setState(ProcessState.TERMINATED);
+                    //正在进行设备io的会自动停止,队列中的会自动清除
+                    //正在读写的会自动停止，请求锁队列会自动清除
+                }
+                pcb.removePCB_all();
                 pcb.removePCB();
-
                 LogEmitterService.getInstance().sendLog("进程 " + pcb.getPid() + " 已终止，所有资源已释放");
+
             }else{
                 LogEmitterService.getInstance().sendLog("进程不存在");
             }
@@ -316,7 +353,7 @@ public class Scheduler extends Thread {
     }
     public void removeWaitingProcess(PCB pcb) {
         // 从等待队列中移除进程
-        if (pcb != null && pcb.getState() == ProcessState.WAITING) {
+        if (pcb != null ) {
             waitingQueue.remove(pcb);
         }
     }
@@ -328,7 +365,7 @@ public class Scheduler extends Thread {
             PCB runningProcess = cpu.getCurrentPCB();
             if (runningProcess != null&&runningProcess.getState()==ProcessState.RUNNING) {
                 //将名字加入到字符串数组内
-                runningProcessNames.add(runningProcess.getExecutedFile());
+                runningProcessNames.add(runningProcess.getExecutedFile()+"(pid:"+runningProcess.getPid()+")");
             }
         }
         return runningProcessNames;
@@ -341,7 +378,7 @@ public class Scheduler extends Thread {
             for (PCB pcb : queue) {
                 if(pcb.getState()==ProcessState.READY){
                     //将名字加入到字符串数组内
-                readyProcessNames.add(pcb.getExecutedFile());
+                readyProcessNames.add(pcb.getExecutedFile()+"(pid:"+pcb.getPid()+")");
             }}
         }
         return readyProcessNames;
@@ -350,10 +387,10 @@ public class Scheduler extends Thread {
         // 遍历所有就绪队列，找到所有就绪的进程，并返回就绪进程名字的数组
         List<String> waitingProcessNames = new ArrayList<>();
         for (PCB pcb : waitingQueue) {
-            waitingProcessNames.add(pcb.getExecutedFile());
+            waitingProcessNames.add(pcb.getExecutedFile()+"(pid:"+pcb.getPid()+")");
         }
         for(PCB pcb: FileLockManager.getInstance().getWaitingProcess()){
-            waitingProcessNames.add(pcb.getExecutedFile());
+            waitingProcessNames.add(pcb.getExecutedFile()+"(pid:"+pcb.getPid()+")");
         }
         return waitingProcessNames;
     }

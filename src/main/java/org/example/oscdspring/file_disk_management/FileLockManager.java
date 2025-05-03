@@ -144,6 +144,26 @@ public class FileLockManager {
             writeLockHolder = -1;
             readWaitingQueue = new LinkedList<>();
             writeWaitingQueue = new LinkedList<>();
+            new Thread(() -> {
+                while (true) {
+                    try {
+                        Thread.sleep(100); // 每100毫秒检查一次
+                        for(PCB pcb: readWaitingQueue) {
+                            if (pcb.getState()==ProcessState.TERMINATED) {
+                                readWaitingQueue.remove(pcb);
+                            }
+                        }
+                        for(PCB pcb: writeWaitingQueue) {
+                            if (pcb.getState()==ProcessState.TERMINATED) {
+                                writeWaitingQueue.remove(pcb);
+                            }
+                        }
+                    } catch (InterruptedException e) {
+                        Thread.currentThread().interrupt();
+                        break;
+                    }
+                }
+            }).start();
         }
         
         // 判断是否可以获取读锁

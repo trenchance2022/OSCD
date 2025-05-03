@@ -32,9 +32,10 @@ public class CPU extends Thread {
         try {
             while (true) {
                 // 执行当前进程
-                if (currentPCB != null) {
+                if (currentPCB != null&& currentPCB.getState()!=ProcessState.TERMINATED) {
                     execute();
-                } else {
+                }
+                else {
                     Thread.sleep(100); // 空闲时等待
                 }
             }
@@ -197,10 +198,22 @@ public class CPU extends Thread {
                         // 创建一个新线程来处理文件读取
                         new Thread(() -> {
                             try {
-                                Thread.sleep(readtime);
-                                LogEmitterService.getInstance().sendLog("进程"+pcbToRelease.getPid()+"读取完毕");
-                                // 读取完成后，触发IO中断，第四个参数为true表示是读操作
-                                InterruptHandler.getInstance().handleIOInterrupt(pcbToRelease, fileToRead, scheduler, true);
+                                int time=readtime;
+                                while (time > Constants.CLOCK_INTERRUPT_INTERVAL_MS) {
+                                    Thread.sleep(Constants.CLOCK_INTERRUPT_INTERVAL_MS);
+                                    time -= Constants.CLOCK_INTERRUPT_INTERVAL_MS;
+                                    if(pcbToRelease.getState()==ProcessState.TERMINATED){
+                                        break;
+                                    }
+                                }
+                                if(pcbToRelease.getState()==ProcessState.TERMINATED) {
+                                    Library.getScheduler().removeWaitingProcess(pcbToRelease);
+                                }else {
+                                    Thread.sleep(time);
+                                    LogEmitterService.getInstance().sendLog("进程" + pcbToRelease.getPid() + "读取完毕");
+                                    // 读取完成后，触发IO中断，第四个参数为true表示是读操作
+                                    InterruptHandler.getInstance().handleIOInterrupt(pcbToRelease, fileToRead, scheduler, true);
+                                }
                             } catch (InterruptedException e) {
                                 Thread.currentThread().interrupt();
                             }
@@ -249,10 +262,21 @@ public class CPU extends Thread {
 
                         new Thread(() -> {
                             try {
-                                Thread.sleep(writeTime);
-                                LogEmitterService.getInstance().sendLog("进程"+pcbToRelease.getPid()+"写入完毕");
-                                // 写入完成后，触发IO中断，第四个参数为false表示是写操作
-                                InterruptHandler.getInstance().handleIOInterrupt(pcbToRelease, fileToWrite, scheduler, false);
+                                int time=writeTime;
+                                while (time > Constants.CLOCK_INTERRUPT_INTERVAL_MS) {
+                                    Thread.sleep(Constants.CLOCK_INTERRUPT_INTERVAL_MS);
+                                    time -= Constants.CLOCK_INTERRUPT_INTERVAL_MS;
+                                    if(pcbToRelease.getState()==ProcessState.TERMINATED){
+                                        break;
+                                    }
+                                }
+                                if(pcbToRelease.getState()==ProcessState.TERMINATED) {
+                                    Library.getScheduler().removeWaitingProcess(pcbToRelease);
+                                }else {
+                                    LogEmitterService.getInstance().sendLog("进程" + pcbToRelease.getPid() + "写入完毕");
+                                    // 写入完成后，触发IO中断，第四个参数为false表示是写操作
+                                    InterruptHandler.getInstance().handleIOInterrupt(pcbToRelease, fileToWrite, scheduler, false);
+                                }
                             } catch (InterruptedException e) {
                                 Thread.currentThread().interrupt();
                             }
@@ -333,7 +357,7 @@ public class CPU extends Thread {
 
                     // 从活跃PCB列表中移除
                     terminatingProcess.removePCB();
-
+                    terminatingProcess.removePCB_all();
                     // 请求新进程执行
                     PCB nextProc = scheduler.getNextProcess();
                     if (nextProc != null) {
@@ -392,7 +416,7 @@ public class CPU extends Thread {
 
     // 判断CPU是否空闲
     public boolean isIdle() {
-        return currentPCB == null;
+        return currentPCB == null || currentPCB.getState()==ProcessState.TERMINATED;
     }
 
     // 获取当前正在执行的进程

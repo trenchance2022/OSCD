@@ -24,16 +24,51 @@ public class IODevice extends Thread {
 
     @Override
     public void run() {
+        new Thread(()->{
+            //检查请求队列中是否已经有进程terminal
+            while(true){
+                try {
+                    Thread.sleep(100);
+                    for(IORequest request: requests){
+                        if(request.getPcb().getState()== ProcessState.TERMINATED){
+                            requests.remove(request);
+                            Library.getScheduler().removeWaitingProcess(request.getPcb());
+                            break;
+                        }
+                    }
+                } catch (InterruptedException e) {
+                    throw new RuntimeException(e);
+                }
+            }
+        }).start();
+
         try {
             while (!isInterrupted()) {
                 IORequest request = requests.take();
                 runningrequest = request;
-                Thread.sleep(request.getProcessingTime());
-                // 执行完毕恢复原状
-                runningrequest = null;
-                // 触发设备中断
-                PCB pcb = request.getPcb();
-                InterruptHandler.getInstance().handleDeviceInterrupt(pcb, Scheduler.getInstance());
+                int time=request.getProcessingTime();
+                while(time> Constants.CLOCK_INTERRUPT_INTERVAL_MS){
+                    Thread.sleep(Constants.CLOCK_INTERRUPT_INTERVAL_MS);
+                    time-=Constants.CLOCK_INTERRUPT_INTERVAL_MS;
+                    if(request.getPcb().getState()== ProcessState.TERMINATED){
+                        break;
+                    }
+                }
+                if(request.getPcb().getState()== ProcessState.TERMINATED) {
+                    // 执行完毕恢复原状
+                    runningrequest = null;
+                    // 触发设备中断
+                    PCB pcb = request.getPcb();
+                    Library.getScheduler().removeWaitingProcess(pcb);
+
+                }else {
+                    Thread.sleep(time);
+                    // 执行完毕恢复原状
+                    runningrequest = null;
+                    // 触发设备中断
+                    PCB pcb = request.getPcb();
+                    InterruptHandler.getInstance().handleDeviceInterrupt(pcb, Scheduler.getInstance());
+                }
             }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();

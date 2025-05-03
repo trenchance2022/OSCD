@@ -11,7 +11,8 @@ public class PCB {
 
     // 存储所有活跃PCB的线程安全列表
     private static List<PCB> activePCBs = Collections.synchronizedList(new ArrayList<>());
-
+    //存储所有的PCB
+    private static List<PCB> allPCBs = Collections.synchronizedList(new ArrayList<>());
     private int currentQueue; // 当前所在队列（MLFQ使用）
     private final int pid;  // 进程id
     private int size;       // 进程大小(代码段+数据段)(单位为B)
@@ -203,11 +204,17 @@ public class PCB {
     }
 
     public static PCB getPCB(int pid){
-        for(PCB pcb:PCB.activePCBs) {
+        for(PCB pcb:PCB.allPCBs) {
             if (pid == pcb.pid) {
                 return pcb;
             }
         }
         return null;
+    }
+    public void addPCB_all(){
+        allPCBs.add(this);
+    }
+    public void removePCB_all(){
+        allPCBs.remove(this);
     }
 }

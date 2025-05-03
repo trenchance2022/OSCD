@@ -3,6 +3,7 @@ package org.example.oscdspring.memory_management;
 import org.example.oscdspring.file_disk_management.FileDiskManagement;
 import org.example.oscdspring.main.Constants;
 import org.example.oscdspring.process_management.CPU;
+import org.example.oscdspring.process_management.PCB;
 import org.example.oscdspring.process_management.PIDBitmap;
 import org.springframework.stereotype.Component;
 
@@ -146,5 +147,22 @@ public class MemoryManagementImpl implements MemoryManagement {
         Memory.getInstance().showPageUse(start, end);
     }
 
+    @Override
+    public void releaseProcess(PCB pcb) {
+        PageTable pageTable = PageTableArea.getInstance().getPageTable(pcb.getPageTableAddress());
+        if(pageTable!=null) {
+            for (int i = 0; i < pageTable.getPageTableSize(); i++) {
+                PageTableEntry entry = pageTable.getEntry(i, false);
+                if (entry.isValid()) {
+                    Memory.getInstance().freeBlock(entry.getFrameNumber());
+                } else {
+                    if (entry.getDiskAddress() != -1)
+                        fileDiskManagement.freeBlock(entry.getDiskAddress());
+                }
+            }
+        }
+        PageTableArea.getInstance().removePageTable(pcb.getPageTableAddress());
+
+    }
 
 }
