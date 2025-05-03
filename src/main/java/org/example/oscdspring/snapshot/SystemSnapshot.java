@@ -32,7 +32,7 @@ public class SystemSnapshot {
     }
 
     // 每100毫秒采集一次快照
-    @Scheduled(fixedRate = 100)
+    @Scheduled(fixedRate = 100, initialDelay = 500)
     public void updateSnapshot() {
         try {
             ObjectMapper mapper = new ObjectMapper();
