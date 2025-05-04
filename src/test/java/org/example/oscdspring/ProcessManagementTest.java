@@ -46,9 +46,9 @@ class ProcessManagementTest {
         PCB next1 = scheduler.getNextProcess();
         PCB next2 = scheduler.getNextProcess();
         PCB next3 = scheduler.getNextProcess();
+        assertNull(next3, "No more processes should remain in queue");
         assertEquals(pcb1, next1, "FCFS should return first added process first");
         assertEquals(pcb2, next2, "FCFS should return second added process next");
-        assertNull(next3, "No more processes should remain in queue");
     }
 
     @Test

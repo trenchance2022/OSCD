@@ -15,6 +15,7 @@ class FileManagementTest {
     void testCreateFileAndRemoveFile() {
         // 使用文件系统接口
         FileSystemImpl fs = new FileSystemImpl();  // 初始化磁盘，根目录
+        int originalSize = fs.getOccupiedBlockIndices().size();  // 记录原始磁盘块数
         String fileName = "testFile.txt";
         int fileSize = 2048;  // 2KB 文件（应占用 2 块磁盘空间）
 
@@ -28,7 +29,7 @@ class FileManagementTest {
 
         // 检查磁盘占用块数是否增加
         List<Integer> occupiedBlockIndices = fs.getOccupiedBlockIndices();
-        int expectedOccupiedBlocks = blocks.length;
+        int expectedOccupiedBlocks = blocks.length + originalSize;
         assertEquals(expectedOccupiedBlocks, occupiedBlockIndices.size(), "Disk occupied blocks count should increase after file creation");
 
         // 删除文件后，文件应从目录中移除
@@ -36,13 +37,15 @@ class FileManagementTest {
         int[] blocksAfter = fs.getFileDiskBlock(fileName);
         assertNull(blocksAfter, "File should be removed from directory listing");
 
+        occupiedBlockIndices = fs.getOccupiedBlockIndices();
         // 删除文件后，磁盘占用块数应减少
-        assertEquals(0, occupiedBlockIndices.size(), "Disk blocks should be freed after file removal");
+        assertEquals(originalSize, occupiedBlockIndices.size(), "Disk blocks should be freed after file removal");
     }
 
     @Test
     void testDirectoryNavigationAndRemoval() {
         FileSystemImpl fs = new FileSystemImpl();
+        int originalSize = fs.getOccupiedBlockIndices().size();  // 记录原始磁盘块数
 
         // 创建目录并进入
         fs.createDirectory("dir1");
@@ -72,7 +75,7 @@ class FileManagementTest {
 
         // 目录内的文件应被删除，磁盘块应被释放
         List<Integer> occupiedBlockIndices = fs.getOccupiedBlockIndices();
-        assertEquals(0, occupiedBlockIndices.size(), "Disk blocks from files in recursively deleted directory should be freed");
+        assertEquals(originalSize, occupiedBlockIndices.size(), "Disk blocks from files in recursively deleted directory should be freed");
     }
 
     @Test
