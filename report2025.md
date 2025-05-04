@@ -556,7 +556,7 @@ Q# 									#进程结束，释放资源
 
 
 
-#### Shell 测试（包含文件/目录系统测试）
+#### Shell 测试
 
 ##### 错误命令
 
@@ -899,6 +899,8 @@ C 10000#Q#
 
 
 
+
+
 #### 设备调度测试
 
 测试程序：
@@ -948,15 +950,97 @@ gantt
 
 结果截图：
 
-![image-20250504103441989](./report2025.assets/image-20250504103441989.png)
+<img src="./report2025.assets/image-20250504103441989.png" alt="image-20250504103441989" style="zoom:50%;" />
 
-![image-20250504103043263](./report2025.assets/image-20250504103043263.png)
+<img src="./report2025.assets/image-20250504103043263.png" alt="image-20250504103043263" style="zoom:50%;" />
 
-![](./report2025.assets/屏幕截图 2025-05-04 103130.png)
+<img src="./report2025.assets/屏幕截图 2025-05-04 103130.png" style="zoom:50%;" />
 
-![屏幕截图 2025-05-04 103139](./report2025.assets/屏幕截图 2025-05-04 103139.png)
+<img src="./report2025.assets/屏幕截图 2025-05-04 103139.png" alt="屏幕截图 2025-05-04 103139" style="zoom:50%;" />
 
 符合甘特图的描述。
+
+
+
+
+
+#### 文件系统测试
+
+基本功能（文件创建删除修改，目录创建删除切换，磁盘块管理，磁盘空间分配等）已在Shell测试部分完成测试，下面仅测试文件读写互斥性。
+
+测试程序：
+
+```yaml
+t4:
+（被读写文件）
+t5:
+M 4096#W t4 2000#Q#
+t6:
+M 4096#W t4 2000#Q#
+t7:
+M 4096#R t4 2000#Q#
+t8:
+M 4096#R t4 2000#Q#
+```
+
+测试命令：`exec t5 0 t6 0 t7 0 t8 0`
+
+测试环境：4个CPU，调度算法FCFS。
+
+结果甘特图：
+
+```mermaid
+gantt
+    title Gantt Chart for t5, t6, t7, t8
+    dateFormat  HH:mm
+    axisFormat  %H:%M
+    section t5
+    M 4096: 00:00, 00:00
+    W t4 2000: 00:00, 00:02
+    Q: 00:02, 00:02
+    section t6
+    M 4096: 00:00, 00:00
+    W t4 2000: 00:02, 00:04
+    Q: 00:04, 00:04
+    section t7
+    M 4096: 00:00, 00:00
+    R t4 2000: 00:04, 00:06
+    Q: 00:06, 00:06
+    section t8
+    M 4096: 00:00, 00:00
+    R t4 2000: 00:04, 00:06
+    Q: 00:06, 00:06
+
+
+```
+
+结果截图：
+
+首先执行写进程t5：
+
+<img src="./report2025.assets/屏幕截图 2025-05-04 105631.png" style="zoom:50%;" />
+
+<img src="./report2025.assets/屏幕截图 2025-05-04 105551.png" style="zoom:50%;" />
+
+t5完成后执行写进程t6，图中t5内存块已被释放，代表t5进程已结束执行：
+
+<img src="./report2025.assets/屏幕截图 2025-05-04 105613.png" style="zoom:50%;" />
+
+<img src="./report2025.assets/屏幕截图 2025-05-04 105606-1746327601179-11.png" style="zoom:50%;" />
+
+t6执行后，t7和t8同时进行读操作：
+
+<img src="./report2025.assets/image-20250504110038382.png" alt="image-20250504110038382" style="zoom:50%;" />
+
+<img src="./report2025.assets/屏幕截图 2025-05-04 110031.png" style="zoom:50%;" />
+
+<img src="./report2025.assets/屏幕截图 2025-05-04 110136.png" style="zoom:50%;" />
+
+t7和t8读之后同时释放：
+
+<img src="./report2025.assets/image-20250504110203214.png" alt="image-20250504110203214" style="zoom:50%;" />
+
+
 
 
 
