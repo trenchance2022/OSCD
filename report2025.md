@@ -258,10 +258,10 @@ Shell支持根据当前所在目录动态更新终端提示符（如 `/root/dir1
 
 5. 文件锁管理
 
-    | 类型 | 是否支持共享 | 是否互斥 | 优先级   |
-    | ---- | ------------ | -------- | -------- |
-    | 读锁 | 是           | 对写互斥 | 次于写锁 |
-    | 写锁 | 否           | 是       | 高       |
+    | 类型 | 是否支持共享 | 是否互斥 |
+    | ---- | ------------ | -------- |
+    | 读锁 | 是           | 对写互斥 |
+    | 写锁 | 否           | 是       |
 
     1. 申请读锁  若无写锁 → 立即持有，否则 → 进程阻塞 。
     2. 申请写锁 若无读写锁 → 立即持有，否则 → 进程阻塞 。
@@ -350,17 +350,22 @@ Shell支持根据当前所在目录动态更新终端提示符（如 `/root/dir1
 
 #### 系统快照展示功能
 
+系统快照展示功能用于实时展示操作系统当前的系统快照，包括进程状态、内存使用情况、设备状态、文件系统等。通过系统快照，用户可以直观地看到操作系统的运行状况、资源分配与使用情况，有助于调试程序和监控系统的运行。
 
-
-
-
-
-
-
-
-
-
-
+1. **进程状态展示**
+    1. 系统展示出每个CPU上的进程状态，便于分析多核调度的正确性。
+    2. 系统展示 `RUNNING`、`READY`、`WAITING` 队列的进程内容。
+    3. 系统显示每个运行进程的 PID、优先级、指令、剩余时间等信息。
+2. **内存状态展示**
+    1. 显示所有物理内存页的当前状态，包括是否被占用、属于哪个进程、页号等。
+3. **设备状态展示**
+    1. 支持实时展示所有设备（如打印机、USB 设备）的当前状态（空闲、正在使用等）。
+    2. 展示当前被服务的进程以及等待队列中的进程。
+4. **文件系统状态展示**
+    1. 展示文件系统中的目录结构信息。
+    2. 展示磁盘块的占用情况信息。
+5. **实时数据更新**
+    1. 快照界面能够实时更新操作系统的状态信息（每100ms刷新一次），确保用户看到的是最新的状态。
 
 
 
@@ -394,33 +399,64 @@ Shell支持根据当前所在目录动态更新终端提示符（如 `/root/dir1
 
 ### 项目目录结构
 
-```
+```elixir
 src/
 ├── main/
 │   ├── java/
-│   │   └── org.example.oscdspring/
-│   │       ├── controller/         # 控制器
-│   │       ├── device_management/
-│   │       ├── file_disk_management/
-│   │       ├── main/
-│   │       ├── memory_management/
-│   │       ├── process_management/
-│   │       ├── interrupt_management/
-│   │       ├── snapshot/           # 系统快照模块
-│   │       └── util/               # 日志/快照服务等工具类
-│   └── resources/
-│       ├── static/                 # 前端 HTML/CSS/JS
-│       └── application.properties
+│   │   └── org/example/oscdspring/
+│   │       ├── controller/              # 控制器
+│   │       ├── device_management/       # 设备管理
+│   │       ├── file_disk_management/    # 文件磁盘管理
+│   │       ├── interrupt_management/     # 中断管理
+│   │       ├── main/                     # 系统全局
+│   │       ├── memory_management/        # 内存管理
+│   │       ├── process_management/       # 进程管理
+│   │       ├── snapshot/                  # 快照
+│   │       ├── util/                      # 工具
+│   │       └── OscdSpringApplication.java	# 启动类
+│   ├── resources/
+│   │   ├── application.properties
+│   │   ├── static/
+│   │   │   ├── index.html
+│   │   │   ├── css/
+│   │   │   └── js/
+│   │   └── templates/
 └── test/
 ```
 
-```cmd
-未完成未完成未完成未完成未完成未完成未完成未完成未完成未完成未完成未完成未完成未完成未完成未完成
-```
+
 
 
 
 ## 总体设计
+
+### 系统架构设计
+
+#### 技术选型
+
+（介绍开发过程中使用的技术栈（例如编程语言、框架、数据库等），并说明为什么选择这些技术。）
+
+#### 模块划分
+
+#### 系统架构图（这是最重要的地方）
+
+（通过图示的方式展示系统的整体架构，包含各个模块、组件及其相互关系，使用plantuml代码，图中内容尽可能详细且正确）
+
+
+
+### 模块设计
+
+（模块功能，模块关系，模块接口，模块间通信等）
+
+
+
+### 数据结构设计（如果方便写的话）
+
+### 用户接口设计
+
+（API，前后端交互等）
+
+### 用户界面设计
 
 
 
@@ -500,11 +536,223 @@ Q# 									#进程结束，释放资源
 
 ## 程序清单
 
-### 代码结构描述
+### 代码结构
 
-```cmd
-未完成未完成未完成未完成未完成未完成未完成未完成未完成未完成未完成未完成未完成未完成未完成未完成
+```elixir
+src/
+├── main/
+│   ├── java/
+│   │   └── org/example/oscdspring/
+│   │       ├── controller/              # 控制器
+│   │       │   ├── ShellController.java
+│   │       │   ├── ShellSseController.java
+│   │       │   └── SnapshotController.java
+│   │       ├── device_management/       # 设备管理
+│   │       │   ├── DeviceManager.java
+│   │       │   ├── IODevice.java
+│   │       │   └── IORequest.java
+│   │       ├── file_disk_management/    # 文件磁盘管理
+│   │       │   ├── Bitmap.java
+│   │       │   ├── Directory.java
+│   │       │   ├── Disk.java
+│   │       │   ├── FileDiskManagement.java
+│   │       │   ├── FileLockManager.java
+│   │       │   ├── FileSystemImpl.java
+│   │       │   └── Inode.java
+│   │       ├── interrupt_management/     # 中断管理
+│   │       │   └── InterruptHandler.java
+│   │       ├── main/                     # 主要类
+│   │       │   ├── Constants.java
+│   │       │   ├── Library.java
+│   │       │   ├── Shell.java
+│   │       │   └── StartupInitializer.java
+│   │       ├── memory_management/        # 内存管理
+│   │       │   ├── Memory.java
+│   │       │   ├── MemoryManagement.java
+│   │       │   ├── MemoryManagementImpl.java
+│   │       │   ├── MMU.java
+│   │       │   ├── PageTable.java
+│   │       │   ├── PageTableArea.java
+│   │       │   └── PageTableEntry.java
+│   │       ├── process_management/       # 进程管理
+│   │       │   ├── CPU.java
+│   │       │   ├── PCB.java
+│   │       │   ├── PIDBitmap.java
+│   │       │   ├── ProcessState.java
+│   │       │   └── Scheduler.java
+│   │       ├── snapshot/                  # 快照
+│   │       │   └── SystemSnapshot.java
+│   │       ├── util/                      # 工具类
+│   │       │   ├── LogEmitterService.java
+│   │       │   └── SnapshotEmitterService.java
+│   │       └── OscdSpringApplication.java  # 应用程序入口
+│   └── resources/
+│       ├── application.properties
+│       ├── static/
+│       │   ├── index.html
+│       │   ├── css/
+│       │   │   └── style.css
+│       │   └── js/
+│       │       ├── device.js
+│       │       ├── disk.js
+│       │       ├── filesystem.js
+│       │       ├── memory.js
+│       │       ├── process.js
+│       │       ├── shell.js
+│       │       └── snapshotManager.js
+│       └── templates/
+└── test/
 ```
+
+代码结构为常见的 Spring 项目结构，程序从 `OscdSpringApplication.java` 为入口启动。
+
+操作系统核心逻辑按照功能划分为多个模块。每个模块负责不同的操作系统功能，并通过类和接口实现。
+
+控制器模块负责处理前端发出的请求；快照模块用于从各个模块采集操作系统的状态快照，填充展示给前端的json，并调用工具类把信息推送给前端；工具类负责消息与快照的前端推送服务。
+
+前端文件位于 `src/main/resources/static/` 目录下，用于动态展示系统的运行状态。
+
+`application.properties` 用于配置 Spring 属性，以及操作系统的部分属性（CPU数，调度算法）。
+
+
+
+### 代码说明
+
+```coffeescript
+src/main/java/org/example/oscdspring/OscdSpringApplication.java
+# Spring Boot 应用的入口类
+
+src/main/java/org/example/oscdspring/controller/ShellController.java
+# Spring 控制器，处理前端 Shell 提交的命令。它接收命令并通过 `Shell` 类处理，返回处理结果。包含解析普通shell指令和vi操作的接口
+
+src/main/java/org/example/oscdspring/controller/ShellSseController.java
+# 通过 SSE 推送实时消息给前端。包括 Shell 的输出和各模块运行时输出
+
+src/main/java/org/example/oscdspring/controller/SnapshotController.java
+# 提供一个 API 接口，允许前端通过 SSE 通道接收操作系统状态的实时快照
+
+src/main/java/org/example/oscdspring/device_management/DeviceManager.java
+# 设备管理类
+
+src/main/java/org/example/oscdspring/device_management/IODevice.java
+# I/O 设备类
+
+src/main/java/org/example/oscdspring/device_management/IORequest.java
+# I/O 请求类
+
+src/main/java/org/example/oscdspring/file_disk_management/Bitmap.java
+# 位图类
+
+src/main/java/org/example/oscdspring/file_disk_management/Directory.java
+# 目录类
+
+src/main/java/org/example/oscdspring/file_disk_management/Disk.java
+# 模拟磁盘类
+
+src/main/java/org/example/oscdspring/file_disk_management/FileDiskManagement.java
+# 文件管理的接口类，供其他模块调用基本方法
+
+src/main/java/org/example/oscdspring/file_disk_management/FileLockManager.java
+# 文件锁管理类
+
+src/main/java/org/example/oscdspring/file_disk_management/FileSystemImpl.java
+# 文件管理接口类的实现
+
+src/main/java/org/example/oscdspring/file_disk_management/Inode.java
+# 文件索引节点类
+
+src/main/java/org/example/oscdspring/interrupt_management/InterruptHandler.java
+# 中断处理类
+
+src/main/java/org/example/oscdspring/main/Constants.java
+# 常数
+
+src/main/java/org/example/oscdspring/main/Library.java
+# 管理各模块Manager对象的访问
+
+src/main/java/org/example/oscdspring/main/Shell.java
+# Shell命令解析类
+
+src/main/java/org/example/oscdspring/main/StartupInitializer.java
+# BIOS类，初始化系统
+
+src/main/java/org/example/oscdspring/memory_management/Memory.java
+# 模拟内存类
+
+src/main/java/org/example/oscdspring/memory_management/MemoryManagement.java
+# 内存管理接口
+
+src/main/java/org/example/oscdspring/memory_management/MemoryManagementImpl.java
+# 内存管理接口的具体实现
+
+src/main/java/org/example/oscdspring/memory_management/MMU.java
+# 内存管理单元
+
+src/main/java/org/example/oscdspring/memory_management/PageTable.java
+# 页表类
+
+src/main/java/org/example/oscdspring/memory_management/PageTableArea.java
+# 单例类，用于模拟内存系统区中存储页表的区域
+
+src/main/java/org/example/oscdspring/memory_management/PageTableEntry.java
+# 页表项类
+
+src/main/java/org/example/oscdspring/process_management/CPU.java
+# 模拟 CPU，负责执行指令
+
+src/main/java/org/example/oscdspring/process_management/PCB.java
+# 进程控制块类
+
+src/main/java/org/example/oscdspring/process_management/PIDBitmap.java
+#管理进程 ID 的分配
+
+src/main/java/org/example/oscdspring/process_management/ProcessState.java
+# 定义进程五种状态
+
+src/main/java/org/example/oscdspring/process_management/Scheduler.java
+# 进程调度器类
+
+src/main/java/org/example/oscdspring/snapshot/SystemSnapshot.java
+# 负责采集操作系统的实时状态并生成快照
+
+src/main/java/org/example/oscdspring/util/LogEmitterService.java
+# 日志发射服务
+
+src/main/java/org/example/oscdspring/util/SnapshotEmitterService.java
+# 快照发射服务
+
+src/main/resources/application.properties
+# Spring Boot 应用配置文件，定义系统的基本参数，以及调度算法，CPU数量
+
+src/main/resources/static/index.html
+# 前端首页
+
+src/main/resources/static/css/style.css
+# 样式
+
+src/main/resources/static/js/device.js
+# 设备管理前端交互与展示
+
+src/main/resources/static/js/disk.js
+# 磁盘占用前端交互与展示
+
+src/main/resources/static/js/filesystem.js
+# 目录结构展示
+
+src/main/resources/static/js/memory.js
+# 内存管理前端交互和显示
+
+src/main/resources/static/js/process.js
+# 进程管理前端交互和显示
+
+src/main/resources/static/js/shell.js
+# Shell前端交互逻辑
+
+src/main/resources/static/js/snapshotManager.js
+# 实时接收来自服务器的操作系统状态快照
+```
+
+
 
 ### 源代码
 
