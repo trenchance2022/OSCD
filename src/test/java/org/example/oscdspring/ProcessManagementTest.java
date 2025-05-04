@@ -1,12 +1,19 @@
 package org.example.oscdspring;
 
-import org.example.oscdspring.process_management.*;
+
 import org.junit.jupiter.api.Test;
+import org.example.oscdspring.process_management.*;
+import org.example.oscdspring.util.LogEmitterService;
 import static org.junit.jupiter.api.Assertions.*;
 import org.example.oscdspring.device_management.DeviceManager;
-import org.example.oscdspring.main.Library;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 
+@SpringBootTest
 class ProcessManagementTest {
+
+    @Autowired
+    private LogEmitterService logEmitterService;
 
     @Test
     void testPIDAllocationAndReuse() {
@@ -25,7 +32,7 @@ class ProcessManagementTest {
 
     @Test
     void testSchedulerFCFSOrder() {
-        Scheduler scheduler = Library.getScheduler();
+        Scheduler scheduler = Scheduler.getInstance();
         scheduler.configure(Scheduler.SchedulingPolicy.FCFS);
         // Create two processes with default priority (ignored in FCFS) and small code sizes
         PCB pcb1 = new PCB(PIDBitmap.getInstance().allocatePID(), 100, new int[]{0}, 0);
@@ -46,7 +53,7 @@ class ProcessManagementTest {
 
     @Test
     void testSchedulerPriorityScheduling() {
-        Scheduler scheduler = Library.getScheduler();
+        Scheduler scheduler = Scheduler.getInstance();
         scheduler.configure(Scheduler.SchedulingPolicy.PRIORITY);
         // Create two processes with different priority values
         PCB highPri = new PCB(PIDBitmap.getInstance().allocatePID(), 50, new int[]{0}, 1);  // priority 1 (higher)
@@ -65,7 +72,7 @@ class ProcessManagementTest {
 
     @Test
     void testSchedulerMLFQOrderAndTimeSlice() {
-        Scheduler scheduler = Library.getScheduler();
+        Scheduler scheduler = Scheduler.getInstance();
         scheduler.configure(Scheduler.SchedulingPolicy.MLFQ);
         // Create two processes assigned to different queues (simulate initial priority levels for MLFQ)
         PCB procQ0 = new PCB(PIDBitmap.getInstance().allocatePID(), 100, new int[]{0}, 0);  // starts in queue 0
@@ -89,7 +96,7 @@ class ProcessManagementTest {
 
     @Test
     void testSchedulerRoundRobinTimeSlice() {
-        Scheduler scheduler = Library.getScheduler();
+        Scheduler scheduler = Scheduler.getInstance();
         scheduler.configure(Scheduler.SchedulingPolicy.RR);
         PCB pcb = new PCB(PIDBitmap.getInstance().allocatePID(), 300, new int[]{0}, 0);
         pcb.setState(ProcessState.READY);
@@ -100,7 +107,7 @@ class ProcessManagementTest {
 
     @Test
     void testCPUChangeProcessAndIsIdle() {
-        Scheduler scheduler = Library.getScheduler();
+        Scheduler scheduler = Scheduler.getInstance();
         DeviceManager devMgr = new DeviceManager();
         CPU cpu = new CPU(0, scheduler, devMgr);
         // Initially, CPU has no process

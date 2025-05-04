@@ -5,7 +5,9 @@ import org.example.oscdspring.process_management.*;
 import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 import org.example.oscdspring.main.Library;
+import org.springframework.boot.test.context.SpringBootTest;
 
+@SpringBootTest
 class DeviceManagementTest {
 
     @Test
