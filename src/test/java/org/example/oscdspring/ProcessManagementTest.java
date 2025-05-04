@@ -40,8 +40,8 @@ class ProcessManagementTest {
         pcb1.setState(ProcessState.READY);
         pcb2.setState(ProcessState.READY);
         // Add in order: pcb1 then pcb2
-        scheduler.addReadyProcess(pcb1);
-        scheduler.addReadyProcess(pcb2);
+        scheduler.addReadyProcess_test(pcb1);
+        scheduler.addReadyProcess_test(pcb2);
 
         PCB next1 = scheduler.getNextProcess();
         PCB next2 = scheduler.getNextProcess();
@@ -61,8 +61,8 @@ class ProcessManagementTest {
         highPri.setState(ProcessState.READY);
         lowPri.setState(ProcessState.READY);
         // Add low priority first, then high priority
-        scheduler.addReadyProcess(lowPri);
-        scheduler.addReadyProcess(highPri);
+        scheduler.addReadyProcess_test(lowPri);
+        scheduler.addReadyProcess_test(highPri);
 
         PCB first = scheduler.getNextProcess();
         PCB second = scheduler.getNextProcess();
@@ -79,8 +79,8 @@ class ProcessManagementTest {
         PCB procQ2 = new PCB(PIDBitmap.getInstance().allocatePID(), 100, new int[]{0}, 2);  // starts in queue 2
         procQ0.setState(ProcessState.READY);
         procQ2.setState(ProcessState.READY);
-        scheduler.addReadyProcess(procQ2);
-        scheduler.addReadyProcess(procQ0);
+        scheduler.addReadyProcess_test(procQ2);
+        scheduler.addReadyProcess_test(procQ0);
 
         // In MLFQ, process in higher queue (0) should be scheduled before lower queue (2)
         PCB next = scheduler.getNextProcess();
@@ -89,9 +89,15 @@ class ProcessManagementTest {
         PCB next2 = scheduler.getNextProcess();
         assertEquals(procQ2, next2, "MLFQ should schedule lower queue process after higher queues are empty");
 
+        //获取两个进程所在队列的序号
+        int queueIndex0 = procQ0.getCurrentQueue();
+        int queueIndex2 = procQ2.getCurrentQueue();
+        int timeslice0 = scheduler.getTimeSlice(queueIndex0);
+        int timeslice2 = scheduler.getTimeSlice(queueIndex2);
+
         // Verify time slice assignments for MLFQ levels (queue 0 -> 500ms, queue 2 -> 2000ms as per Constants)
-        assertEquals(500, procQ0.getTimeSlice(), "MLFQ queue 0 process should have time slice 500ms");
-        assertEquals(2000, procQ2.getTimeSlice(), "MLFQ queue 2 process should have time slice 2000ms");
+        assertEquals(500, timeslice0, "MLFQ queue 0 process should have time slice 500ms");
+        assertEquals(2000, timeslice2, "MLFQ queue 2 process should have time slice 2000ms");
     }
 
     @Test

@@ -398,4 +398,18 @@ public class Scheduler extends Thread {
     public List<CPU> getCpus() {
         return cpus;
     }
+    public void addReadyProcess_test(PCB pcb) {
+        lock.lock();
+        try {
+            if (pcb != null && pcb.getState() == ProcessState.READY) {
+                readyQueues.get(pcb.getCurrentQueue()).add(pcb);
+            }
+        } finally {
+            lock.unlock();
+        }
+    }
+
+    public int[] getTimeSlices() {
+        return timeSlices;
+    }
 }
