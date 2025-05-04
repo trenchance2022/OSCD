@@ -93,13 +93,13 @@ public class StartupInitializer implements ApplicationRunner {
 
         // 读写互斥测试程序
         fileSystem.createFile("t5", 1);
-        fileSystem.editFile("t5", "M 4096#W t4 2000#Q#");
+        fileSystem.editFile("t5", "M 4096#W t4 10000#Q#");
         fileSystem.createFile("t6", 1);
-        fileSystem.editFile("t6", "M 4096#W t4 2000#Q#");
+        fileSystem.editFile("t6", "M 4096#W t4 10000#Q#");
         fileSystem.createFile("t7", 1);
-        fileSystem.editFile("t7", "M 4096#R t4 2000#Q#");
+        fileSystem.editFile("t7", "M 4096#R t4 10000#Q#");
         fileSystem.createFile("t8", 1);
-        fileSystem.editFile("t8", "M 4096#R t4 2000#Q#");
+        fileSystem.editFile("t8", "M 4096#R t4 10000#Q#");
 
         // 进程调度测试程序
         fileSystem.createFile("t9", 1);
