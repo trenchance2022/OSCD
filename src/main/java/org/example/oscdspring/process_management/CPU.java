@@ -389,6 +389,15 @@ public class CPU extends Thread {
                     byte[] readData = new byte[readBytes];
                     if (!memoryManagement.Read(this, logicAddress, readData, readBytes)) {
                         LogEmitterService.getInstance().sendLog("CPU-" + cpuId + " 内存读取失败");
+                    }else{
+                        LogEmitterService.getInstance().sendLog("CPU-" + cpuId + " 内存读结果如下：");
+                        for (int i = 0; i < readBytes; i+=1024) {
+                            StringBuilder sb = new StringBuilder();
+                            for (int j = i; j < Math.min(i + 1024, readBytes); j++) {
+                                sb.append((char) readData[j]);
+                            }
+                            LogEmitterService.getInstance().sendLog(sb.toString());
+                        }
                     }
                     break;
                 default:

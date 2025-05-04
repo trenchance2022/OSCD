@@ -119,6 +119,16 @@ public class StartupInitializer implements ApplicationRunner {
         fileSystem.createFile("t16", 1);
         fileSystem.editFile("t16", "C 10000#Q#");
 
+        // 内存管理测试程序
+
+        // 正常读写，分配100000字节内存
+        fileSystem.createFile("m1", 1);
+        fileSystem.editFile("m1", "C 3000#M 100000#C 3000#MR 0 100000#C 3000#MW 100 90000#C 3000#MR 0 100000#C 3000#Q#");
+        // 读写越界,分配100000字节内存，读101000 终止操作，报错
+        fileSystem.createFile("m2", 1);
+        fileSystem.editFile("m2", "C 2000#M 100000#C 2000#MW 100 101000#Q#");
+
+
         // 回到根目录
         fileSystem.goBack();
         // 启动调度器（调度器内部一般会启动自己的线程处理调度逻辑）
