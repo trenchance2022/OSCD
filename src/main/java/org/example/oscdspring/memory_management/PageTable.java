@@ -26,6 +26,24 @@ public class PageTable {
 
     }
 
+    @Override
+    public PageTable clone(){
+        PageTable pageTable = new PageTable(this.pid, this.entries.size(), new int[this.entries.size()]);
+        for (int i = 0; i < this.entries.size(); i++) {
+            pageTable.entries.set(i, (PageTableEntry) this.entries.get(i).clone());
+        }
+        pageTable.memoryBlockUsed = this.memoryBlockUsed;
+        pageTable.pointer = this.pointer;
+        return pageTable;
+    }
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
+        PageTable pageTable = (PageTable) obj;
+        return pid == pageTable.pid && memoryBlockUsed == pageTable.memoryBlockUsed && pointer == pageTable.pointer && entries.equals(pageTable.entries);
+    }
+
     public boolean hasValidPage() {
         for (PageTableEntry entry : entries) {
             if (entry.isValid()) {

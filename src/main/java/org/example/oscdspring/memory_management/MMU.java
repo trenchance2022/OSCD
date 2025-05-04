@@ -9,8 +9,31 @@ import static org.example.oscdspring.main.Library.getFileSystem;
 // 每个CPU都有一个MMU，MMU负责地址转换，内含TLB缓冲区，页表寄存器
 public class MMU {
 
-    private final PTR ptr = new PTR();//页表寄存器
-    private final TLB tlb = new TLB();//TLB缓冲区
+    private final PTR ptr ;//页表寄存器
+    private final TLB tlb ;//TLB缓冲区
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
+        MMU mmu = (MMU) obj;
+        return ptr.equals(mmu.ptr) && tlb.equals(mmu.tlb);
+    }
+
+    @Override
+    public MMU clone(){
+        return new MMU(this.ptr.clone(), this.tlb.clone());
+    }
+
+    public MMU(){
+        this.ptr = new PTR();
+        this.tlb = new TLB();
+    }
+
+    public MMU(PTR ptr, TLB tlb) {
+        this.ptr = ptr;
+        this.tlb = tlb;
+    }
 
     // 切换进程时调用，更新页表寄存器和TLB
     public void update(PCB pcb) {
@@ -22,6 +45,7 @@ public class MMU {
     public void addPageSize(int pageSize) {
         ptr.addPageSize(pageSize);
     }
+
     public void setLastPageSize(int lastPageSize) {
         ptr.setLastPageSize(lastPageSize);
     }
@@ -46,7 +70,7 @@ public class MMU {
 
         int pageNumber = logicalAddress / Constants.PAGE_SIZE_BYTES;
         int offset = logicalAddress % Constants.PAGE_SIZE_BYTES;
-        if (pageNumber >= ptr.getPageTableSize()||pageNumber== ptr.getPageTableSize()-1&&offset>=ptr.getLastPageSize()) {
+        if (pageNumber >= ptr.getPageTableSize() || pageNumber == ptr.getPageTableSize() - 1 && offset >= ptr.getLastPageSize()) {
             LogEmitterService.getInstance().sendLog("逻辑地址超出范围 MMU");
             return -2;
         }
@@ -77,6 +101,31 @@ public class MMU {
         }
         return frameNumber * Constants.PAGE_SIZE_BYTES + offset;
     }
+
+    public int getInnerFragmentation() {
+        return ptr.getInnerFragmentation();
+    }
+
+    public int getPageTableAddress() {
+        return ptr.getPageTableAddress();
+    }
+
+    public int getPageTableSize() {
+        return ptr.getPageTableSize();
+    }
+
+    public int getCodeSize() {
+        return ptr.getCodeSize();
+    }
+
+    public Object getTLB() {
+        return tlb;
+    }
+
+    public boolean isTLBEmpty() {
+        return tlb.isEmpty();
+    }
+
 }
 
 class PTR {
@@ -85,6 +134,29 @@ class PTR {
     private int codeSize;//代码段大小
     private int innerFragmentation;//内部碎片(代码段与数据段之间的碎片)
     private int lastPageSize;//数据段最后一页的大小
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
+        PTR ptr = (PTR) obj;
+        return pageTableAddress == ptr.getPageTableAddress()
+                && pageTableSize == ptr.getPageTableSize()
+                && codeSize == ptr.getCodeSize()
+                && innerFragmentation == ptr.getInnerFragmentation()
+                && lastPageSize == ptr.getLastPageSize();
+    }
+
+    @Override
+    public PTR clone(){
+        PTR ptr = new PTR();
+        ptr.pageTableAddress = pageTableAddress;
+        ptr.pageTableSize = pageTableSize;
+        ptr.codeSize = codeSize;
+        ptr.innerFragmentation = innerFragmentation;
+        ptr.lastPageSize = lastPageSize;
+        return ptr;
+    }
 
     public void update(PCB pcb) {
         pageTableAddress = pcb.getPageTableAddress();
@@ -127,6 +199,38 @@ class PTR {
 class TLB {
     private final TLBEntry[] TLB = new TLBEntry[Constants.TLB_SIZE];
     private int clockHand = 0;//指针，指向下一个要替换的TLB项
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
+        TLB tlb = (TLB) obj;
+        for (int i = 0; i < Constants.TLB_SIZE; i++) {
+            if (!TLB[i].equals(tlb.TLB[i])) {
+                return false;
+            }
+        }
+        return clockHand == tlb.clockHand;
+    }
+
+    @Override
+    public TLB clone(){
+        TLB tlb = new TLB();
+        for (int i = 0; i < Constants.TLB_SIZE; i++) {
+            tlb.TLB[i] = (TLBEntry) TLB[i].clone();
+        }
+        tlb.clockHand = clockHand;
+        return tlb;
+    }
+
+    public boolean isEmpty() {
+        for (TLBEntry entry : TLB) {
+            if (entry.isValid()) {
+                return false;
+            }
+        }
+        return true;
+    }
 
     public TLB() {
         for (int i = 0; i < Constants.TLB_SIZE; i++) {
@@ -211,6 +315,29 @@ class TLBEntry {
     private boolean valid;//是否有效
     private boolean dirty;//是否被修改过
     private boolean accessed;//用于clock算法，是否被访问过
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
+        TLBEntry tlbEntry = (TLBEntry) obj;
+        return pageNumber == tlbEntry.pageNumber
+                && frameNumber == tlbEntry.frameNumber
+                && valid == tlbEntry.valid
+                && dirty == tlbEntry.dirty
+                && accessed == tlbEntry.accessed;
+    }
+
+    @Override
+    public TLBEntry clone() {
+        TLBEntry tlbEntry = new TLBEntry();
+        tlbEntry.pageNumber = pageNumber;
+        tlbEntry.frameNumber = frameNumber;
+        tlbEntry.valid = valid;
+        tlbEntry.dirty = dirty;
+        tlbEntry.accessed = accessed;
+        return tlbEntry;
+    }
 
     public TLBEntry() {
         this.valid = false;
@@ -305,7 +432,8 @@ class PageFaultHandler {
                 if (replacePageTableEntry.isDirty()) {
                     // 如果被修改的页面此前没有对应，需要分配磁盘块
                     if (!replacePageTableEntry.isAllocatedDisk()) {
-                        int diskAddress = getFileSystem().allocateBlock();
+                        int diskAddress;
+                        diskAddress = getFileSystem().allocateBlock();
                         replacePageTableEntry.setDiskAddress(diskAddress);
                         replacePageTableEntry.AllocatedDisk();
 
@@ -327,7 +455,9 @@ class PageFaultHandler {
 
             // 将磁盘块读入内存
             if (faultPageTableEntry.getDiskAddress() != -1) {
-                Memory.getInstance().writeBlock(freeFrame, getFileSystem().readBlock(faultPageTableEntry.getDiskAddress()), pageTable.getPid(), pageNumber);
+                byte[] block;
+                block= getFileSystem().readBlock(faultPageTableEntry.getDiskAddress());
+                Memory.getInstance().writeBlock(freeFrame, block, pageTable.getPid(), pageNumber);
             }
             else{// 更新内存块状态
                 Memory.getInstance().updateBlock(freeFrame, pageTable.getPid(), pageNumber);

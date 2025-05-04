@@ -17,6 +17,25 @@ public class PageTableEntry {
         this.allocatedDisk = false;
     }
 
+    @Override
+    public PageTableEntry clone(){
+        PageTableEntry pageTableEntry = new PageTableEntry(this.diskAddress);
+        pageTableEntry.frameNumber = this.frameNumber;
+        pageTableEntry.valid = this.valid;
+        pageTableEntry.dirty = this.dirty;
+        pageTableEntry.accessed = this.accessed;
+        pageTableEntry.allocatedDisk = this.allocatedDisk;
+        return pageTableEntry;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
+        PageTableEntry that = (PageTableEntry) obj;
+        return frameNumber == that.frameNumber && valid == that.valid && dirty == that.dirty && accessed == that.accessed && diskAddress == that.diskAddress && allocatedDisk == that.allocatedDisk;
+    }
+
     public int getFrameNumber() {
         return frameNumber;
     }

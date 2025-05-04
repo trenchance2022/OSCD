@@ -21,6 +21,9 @@ public class LogEmitterService {
     }
 
     public static LogEmitterService getInstance() {
+        if (instance == null) {
+            instance = new LogEmitterService();
+        }
         return instance;
     }
 

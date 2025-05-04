@@ -16,6 +16,9 @@ public class Library {
     private static Scheduler scheduler;
 
     public static FileSystemImpl getFileSystem() {
+        if(fileSystem== null){
+            fileSystem = new FileSystemImpl();
+        }
         return fileSystem;
     }
 
