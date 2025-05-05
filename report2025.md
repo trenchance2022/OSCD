@@ -1256,6 +1256,8 @@ gantt
 
 结果甘特图：
 
+t9先到达，由于没有抢占，t9会先执行完毕。此后t12虽然比t11先到达，但是t11的代码段比t12小，所以t11先执行。
+
 ```mermaid
 gantt
     title Gantt Chart for t9, t11, t12
@@ -1290,6 +1292,8 @@ gantt
 
 结果甘特图：
 
+由于此模式不支持抢占，最先到达t9会最先被执行。执行期间t10和t11都已到达完毕，按照优先级执行。
+
 ```mermaid
 gantt
     title Gantt Chart for t9, t10, t11
@@ -1323,6 +1327,8 @@ gantt
 
 结果甘特图：
 
+t14最先到达，先执行一个时间片，在此期间，t15和t16均到达，于是t16会抢占t14，此后按优先级执行。
+
 ```mermaid
 gantt
     title Gantt Chart for t14, t15, t16
@@ -1352,9 +1358,152 @@ gantt
 
 #### 多CPU进程调度测试
 
+本测试使用2个CPU。
 
+##### FCFS
 
+测试命令：`exec t9 0 t10 0 t11 0`
 
+结果甘特图：
+
+```mermaid
+gantt
+    title Gantt Chart for t9, t10, t11
+    dateFormat  HH:mm
+    axisFormat  %H:%M
+    section t9
+    C 2000: 00:00, 00:02
+    section t10
+    C 3000: 00:00, 00:03
+    section t11
+    C 4000: 00:02, 00:06
+```
+
+结果截图：
+
+![](.\report2025.assets\多CPU-FCFS-1.png)
+
+![](.\report2025.assets\多CPU-FCFS-2.png)
+
+![](.\report2025.assets\多CPU-FCFS-3.png)
+
+##### SJF
+
+说明：本程序SJF调度算法按程序代码段大小对程序进行排序
+
+测试命令:`exec t9 0 t9 0 t12 0 t11 0 t11 0`
+
+结果甘特图：
+
+```mermaid
+gantt
+    title Gantt Chart for t9-1, t9-2, t11-1, t11-2, t12
+    dateFormat  HH:mm
+    axisFormat  %H:%M
+    section t9-1
+    C 2000: 00:00, 00:02
+    section t9-2
+    C 2000: 00:00, 00:02
+    section t12
+    C 1000: 00:06, 00:07
+    C 2000: 00:07, 00:09
+    section t11-1
+    C 4000: 00:02, 00:06
+    section t11-2
+    C 4000: 00:02, 00:06
+    
+```
+
+结果截图：
+
+![](.\report2025.assets\多CPU-SJF-1.png)
+
+![](.\report2025.assets\多CPU-SJF-2.png)
+
+![](.\report2025.assets\多CPU-SJF-3.png)
+
+##### RR
+
+测试命令：`exec t9 0 t10 0 t11 0`
+
+测试结果：CPU交替运行t9、t10、t11。
+
+##### PRIORITY
+
+测试命令：`exec t9 3 t9 3 t10 2 t11 1 t12 0`
+
+结果甘特图：
+
+由于此模式不支持抢占，t9会最先被执行。执行期间t10和t11和t12都已到达完毕，按照优先级执行。
+
+```mermaid
+gantt
+    title Gantt Chart for t9, t10, t11, t12
+    dateFormat  HH:mm
+    axisFormat  %H:%M
+    section t9-1
+    C 2000: 00:00, 00:02
+    section t9-2
+    C 2000: 00:00, 00:02
+    section t10
+    C 3000: 00:05, 00:08
+    section t11
+    C 4000: 00:02, 00:06
+    section t12
+    C 1000: 00:02, 00:03
+    C 2000: 00:03, 00:05
+```
+
+结果截图：
+
+![](.\report2025.assets\多CPU-优先级-1.png)
+
+![](.\report2025.assets\多CPU-优先级-2.png)
+
+![](.\report2025.assets\多CPU-优先级-3.png)
+
+![](.\report2025.assets\多CPU-优先级-4.png)
+
+![](.\report2025.assets\多CPU-优先级-5.png)
+
+##### MLFQ
+
+测试命令：`exec t13 0 t14 1 t15 2 t16 3`
+
+测试结果：CPU按t13, t14, t13,t15, t14, t13, t16, t15, t13的顺序依次执行完毕，符合MLFQ调度算法的预期。
+
+##### PRIORITY_Preemptive
+
+测试命令：`exec t14 3 t15 2 t16 1 t16 0`
+
+结果甘特图：
+
+t14和t15先到达，各先执行一个时间片，在此期间，两个t16到达，于是t16会抢占t14和t15，此后按优先级执行。
+
+```mermaid
+gantt
+    title Gantt Chart for t14, t15, t16
+    dateFormat  ss:SSS
+    axisFormat  %S:%L
+    section t14
+    C 2000: 00:000, 00:100
+    C 2000: 02:100, 04:000
+    section t15
+    C 2000: 00:000, 00:100
+    C 2000: 02:100, 04:000
+    section t16-1
+    C 2000: 00:100, 02:100
+    section t16-2
+    C 2000: 00:100, 02:100
+```
+
+结果截图：
+
+![](.\report2025.assets\多CPU-优先抢占-1.png)
+
+![](.\report2025.assets\多CPU-优先抢占-2.png)
+
+![](.\report2025.assets\多CPU-优先抢占-3.png)
 
 #### 设备调度测试
 
