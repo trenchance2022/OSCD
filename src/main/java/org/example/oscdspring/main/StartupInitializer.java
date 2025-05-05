@@ -113,11 +113,11 @@ public class StartupInitializer implements ApplicationRunner {
         fileSystem.createFile("t13", 1);
         fileSystem.editFile("t13", "C 10000#Q#");
         fileSystem.createFile("t14", 1);
-        fileSystem.editFile("t14", "C 10000#Q#");
+        fileSystem.editFile("t14", "C 2000#Q#");
         fileSystem.createFile("t15", 1);
-        fileSystem.editFile("t15", "C 10000#Q#");
+        fileSystem.editFile("t15", "C 2000#Q#");
         fileSystem.createFile("t16", 1);
-        fileSystem.editFile("t16", "C 10000#Q#");
+        fileSystem.editFile("t16", "C 2000#Q#");
 
         // 内存管理测试程序
 
