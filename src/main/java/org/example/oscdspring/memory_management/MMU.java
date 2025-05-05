@@ -403,6 +403,8 @@ class PageFaultHandler {
     // 更新页表项，更新TLB
     static public boolean handlePageFault(int pageTableAddress, TLB tlb, int pageNumber) {
         synchronized (lock) {
+            LogEmitterService.getInstance().sendLog("pageTableAddress: " + pageTableAddress + " pageNumber: " + pageNumber );
+
             // 读取页表
             PageTable pageTable = PageTableArea.getInstance().getPageTable(pageTableAddress);
             // 读取出错的页表项
@@ -422,6 +424,9 @@ class PageFaultHandler {
             // 物理内存已满或者页表内存用完，需要调出页面
             if ((!MemoryHasEmptyFrame) || (!PageHasEmptyFrame)) {
                 int replacePage = pageTable.getReplacePage();
+
+                LogEmitterService.getInstance().sendLog("pageTableAddress: " + pageTableAddress + " pageNumber: " + pageNumber+"replacePage: "+replacePage );
+
                 PageTableEntry replacePageTableEntry = pageTable.getEntry(replacePage, false);
                 if (replacePageTableEntry == null) {
                     System.err.println("按理说这里不可能false， 如果出现了说明有BUG，反馈给我，我会修改");
@@ -471,6 +476,7 @@ class PageFaultHandler {
 
             // 更新TLB
             tlb.addEntry(pageNumber, freeFrame);
+            LogEmitterService.getInstance().sendLog("pageTableAddress: " + pageTableAddress + " pageNumber: " + pageNumber+" over" );
             return true;
         }
     }

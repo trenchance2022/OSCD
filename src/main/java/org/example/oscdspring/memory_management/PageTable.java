@@ -62,6 +62,8 @@ public class PageTable {
     }
 
     public int getReplacePage() {//使用改进的clock算法
+        pointer = (pointer + 1) % entries.size();//指针指向下一个页表项
+
         for (int i = 0; i < entries.size(); i++) {
             // 第一次扫描，找到访问位为false,修改位为false的页
             if (entries.get(pointer).isValid()) {
@@ -75,7 +77,6 @@ public class PageTable {
             // 第二次扫描，找到访问位为true,修改位为false的页,并将访问位设置为false
             if (entries.get(pointer).isValid()) {
                 if (entries.get(pointer).isAccessed() && !entries.get(pointer).isDirty()) {
-                    entries.get(pointer).setDirty(false);
                     return pointer;
                 }
                 entries.get(pointer).setAccessed(false);
@@ -98,7 +99,7 @@ public class PageTable {
             }
             pointer = (pointer + 1) % entries.size();
         }
-        LogEmitterService.getInstance().sendLog("页表项没有在内存中找到可以替换的页");
+        LogEmitterService.getInstance().sendLog("进程未使用物理内存");
         return -1;
     }
 
