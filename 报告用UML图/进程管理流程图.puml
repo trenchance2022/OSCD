@@ -1,0 +1,32 @@
+@startuml
+actor 用户
+participant Shell
+participant Scheduler
+participant CPU
+participant PCB
+participant InterruptHandler
+participant DeviceManager
+
+用户 -> Shell : exec test.txt 1
+Shell -> Scheduler : createProcess()
+Scheduler -> PCB : 初始化 PCB（设置为 READY）
+CPU -> Scheduler : 请求就绪进程
+Scheduler -> CPU : 分配 PCB，状态变为 RUNNING
+CPU -> PCB : 执行伪指令（C / D / R / W）
+
+alt 阻塞指令（I/O）
+  CPU -> Scheduler : 设置为 WAITING
+  CPU -> DeviceManager : 提交设备请求
+  DeviceManager -> InterruptHandler : I/O 完成 → 中断
+  InterruptHandler -> Scheduler : 唤醒进程，回到 READY
+end
+
+alt 时间片耗尽
+  CPU -> InterruptHandler : 触发时钟中断
+  InterruptHandler -> Scheduler : 进程换出 / 优先级调整
+end
+
+alt 结束指令（Q）
+  CPU -> Scheduler : 回收资源，PCB 设置为 TERMINATED
+end
+@enduml

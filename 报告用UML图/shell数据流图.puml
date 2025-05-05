@@ -1,0 +1,16 @@
+@startuml
+actor 用户
+participant "Browser" as FE
+participant "ShellController (Spring Boot)" as Controller
+participant "Class Shell" as Shell
+participant "各功能模块\n(文件系统/调度器等)" as Modules
+participant "SSE推送器" as LogSSE
+
+用户 -> FE : 输入命令
+FE -> Controller : POST API
+Controller -> Shell : Parse()
+Shell --> LogSSE : 返回执行结果
+Shell -> Modules : 调用对应模块执行操作
+Modules --> LogSSE : 返回执行结果
+LogSSE -> FE : 呈现输出给用户
+@enduml
