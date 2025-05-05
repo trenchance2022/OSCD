@@ -11,21 +11,19 @@ import org.example.oscdspring.memory_management.Memory;
 import org.example.oscdspring.memory_management.MemoryManagement;
 import org.example.oscdspring.memory_management.MemoryManagementImpl;
 import org.example.oscdspring.memory_management.PageTable;
-import org.example.oscdspring.util.LogEmitterService;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
-import static org.example.oscdspring.main.Library.getMemoryManagement;
 import static org.junit.jupiter.api.Assertions.*;
 import org.example.oscdspring.main.Constants;
 import org.junit.jupiter.api.TestInstance;
+import org.springframework.boot.test.context.SpringBootTest;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Map;
 import java.util.Random;
 
 
+@SpringBootTest
 @Nested
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class MemoryManagementTest {
@@ -115,7 +113,7 @@ class MemoryManagementTest {
             byte []readContent =new byte[wrSize];
             memMan.Read(cpu,codeSize,readContent,wrSize);
 
-            assertTrue(Arrays.equals(wrContent, readContent), "Read content should equal the write content");
+            assertArrayEquals(wrContent, readContent, "Read content should equal the write content");
         }
 
         // 测试释放内存
@@ -148,13 +146,13 @@ class MemoryManagementTest {
             memMan.Read(cpu,codeSize,readContent,wrSize);
 
             Map<String, Object> usage2= memMan.getPageUse();
-            assertFalse(usage.equals(usage2), "Memory usage should change after allocation");
+            assertNotEquals(usage, usage2, "Memory usage should change after allocation");
             // 释放内存
             memMan.releaseProcess(pcb);
 
             // 释放后，物理内存使用情况应该与之前相同
             Map<String, Object> usage3= memMan.getPageUse();
-            assertTrue(usage.equals(usage3), "Memory usage should be the same after process release" );
+            assertEquals(usage, usage3, "Memory usage should be the same after process release");
         }
     }
 
@@ -247,22 +245,22 @@ class MemoryManagementTest {
             PCB pcb2 = new PCB(2,codeSize , addressBlock, 1);
             mmu.update(pcb1);
             // 检查mmu的ptr是否更新
-            assertTrue(mmu.getLastPageSize()== pcb1.getLastPageSize(), "MMU last page size should match PCB");
-            assertTrue(mmu.getPageTableAddress()== pcb1.getPageTableAddress(), "MMU page table address should match PCB");
-            assertTrue(mmu.getPageTableSize()== pcb1.getPageTableSize(), "MMU page table size should match PCB");
-            assertTrue(mmu.getCodeSize()== pcb1.getCodeSize(), "MMU code size should match PCB");
-            assertTrue(mmu.getInnerFragmentation()== pcb1.getInnerFragmentation(), "MMU inner fragmentation should match PCB");
+            assertEquals(mmu.getLastPageSize(), pcb1.getLastPageSize(), "MMU last page size should match PCB");
+            assertEquals(mmu.getPageTableAddress(), pcb1.getPageTableAddress(), "MMU page table address should match PCB");
+            assertEquals(mmu.getPageTableSize(), pcb1.getPageTableSize(), "MMU page table size should match PCB");
+            assertEquals(mmu.getCodeSize(), pcb1.getCodeSize(), "MMU code size should match PCB");
+            assertEquals(mmu.getInnerFragmentation(), pcb1.getInnerFragmentation(), "MMU inner fragmentation should match PCB");
             // 检查mmu的tlb是否刷新
             assertTrue(mmu.isTLBEmpty(), "TLB should be empty after process switch");
 
             // 切换到第二个进程
             mmu.update(pcb2);
             // 检查mmu的ptr是否更新
-            assertTrue(mmu.getLastPageSize()== pcb2.getLastPageSize(), "MMU last page size should match PCB");
-            assertTrue(mmu.getPageTableAddress()== pcb2.getPageTableAddress(), "MMU page table address should match PCB");
-            assertTrue(mmu.getPageTableSize()== pcb2.getPageTableSize(), "MMU page table size should match PCB");
-            assertTrue(mmu.getCodeSize()== pcb2.getCodeSize(), "MMU code size should match PCB");
-            assertTrue(mmu.getInnerFragmentation()== pcb2.getInnerFragmentation(), "MMU inner fragmentation should match PCB");
+            assertEquals(mmu.getLastPageSize(), pcb2.getLastPageSize(), "MMU last page size should match PCB");
+            assertEquals(mmu.getPageTableAddress(), pcb2.getPageTableAddress(), "MMU page table address should match PCB");
+            assertEquals(mmu.getPageTableSize(), pcb2.getPageTableSize(), "MMU page table size should match PCB");
+            assertEquals(mmu.getCodeSize(), pcb2.getCodeSize(), "MMU code size should match PCB");
+            assertEquals(mmu.getInnerFragmentation(), pcb2.getInnerFragmentation(), "MMU inner fragmentation should match PCB");
             // 检查mmu的tlb是否刷新
             assertTrue(mmu.isTLBEmpty(), "TLB should be empty after process switch");
 
@@ -342,7 +340,7 @@ class MemoryManagementTest {
             for(int i=0;i<codeSize;i+=1050){
                 int logicalAddress=i;
                 mmu.addressTranslation(logicalAddress,false);
-                assertFalse(mmuc.getTLB().equals(mmu.getTLB()), "TLB should be updated after address translation");
+                assertNotEquals(mmuc.getTLB(), mmu.getTLB(), "TLB should be updated after address translation");
             }
 
             // 同一页进行多次地址转换，检查tlb是否一致
@@ -353,7 +351,7 @@ class MemoryManagementTest {
                     mmuc=mmu.clone();
                     continue;
                 }
-                assertTrue(mmuc.getTLB().equals(mmu.getTLB()), "TLB should be same after address translation");
+                assertEquals(mmuc.getTLB(), mmu.getTLB(), "TLB should be same after address translation");
             }
         }
 
@@ -377,7 +375,7 @@ class MemoryManagementTest {
             for(int i=0;i<codeSize;i+=1050){
                 int logicalAddress=i;
                 mmu.addressTranslation(logicalAddress,false);
-                assertFalse(pageTable.equals(PageTableArea.getInstance().getPageTable(pageTableAddress).clone()), "TLB should be updated after address translation");
+                assertNotEquals(pageTable, PageTableArea.getInstance().getPageTable(pageTableAddress).clone(), "TLB should be updated after address translation");
             }
 
             // 同一页进行多次地址转换，检查tlb是否一致
@@ -388,7 +386,7 @@ class MemoryManagementTest {
                     pageTable=PageTableArea.getInstance().getPageTable(pageTableAddress).clone();
                     continue;
                 }
-                assertTrue(pageTable.equals(PageTableArea.getInstance().getPageTable(pageTableAddress).clone()), "TLB should be same after address translation");
+                assertEquals(pageTable, PageTableArea.getInstance().getPageTable(pageTableAddress).clone(), "TLB should be same after address translation");
             }
         }
     }
