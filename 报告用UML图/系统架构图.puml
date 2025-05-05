@@ -1,66 +1,84 @@
 @startuml
 left to right direction
-skinparam nodesep 50
-skinparam ranksep 130
-
 
 actor "用户" as user
-
 package "前端界面" {
   [浏览器UI] as UI
 }
-
 package "Shell接口" {
-  [ShellController] as shellCtl
+  [ShellController] <<REST接口>> as shellCtl
   [Shell解释器] as shell
 }
-
 package "进程管理" {
-  [调度器] as sched
-  [CPU核心] as cpu
+  [调度器] <<线程>> as sched
+  [CPU核心] <<线程>> as cpu1
+  [CPU核心] <<线程>> as cpu2
+  [PCB列表/队列] as pcbList
 }
-
 package "内存管理" {
   [MemoryManagement] as memMgmt
+  [物理内存] as memory
+  [页表/TLB] as pageTable
 }
-
-package "文件系统" {
+package "文件&磁盘管理" {
   [文件系统] as fs
+  [磁盘] as disk
+  [目录/_inode_] as dir
 }
-
 package "设备管理" {
   [设备管理器] as devMgr
+  [设备线程] <<线程>> as deviceThread
+  [I/O请求队列] as ioq
 }
-
-package "快照与日志" {
-  [快照服务] as snapEmit
-  [日志服务] as logEmit
+package "中断/锁机制" {
+  [中断处理器] as intH
+  [文件锁管理] as lockMgr
 }
-
-' 用户与系统交互
-user --> UI : 输入命令
-UI --> shellCtl : HTTP 请求
-shellCtl --> shell : 解析并执行命令
-
-' Shell 请求模块服务
-shell --> sched : 创建/终止进程
-shell --> memMgmt : 查询内存
-shell --> fs : 文件操作
-shell --> devMgr : 设备操作
-
-' CPU 执行进程
-sched --> cpu : 分配进程执行
-cpu --> memMgmt : 访存
-cpu --> fs : 文件读写
-cpu --> devMgr : I/O 请求
-
+package "日志与快照" {
+  [日志SSE服务] as logEmit
+  [快照SSE服务] as snapEmit
+  [系统快照任务] <<定时>> as snapshot
+}
+' 前端与Shell交互
+user --> UI : 输入命令/查看状态
+UI --> shellCtl : 提交命令 (HTTP POST)
+shellCtl --> shell : 调用 Shell.parseCommand()
+shell --> fs : 执行文件系统操作
+shell --> devMgr : 执行设备添加/移除
+shell --> memMgmt : 查询内存使用
+shell --> sched : 创建新进程 (exec) / 终止进程 (kill)
+' 进程与CPU调度
+sched --> cpu1 : 分配进程到CPU0执行
+sched --> cpu2 : 分配进程到CPU1执行
+cpu1 --> sched : 时间片完/进程阻塞，请求调度
+cpu1 -> memMgmt : 进程内存分配释放
+cpu1 --> memMgmt : 访存请求(经MMU地址转换)
+cpu1 -> intH : 触发时钟中断 (定时调度)
+cpu1 -> lockMgr : 请求文件读/写锁
+cpu1 -> devMgr : 提交外设I/O请求
+' 内存与磁盘
+memMgmt --> memory : 管理物理帧分配
+memMgmt --> pageTable : 维护页表/TLB
+memMgmt -> fs : 缺页时换入/换出页面
+intH -> memMgmt : 处理缺页中断 (页面置换)
+' 文件系统与锁
+fs --> disk : 磁盘块读写分配
+fs --> dir : 更新目录和inode结构
+lockMgr --> sched : 锁释放时唤醒等待进程
+' 设备I/O与中断
+devMgr --> deviceThread : 启动设备线程
+devMgr --> ioq : 加入I/O请求队列
+deviceThread --> ioq : 执行I/O请求
+deviceThread -> intH : I/O完成触发设备中断
+intH -> sched : 设备中断就绪对应进程
+intH -> lockMgr : I/O完成释放文件锁
 ' 日志与快照
-sched ..> snapEmit : 状态快照
-memMgmt ..> snapEmit
-fs ..> snapEmit
-devMgr ..> snapEmit
-[所有模块] ..> logEmit : 输出日志
-[所有模块] --> [中断处理] : 请求中断处理
-logEmit -> UI : 推送日志
-snapEmit -> UI : 推送快照
+snapshot -> sched : 收集进程/队列状态
+snapshot -> memMgmt : 收集内存使用情况
+snapshot -> fs : 收集文件目录/磁盘信息
+snapshot -> devMgr : 收集设备队列状态
+snapshot -> snapEmit : 推送系统快照事件
+所有模块 ..> logEmit : 输出日志消息
+logEmit -> UI : SSE推送日志更新
+snapEmit -> UI : SSE推送快照更新
 @enduml
