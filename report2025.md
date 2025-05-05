@@ -397,28 +397,31 @@ Shell支持根据当前所在目录动态更新终端提示符（如 `/root/dir1
 ### 项目目录结构
 
 ```elixir
-src/
-├── main/
-│   ├── java/
-│   │   └── org/example/oscdspring/
-│   │       ├── controller/              # 控制器
-│   │       ├── device_management/       # 设备管理
-│   │       ├── file_disk_management/    # 文件磁盘管理
-│   │       ├── interrupt_management/     # 中断管理
-│   │       ├── main/                     # 系统全局
-│   │       ├── memory_management/        # 内存管理
-│   │       ├── process_management/       # 进程管理
-│   │       ├── snapshot/                  # 快照
-│   │       ├── util/                      # 工具
-│   │       └── OscdSpringApplication.java	# 启动类
-│   ├── resources/
-│   │   ├── application.properties
-│   │   ├── static/
-│   │   │   ├── index.html
-│   │   │   ├── css/
-│   │   │   └── js/
-│   │   └── templates/
-└── test/
+OSCD/
+├── pom.xml                               # Maven 项目构建文件
+└── src/
+    ├── main/
+    │   ├── java/
+    │   │   └── org/example/oscdspring/
+    │   │       ├── controller/              # 控制器
+    │   │       ├── device_management/       # 设备管理
+    │   │       ├── file_disk_management/    # 文件磁盘管理
+    │   │       ├── interrupt_management/    # 中断管理
+    │   │       ├── main/                    # 系统全局类与BIOS
+    │   │       ├── memory_management/       # 内存管理
+    │   │       ├── process_management/      # 进程管理
+    │   │       ├── snapshot/                # 系统快照
+    │   │       ├── util/                    # 工具类
+    │   │       └── OscdSpringApplication.java  # Spring Boot 启动类
+    │   └── resources/
+    │       ├── application.properties       # Spring 配置文件
+    │       ├── static/
+    │       │   ├── index.html               # 前端入口页面
+    │       │   ├── css/                     # 样式文件目录
+    │       │   └── js/                      # JavaScript 脚本目录
+    │       └── templates/                   # Thymeleaf 模板目录
+    └── test/
+        └── java/org/example/oscdspring/     # JUnit 单元测试
 ```
 
 
@@ -443,15 +446,11 @@ src/
 
 
 
-
-
 #### 模块划分
 
-#### 系统架构图（这是最重要的地方）
+#### 系统架构图
 
-（通过图示的方式展示系统的整体架构，包含各个模块、组件及其相互关系，使用plantuml代码，图中内容尽可能详细且正确）
-
-
+![image-20250505164224013](./report2025.assets/image-20250505164224013.png)
 
 ### 模块设计
 
@@ -471,29 +470,29 @@ src/
 
 ![image-20250505141146434](./report2025.assets/image-20250505141146434.png)
 
-进程管理区
+#### 进程管理区
 
-显示所有CPU核心上的当前运行进程及调度队列情况。file-cx1nyfj8dunbtgj5ynyarofile-cx1nyfj8dunbtgj5ynyaro界面采用表格形式：每个CPU作为一行，列出CPU编号、当前运行进程PID、进程名称、执行指令、剩余运行时间、优先级等动态信息。表格下方用文本列出全局就绪队列和等待队列的进程列表，以及当前采用的调度策略。file-cx1nyfj8dunbtgj5ynyarofile-k7xwc2dbthkurww8gh6tya用户据此可以观察调度算法的运行效果（如进程在就绪/等待队列间移动、时间片倒计时等）。该区域数据来源于快照系统的`processManagement`部分，前端每次收到快照事件即更新表格内容和队列文本，实现对调度状态的实时监控。
+显示所有CPU核心上的当前运行进程及调度队列情况。界面采用表格形式：每个CPU作为一行，列出CPU编号、当前运行进程PID、进程名称、执行指令、剩余运行时间、优先级等动态信息。表格下方用文本列出全局就绪队列和等待队列的进程列表，以及当前采用的调度策略。用户据此可以观察调度算法的运行效果（如进程在就绪/等待队列间移动、时间片倒计时等）。该区域数据来源于快照系统的`processManagement`部分，前端每次收到快照事件即更新表格内容和队列文本，实现对调度状态的实时监控。
 
-内存可视化区
+#### 内存可视化区
 
-模拟物理内存的使用情况，以8×8网格共64个小格表示固定数量的内存页帧。file-cx1nyfj8dunbtgj5ynyaro每个小格对应一个物理帧，颜色和文字标识其分配状态：空闲帧以灰色显示，已占用帧则填充特定进程的颜色并标注该进程PID（或内核/系统保留帧特殊标记）及对应的页号。file-qzr1q2u9pe5dxhm1wf4zo7file-qzr1q2u9pe5dxhm1wf4zo7当进程分配或释放内存、发生页面换入换出时，此区域相应格子会改变颜色或内容。用户可通过此图直观了解内存分配，以及页面置换时哪些帧被替换。比如，当某进程新增内存需求导致置换，某格颜色会从原进程颜色变为新进程颜色。网格支持悬停显示tooltip，提供帧号、所属进程、页号等详细信息file-qzr1q2u9pe5dxhm1wf4zo7。这种可视化有助于理解分页和虚拟内存机制的动态行为。
+模拟物理内存的使用情况，以8×8网格共64个小格表示固定数量的内存页帧。每个小格对应一个物理帧，颜色和文字标识其分配状态：空闲帧以灰色显示，已占用帧则填充特定进程的颜色并标注该进程PID及对应的页号（通过鼠标悬停可以显示）。当进程分配或释放内存、发生页面换入换出时，此区域相应格子会改变颜色或内容。用户可通过此图直观了解内存分配，以及页面置换时哪些帧被替换。网格支持悬停显示tooltip，提供帧号、所属进程、页号等详细信息。这种可视化有助于理解分页和虚拟内存机制的动态行为。
 
-文件目录区
+#### 文件目录区
 
-以树状结构文本显示文件系统当前目录及其子目录、文件列表。file-cx1nyfj8dunbtgj5ynyaro采用ASCII绘图风格，如目录前有“`├──`”和“`└──`”符号区分层次结构。根目录`root/`作为起点，列出其中包含的所有文件和子目录，每个子目录下又以缩进方式列出其内容，递归显示整个文件系统层次。file-j54desmklj1kn4zgbjzl8yfile-j54desmklj1kn4zgbjzl8y前端在每次收到快照中`fileDirectory`字符串后更新此文本区域。用户可以一目了然地看到当前磁盘上的目录结构和文件分布情况。例如，在Shell执行`mkdir`、`rm`等命令后，此区域会刷新体现新建或删除的文件/目录。由于快照频率高（0.1秒），对于文件系统变化用户几乎可以实时看到结果。
+以树状结构文本显示文件系统当前目录及其子目录、文件列表。采用ASCII绘图风格，如目录前有“`├──`”和“`└──`”符号区分层次结构。根目录`root/`作为起点，列出其中包含的所有文件和子目录，每个子目录下又以缩进方式列出其内容，递归显示整个文件系统层次。前端在每次收到快照中`fileDirectory`字符串后更新此文本区域。用户可以一目了然地看到当前磁盘上的目录结构和文件分布情况。例如，在Shell执行`mkdir`、`rm`等命令后，此区域会刷新体现新建或删除的文件/目录。由于快照频率高，对于文件系统变化用户几乎可以实时看到结果。
 
-Shell终端区
+#### Shell终端区
 
-界面右侧下方留出一块终端模拟窗口，包含顶部的命令输入行和下方滚动的输出日志区域。file-cx1nyfj8dunbtgj5ynyarofile-cx1nyfj8dunbtgj5ynyaro用户在命令输入行中键入指令，类似真实终端以“`>`”提示符开头，支持自由编辑和使用退格等。按下回车后，输入的命令行连同当前提示符会追加到下方输出日志区域，模拟命令被提交执行的显示效果file-mgezfiqff6zzb2sqrtebasfile-mgezfiqff6zzb2sqrtebas。随后，后台处理该命令产生的所有输出（例如`ls`列出的文件名，`ps`命令若有的话进程列表，或者错误信息等）会逐行添加到日志区域。file-mgezfiqff6zzb2sqrtebas日志输出使用单独的字体样式，保证与输入提示符区分。Shell区还能动态更新当前路径提示符：当用户改变目录后，提示符会相应变为新路径，如`/root/docs>`，实现方式是前端收到后端发送的`PROMPT:`事件后修改提示符文本file-mgezfiqff6zzb2sqrtebas。此外，Shell区与前端VI编辑器交互：当用户输入`vi file`命令时，如果文件不存在，后端首先通过日志发送`OPEN_VI_*:`信号，前端弹出提示（如“文件不存在，将创建新文件”）file-mgezfiqff6zzb2sqrtebas；然后发送`OPEN_VI:`信号携带文件名，终端区暂停输出并弹出VI编辑窗口覆盖Shell区，等待用户输入文本。file-mgezfiqff6zzb2sqrtebas编辑完成保存后，VI窗口关闭，Shell终端继续显示后续日志。Shell区域基本模拟了一个交互式命令行环境，通过配合SSE实现了后端输出即时呈现，增强了用户对系统控制的沉浸感。
+界面左侧下方留出一块终端模拟窗口，包含顶部的命令输入行和下方滚动的输出日志区域。用户在命令输入行中键入指令，类似真实终端以“`>`”提示符开头，支持自由编辑和使用退格等。按下回车后，输入的命令行连同当前提示符会追加到下方输出日志区域，模拟命令被提交执行的显示效果。随后，后台处理该命令产生的所有输出（例如`ls`列出的文件名）会逐行添加到日志区域。Shell区还能动态更新当前路径提示符：当用户改变目录后，提示符会相应变为新路径，如`/root/docs>`。此外，Shell区与前端VI编辑器交互：当用户输入`vi file`命令时，如果文件不存在，前端弹出提示（如“文件不存在，将创建新文件”），终端区暂停输出并弹出VI编辑窗口覆盖Shell区，等待用户输入文本。编辑完成保存后，VI窗口关闭，Shell终端继续显示后续日志。Shell区域基本模拟了一个交互式命令行环境。
 
-磁盘状态区
+#### 磁盘状态区
 
-采用小格矩阵表示磁盘块使用情况。设计为16列×64行的网格，总计1024格对应磁盘的1024个块（假定每块1KB，整个磁盘1MB）。file-cx1nyfj8dunbtgj5ynyarofile-cx1nyfj8dunbtgj5ynyaro每个小格代表一个磁盘块，使用颜色区分空闲和已占用状态（例如白色为空闲，深色为占用）。当有文件创建、扩展或删除时，此区域将有若干格子颜色发生变化，反映磁盘位图的改变情况。前端根据快照中`diskManagement`的occupiedBlocks列表，将对应索引的格子着色为占用，其余为空闲。直观上，用户可看到磁盘空间的分布碎片状况：如果连续创建大文件会有大片格子变色，删除文件会出现空洞。虽然无法精确显示文件内容，但此宏观视图有助于理解文件存储和磁盘分配机制。
+采用小格矩阵表示磁盘块使用情况。设计为16列×64行的网格，总计1024格对应磁盘的1024个块。每个小格代表一个磁盘块，使用颜色区分空闲和已占用状态（白色为空闲，深色为占用）。当有文件创建、扩展或删除时，此区域将有若干格子颜色发生变化，反映磁盘位图的改变情况。前端根据快照中`diskManagement`的occupiedBlocks列表，将对应索引的格子着色为占用，其余为空闲。直观上，用户可看到磁盘空间的分布碎片状况：如果连续创建大文件会有大片格子变色，删除文件会出现空洞。虽然无法精确显示文件内容，但此宏观视图有助于理解文件存储和磁盘分配机制。
 
-设备列表区
+#### 设备列表区
 
-显示当前系统中登记的所有模拟设备及其工作状态。file-cx1nyfj8dunbtgj5ynyarofile-cx1nyfj8dunbtgj5ynyaro界面用表格列出每个设备：包括设备名称（如“Printer_1”等）、当前正在为哪个进程服务（若空闲则标记“空闲”），以及其等待队列中的进程PID列表。每当有进程请求某设备I/O，该进程PID会出现在对应设备的等待队列栏，并在设备空闲时移至“运行进程”栏；I/O完成后，该进程PID将从设备表中消失并重新出现在就绪队列（由进程区显示）。用户通过此表可以观察设备并行工作的情况和I/O队列积压状况。例如，启动两个进程同时访问Printer_1，则设备列表会显示Printer_1的运行进程为其中一个，等待队列含另一个PID，当第一个完成后等待的进程转为运行。设备添加和移除操作（通过`addevc`/`rmdevc`）会动态更新此表增删行。总之，设备列表区提供了对系统外围设备活动的直观监控。
+显示当前系统中登记的所有模拟设备及其工作状态。界面用表格列出每个设备：包括设备标识符（如“Printer_1”等）、当前正在为哪个进程服务（若空闲则标记“空闲”），以及其等待队列中的进程PID列表。每当有进程请求某设备I/O，该进程PID会出现在对应设备的等待队列栏，并在设备空闲时移至“运行进程”栏；I/O完成后，该进程PID将从设备表中消失并重新出现在就绪队列（由进程区显示）。用户通过此表可以观察设备并行工作的情况和I/O队列积压状况。例如，启动两个进程同时访问Printer_1，则设备列表会显示Printer_1的运行进程为其中一个，等待队列含另一个PID，当第一个完成后等待的进程转为运行。设备添加和移除操作（通过`addevc`/`rmdevc`）会动态更新此表增删行。设备列表区提供了对系统外围设备活动的直观监控。
 
 
 
@@ -578,69 +577,77 @@ Q# 									#进程结束，释放资源
 ### 代码结构
 
 ```elixir
-src/
-├── main/
-│   ├── java/
-│   │   └── org/example/oscdspring/
-│   │       ├── controller/              # 控制器
-│   │       │   ├── ShellController.java
-│   │       │   ├── ShellSseController.java
-│   │       │   └── SnapshotController.java
-│   │       ├── device_management/       # 设备管理
-│   │       │   ├── DeviceManager.java
-│   │       │   ├── IODevice.java
-│   │       │   └── IORequest.java
-│   │       ├── file_disk_management/    # 文件磁盘管理
-│   │       │   ├── Bitmap.java
-│   │       │   ├── Directory.java
-│   │       │   ├── Disk.java
-│   │       │   ├── FileDiskManagement.java
-│   │       │   ├── FileLockManager.java
-│   │       │   ├── FileSystemImpl.java
-│   │       │   └── Inode.java
-│   │       ├── interrupt_management/     # 中断管理
-│   │       │   └── InterruptHandler.java
-│   │       ├── main/                     # 主要类
-│   │       │   ├── Constants.java
-│   │       │   ├── Library.java
-│   │       │   ├── Shell.java
-│   │       │   └── StartupInitializer.java
-│   │       ├── memory_management/        # 内存管理
-│   │       │   ├── Memory.java
-│   │       │   ├── MemoryManagement.java
-│   │       │   ├── MemoryManagementImpl.java
-│   │       │   ├── MMU.java
-│   │       │   ├── PageTable.java
-│   │       │   ├── PageTableArea.java
-│   │       │   └── PageTableEntry.java
-│   │       ├── process_management/       # 进程管理
-│   │       │   ├── CPU.java
-│   │       │   ├── PCB.java
-│   │       │   ├── PIDBitmap.java
-│   │       │   ├── ProcessState.java
-│   │       │   └── Scheduler.java
-│   │       ├── snapshot/                  # 快照
-│   │       │   └── SystemSnapshot.java
-│   │       ├── util/                      # 工具类
-│   │       │   ├── LogEmitterService.java
-│   │       │   └── SnapshotEmitterService.java
-│   │       └── OscdSpringApplication.java  # 应用程序入口
-│   └── resources/
-│       ├── application.properties
-│       ├── static/
-│       │   ├── index.html
-│       │   ├── css/
-│       │   │   └── style.css
-│       │   └── js/
-│       │       ├── device.js
-│       │       ├── disk.js
-│       │       ├── filesystem.js
-│       │       ├── memory.js
-│       │       ├── process.js
-│       │       ├── shell.js
-│       │       └── snapshotManager.js
-│       └── templates/
-└── test/
+OSCD/
+├── pom.xml
+└── src/
+    ├── main/
+    │   ├── java/
+    │   │   └── org/example/oscdspring/
+    │   │       ├── controller/                    # 控制器
+    │   │       │   ├── ShellController.java
+    │   │       │   ├── ShellSseController.java
+    │   │       │   └── SnapshotController.java
+    │   │       ├── device_management/             # 设备管理
+    │   │       │   ├── DeviceManager.java
+    │   │       │   ├── IODevice.java
+    │   │       │   └── IORequest.java
+    │   │       ├── file_disk_management/          # 文件磁盘管理
+    │   │       │   ├── Bitmap.java
+    │   │       │   ├── Directory.java
+    │   │       │   ├── Disk.java
+    │   │       │   ├── FileDiskManagement.java
+    │   │       │   ├── FileLockManager.java
+    │   │       │   ├── FileSystemImpl.java
+    │   │       │   └── Inode.java
+    │   │       ├── interrupt_management/          # 中断管理
+    │   │       │   └── InterruptHandler.java
+    │   │       ├── main/                          # 主要类
+    │   │       │   ├── Constants.java
+    │   │       │   ├── Library.java
+    │   │       │   ├── Shell.java
+    │   │       │   └── StartupInitializer.java
+    │   │       ├── memory_management/             # 内存管理
+    │   │       │   ├── Memory.java
+    │   │       │   ├── MemoryManagement.java
+    │   │       │   ├── MemoryManagementImpl.java
+    │   │       │   ├── MMU.java
+    │   │       │   ├── PageTable.java
+    │   │       │   ├── PageTableArea.java
+    │   │       │   └── PageTableEntry.java
+    │   │       ├── process_management/            # 进程管理
+    │   │       │   ├── CPU.java
+    │   │       │   ├── PCB.java
+    │   │       │   ├── PIDBitmap.java
+    │   │       │   ├── ProcessState.java
+    │   │       │   └── Scheduler.java
+    │   │       ├── snapshot/                      # 系统快照
+    │   │       │   └── SystemSnapshot.java
+    │   │       ├── util/                          # 工具类
+    │   │       │   ├── LogEmitterService.java
+    │   │       │   └── SnapshotEmitterService.java
+    │   │       └── OscdSpringApplication.java     # 应用程序入口
+    │   └── resources/
+    │       ├── application.properties
+    │       ├── static/
+    │       │   ├── index.html
+    │       │   ├── css/
+    │       │   │   └── style.css
+    │       │   └── js/
+    │       │       ├── device.js
+    │       │       ├── disk.js
+    │       │       ├── filesystem.js
+    │       │       ├── memory.js
+    │       │       ├── process.js
+    │       │       ├── shell.js
+    │       │       └── snapshotManager.js
+    │       └── templates/
+    └── test/
+        └── java/org/example/oscdspring/
+            ├── CPUTest.java                     
+            ├── DeviceManagementTest.java        
+            ├── FileManagementTest.java          
+            ├── MemoryManagementTest.java        
+            └── ProcessManagementTest.java       
 ```
 
 代码结构为常见的 Spring 项目结构，程序从 `OscdSpringApplication.java` 为入口启动。
@@ -653,11 +660,16 @@ src/
 
 `application.properties` 用于配置 Spring 属性，以及操作系统的部分属性（CPU数，调度算法）。
 
+JUnit 单元测试代码位于 `test/java/org/example/oscdspring/` 目录下。
+
 
 
 ### 代码说明
 
 ```coffeescript
+pom.xml
+# Maven 配置文件
+
 src/main/java/org/example/oscdspring/OscdSpringApplication.java
 # Spring Boot 应用的入口类
 
@@ -789,6 +801,21 @@ src/main/resources/static/js/shell.js
 
 src/main/resources/static/js/snapshotManager.js
 # 实时接收来自服务器的操作系统状态快照
+
+src/test/java/org/example/oscdspring/CPUTest.java
+# CPU单元测试
+
+src/test/java/org/example/oscdspring/DeviceManagementTest.java
+# 设备管理单元测试
+
+src/test/java/org/example/oscdspring/FileManagementTest.java
+# 文件系统单元测试
+
+src/test/java/org/example/oscdspring/MemoryManagementTest.java
+# 内存单元测试
+
+src/test/java/org/example/oscdspring/ProcessManagementTest.java
+# 进程管理单元测试
 ```
 
 
@@ -851,7 +878,7 @@ src/main/resources/static/js/snapshotManager.js
 
 - **测试功能**：测试内存管理模块，包括物理内存使用统计、动态内存分配及页表扩展、内存读写一致性、进程内存释放，以及地址转换单元 (MMU) 的页表更新、地址转换正确性与越界保护、TLB 快表替换策略和页面置换算法。
 - **测试用例**：涵盖多个方面：首先获取物理内存使用状态，验证系统保留的内存帧数量及新分配帧是否正确登记；然后为进程追加一段随机大小的内存以扩展页表，并在新分配区域写入随机数据再读出，检查读出内容与写入内容一致；接着释放该进程占用的内存，再次查询内存使用信息，确认物理内存占用恢复至释放前状态。针对 MMU，测试了进程切换时调用 MMU.update() 更新页表指针、页表大小、代码段长度等信息并清空 TLB；对一系列逻辑地址逐一进行地址转换，将得到的物理地址与根据页表计算的结果比对验证转换正确；对超出进程地址空间范围的逻辑地址进行转换，确认返回错误码表示越界；最后连续访问多个不同页的地址以触发 TLB 替换和页面置换机制，检查首次访问新页面时 TLB 内容更新，而重复访问已缓存的页面时 TLB 保持不变。
-- **预期结果**：内存管理功能方面，初始的内存使用信息应准确给出总帧数及系统已用帧数；为进程分配内存后，其页表大小增加的页数应等于请求分配字节数按页面大小向上取整的结果；在新分配内存区域读出的数据应与先前写入的数据完全一致；释放进程内存后，再次查询内存使用应发现总占用帧数恢复到释放前水平。MMU 方面，进程切换后 MMU 内保存的页表基址、页表大小、代码段长度等应更新为新进程对应的值，且 TLB 快表应被清空；逻辑地址到物理地址的转换结果应与直接查页表计算所得的物理地址相符，对越界的逻辑地址转换应返回预定义的错误标识（如 -2）；多页连续访问时，预期首次访问新页会导致 TLB 内容更新（加入新条目或替换掉旧条目），而对同一页的重复访问不会反复更换已缓存的 TLB 项，页面置换算法在需要时会正确地分配/替换物理页帧。
+- **预期结果**：内存管理功能方面，初始的内存使用信息应准确给出总帧数及系统已用帧数；为进程分配内存后，其页表大小增加的页数应等于请求分配字节数按页面大小向上取整的结果；在新分配内存区域读出的数据应与先前写入的数据完全一致；释放进程内存后，再次查询内存使用应发现总占用帧数恢复到释放前水平。MMU 方面，进程切换后 MMU 内保存的页表基址、页表大小、代码段长度等应更新为新进程对应的值，且 TLB 快表应被清空；逻辑地址到物理地址的转换结果应与直接查页表计算所得的物理地址相符，对越界的逻辑地址转换应返回预定义的错误标识；多页连续访问时，预期首次访问新页会导致 TLB 内容更新（加入新条目或替换掉旧条目），而对同一页的重复访问不会反复更换已缓存的 TLB 项，页面置换算法在需要时会正确地分配/替换物理页帧。
 - **结果分析**：测试结果表明内存管理模块各功能行为都符合预期：初始内存使用统计正确，新增内存分配后页表扩展的页数与所需页数计算结果一致，内存读写测试中读出内容与写入内容完全吻合，释放内存后物理内存占用状况恢复如初。MMU 及内存保护方面的测试也全部通过：进程切换时 MMU 成功更新了页表相关信息并清空了 TLB，逻辑地址转换对进程可访问范围内的地址均返回了正确的物理地址，而对越界地址返回了错误码；连续多页访问过程中，TLB 表现出正确的替换策略——首次访问新页面时快表内容发生更新，而对同一页面的重复访问未改变已缓存的条目；整个过程中页面置换机制正常工作。
 
 
@@ -861,7 +888,7 @@ src/main/resources/static/js/snapshotManager.js
 <img src="./report2025.assets/image-20250505150059067.png" alt="image-20250505150059067" style="zoom:50%;" />
 
 - **测试功能**：验证 CPU 模块中取指过程和指令执行逻辑的正确性。
-- **测试用例**：模拟从内存逐字节读取指令直到遇到终止符（如 `#`）的取指操作，验证组装出的指令字符串正确且程序计数器 PC 随读取进度递增；测试带有剩余指令片段的情况，预先在进程控制块 PCB 中设置未执行完的残留指令，调用取指应直接返回该残留指令串且不访问内存；模拟执行一条计算指令（例如 “C 200”），验证 CPU 执行后将对应进程的已用CPU时间累加指定的计算时长，并清除已执行的指令残留。
+- **测试用例**：模拟从内存逐字节读取指令直到遇到终止符（`#`）的取指操作，验证组装出的指令字符串正确且程序计数器 PC 随读取进度递增；测试带有剩余指令片段的情况，预先在进程控制块 PCB 中设置未执行完的残留指令，调用取指应直接返回该残留指令串且不访问内存；模拟执行一条计算指令（例如 “C 200”），验证 CPU 执行后将对应进程的已用CPU时间累加指定的计算时长，并清除已执行的指令残留。
 - **预期结果**：当没有残留指令时，CPU 的取指过程应连续从内存读取字节直到遇到终止符为止，返回正确的指令字符串（不包含终止符本身），同时 PC 寄存器增加读取的字节数；如果当前 PCB 中有残留指令未执行完，则取指操作应直接返回该指令串且不会进行任何内存读取；执行计算指令后，相应 PCB 记录的累计 CPU 时间 (`timeUsed`) 应增加指令所消耗的时间（例如增加200单位），并且该指令应从 PCB 的残留指令字段中移除（清空）。
 - **结果分析**：测试结果与预期完全一致：取指流程能够正确读取并组装指令，在内存提供字符到终止符的过程中 PC 得到了相应递增；当存在残留指令时，CPU 跳过内存读取直接返回了该指令字符串，验证了利用缓存指令优化取指的逻辑。计算指令执行测试则确认了 CPU 能根据指令内容正确更新进程的 CPU 时间累加值，并清除已执行指令的残留。
 

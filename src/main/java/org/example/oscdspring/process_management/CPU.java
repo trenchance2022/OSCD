@@ -29,18 +29,12 @@ public class CPU extends Thread {
 
     @Override
     public void run() {
-        try {
+//        try {
             while (true) {
                 // 执行当前进程
                 if (currentPCB != null&& currentPCB.getState()!=ProcessState.TERMINATED) {
                     execute();
                 }
-                else {
-                    Thread.sleep(100); // 空闲时等待
-                }
-            }
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
         }
     }
 
