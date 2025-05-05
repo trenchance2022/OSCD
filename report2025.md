@@ -1098,11 +1098,11 @@ C 1000#C 2000#Q#
 t13:
 C 10000#Q#
 t14:
-C 10000#Q#
+C 2000#Q#
 t15:
-C 10000#Q#
+C 2000#Q#
 t16:
-C 10000#Q#
+C 2000#Q#
 ```
 
 为便于测试，CPU数量均设置为1
@@ -1111,7 +1111,28 @@ C 10000#Q#
 
    测试命令：`exec t9 0 t10 0 t11 0`
 
-   测试结果：CPU按t9、t10、t11的顺序执行程序。
+   结果甘特图：
+
+   ```mermaid
+   gantt
+       title Gantt Chart for t9, t10, t11
+       dateFormat  HH:mm
+       axisFormat  %H:%M
+       section t9
+       C 2000: 00:00, 00:02
+       section t10
+       C 3000: 00:02, 00:05
+       section t11
+       C 4000: 00:05, 00:09
+   ```
+
+   结果截图：
+
+   ![](.\report2025.assets\进程调度测试FCFS-1.png)
+
+   ![](.\report2025.assets\进程调度测试FCFS-2.png)
+
+   ![](.\report2025.assets\进程调度测试FCFS-3.png)
 
 2. SJF
 
@@ -1119,7 +1140,29 @@ C 10000#Q#
 
    测试命令:`exec t9 0 t12 0 t11 0`
 
-   测试结果：CPU按t9、t11、t12的顺序执行程序。（t12的代码段长度大于t11）
+   结果甘特图：
+
+   ```mermaid
+   gantt
+       title Gantt Chart for t9, t11, t12
+       dateFormat  HH:mm
+       axisFormat  %H:%M
+       section t9
+       C 2000: 00:00, 00:02
+       section t11
+       C 4000: 00:02, 00:06
+       section t12
+       C 1000: 00:06, 00:07
+       C 2000: 00:07, 00:09
+   ```
+
+   结果截图：
+
+   ![](.\report2025.assets\进程调度测试SJF-1.png)
+
+   ![](.\report2025.assets\进程调度测试SJF-2.png)
+
+   ![](.\report2025.assets\进程调度测试SJF-3.png)
 
 3. RR
 
@@ -1131,7 +1174,28 @@ C 10000#Q#
 
    测试命令：`exec t9 3 t10 2 t11 1`
 
-   测试结果：CPU按t9、t11、t10的顺序执行程序。
+   结果甘特图：
+
+   ```mermaid
+   gantt
+       title Gantt Chart for t9, t10, t11
+       dateFormat  HH:mm
+       axisFormat  %H:%M
+       section t9
+       C 2000: 00:00, 00:02
+       section t10
+       C 3000: 00:06, 00:09
+       section t11
+       C 4000: 00:02, 00:06
+   ```
+
+   结果截图：
+
+   ![](.\report2025.assets\进程调度测试PRIORITY-1.png)
+
+   ![](.\report2025.assets\进程调度测试PRIORITY-2.png)
+
+   ![](.\report2025.assets\进程调度测试PRIORITY-3.png)
 
 5. MLFQ
 
@@ -1143,11 +1207,31 @@ C 10000#Q#
 
    测试命令：`exec t14 3 t15 2 t16 1`
 
-   测试结果：CPU按t14、t16、t15、t14的顺序依次执行程序，符合抢占式优先级调度算法的预期。
-
-
-
-
+   结果甘特图：
+   
+   ```mermaid
+   gantt
+       title Gantt Chart for t14, t15, t16
+       dateFormat  ss:SSS
+       axisFormat  %S:%L
+       section t14
+       C 2000: 00:000, 00:100
+       C 2000: 04:100, 06:000
+       section t15
+       C 2000: 00:100, 02:100
+       section t16
+       C 2000: 02:100, 04:100
+   ```
+   
+   结果截图：
+   
+   ![](.\report2025.assets\进程调度测试优先级抢占-1.png)
+   
+   ![](.\report2025.assets\进程调度测试优先级抢占-2.png)
+   
+   ![](.\report2025.assets\进程调度测试优先级抢占-3.png)
+   
+   ![](.\report2025.assets\进程调度测试优先级抢占-4.png)
 
 #### 设备调度测试
 
