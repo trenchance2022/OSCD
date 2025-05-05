@@ -121,9 +121,9 @@ public class StartupInitializer implements ApplicationRunner {
 
         // 内存管理测试程序
 
-        // 正常读写，分配100000字节内存
+        // 正常读写，分配10000字节内存
         fileSystem.createFile("m1", 1);
-        fileSystem.editFile("m1", "C 3000#M 100000#C 3000#MR 0 100000#C 3000#MW 100 90000#C 3000#MR 0 100000#C 3000#Q#");
+        fileSystem.editFile("m1", "C 3000#M 10000#C 3000#MR 0 10000#C 3000#MW 100 9000#C 3000#MR 0 10000#C 3000#Q#");
         // 读写越界,分配100000字节内存，读101000 终止操作，报错
         fileSystem.createFile("m2", 1);
         fileSystem.editFile("m2", "C 2000#M 100000#C 2000#MW 100 101000#Q#");
@@ -133,7 +133,7 @@ public class StartupInitializer implements ApplicationRunner {
         fileSystem.createFile("e2", 1);
         fileSystem.createFile("e3", 1);
         fileSystem.editFile("e1", "M 4096#D Printer 1 10000#C 5000#Q#");
-        fileSystem.editFile("e2", "M 4096#D Scanner 2 2000#C 2000Q#");
+        fileSystem.editFile("e2", "M 4096#D Scanner 2 2000#C 2000#Q#");
         fileSystem.editFile("e3", "M 10240#C 5000#D USB 3 10000#C 5000#Q#");
 
 
