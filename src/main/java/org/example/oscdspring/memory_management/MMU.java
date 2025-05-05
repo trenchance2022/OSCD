@@ -71,7 +71,7 @@ public class MMU {
         int pageNumber = logicalAddress / Constants.PAGE_SIZE_BYTES;
         int offset = logicalAddress % Constants.PAGE_SIZE_BYTES;
         if (pageNumber >= ptr.getPageTableSize() || pageNumber == ptr.getPageTableSize() - 1 && offset >= ptr.getLastPageSize()) {
-            LogEmitterService.getInstance().sendLog("逻辑地址超出范围 MMU");
+            LogEmitterService.getInstance().sendLog("逻辑地址超出范围");
             return -2;
         }
 

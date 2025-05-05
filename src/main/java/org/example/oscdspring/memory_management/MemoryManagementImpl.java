@@ -69,7 +69,16 @@ public class MemoryManagementImpl implements MemoryManagement {
     @Override
     public boolean Read(CPU cpu, int logicAddress, byte[] data, int length) {
         MMU mmu = cpu.getMMU();
+        // 逐字读写
+        for(int i=0;i<length;i++){
+            int physicalAddress = mmu.addressTranslation(logicAddress+i, false);
+            if (physicalAddress < 0) {
+                return false;
+            }
+            data[i] = Memory.getInstance().read(physicalAddress, 1)[0];
+        }
 
+        /*
         //第一个页面读取的数据长度
         int firstPageReadSize = Math.min(Constants.PAGE_SIZE_BYTES - logicAddress % Constants.PAGE_SIZE_BYTES, length);
         //读取
@@ -96,6 +105,7 @@ public class MemoryManagementImpl implements MemoryManagement {
             }
             System.arraycopy(Memory.getInstance().read(physicalAddress, lastPageReadSize), 0, data, firstPageReadSize + remainBlock * Constants.PAGE_SIZE_BYTES, lastPageReadSize);
         }
+        */
         return true;
     }
 
@@ -104,6 +114,15 @@ public class MemoryManagementImpl implements MemoryManagement {
     public boolean Write(CPU cpu, int logicAddress, byte[] data, int length) {
         MMU mmu = cpu.getMMU();
 
+        for(int i=0;i<length;i++){
+            int physicalAddress = mmu.addressTranslation(logicAddress+i, true);
+            if (physicalAddress < 0) {
+                return false;
+            }
+            Memory.getInstance().write(physicalAddress, 1, new byte[]{data[i]});
+        }
+
+        /*
         // 第一个页面写入的数据长度
         int firstPageWriteSize = Math.min(Constants.PAGE_SIZE_BYTES - logicAddress % Constants.PAGE_SIZE_BYTES, length);
         // 写入第一个页面的数据
@@ -132,6 +151,8 @@ public class MemoryManagementImpl implements MemoryManagement {
             }
             Memory.getInstance().write(physicalAddress, lastPageWriteSize, Arrays.copyOfRange(data, firstPageWriteSize + remainBlock * Constants.PAGE_SIZE_BYTES, firstPageWriteSize + remainBlock * Constants.PAGE_SIZE_BYTES + lastPageWriteSize));
         }
+
+         */
 
         return true;
     }
