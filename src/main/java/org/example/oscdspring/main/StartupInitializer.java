@@ -82,16 +82,16 @@ public class StartupInitializer implements ApplicationRunner {
         fileSystem.createDirectory("d1");
         fileSystem.changeDirectory("d1");
 
-        // 设备管理测试程序
+        // 设备管理测试程序1
         fileSystem.createFile("t1", 1);
         fileSystem.createFile("t2", 1);
         fileSystem.createFile("t3", 1);
-        fileSystem.createFile("t4", 1);
         fileSystem.editFile("t1", "M 4096#C 5000#C 10000#D Printer 1 10000#Q#");
         fileSystem.editFile("t2", "M 4096#C 10000#C 2000#D Printer 1 10000#Q#");
         fileSystem.editFile("t3", "M 10240#C 5000#C 10000#D USB 3 10000#Q#");
 
         // 读写互斥测试程序
+        fileSystem.createFile("t4", 1);
         fileSystem.createFile("t5", 1);
         fileSystem.editFile("t5", "M 4096#W t4 10000#Q#");
         fileSystem.createFile("t6", 1);
@@ -127,6 +127,14 @@ public class StartupInitializer implements ApplicationRunner {
         // 读写越界,分配100000字节内存，读101000 终止操作，报错
         fileSystem.createFile("m2", 1);
         fileSystem.editFile("m2", "C 2000#M 100000#C 2000#MW 100 101000#Q#");
+
+        // 设备管理测试程序2
+        fileSystem.createFile("e1", 1);
+        fileSystem.createFile("e2", 1);
+        fileSystem.createFile("e3", 1);
+        fileSystem.editFile("e1", "M 4096#D Printer 1 10000#C 5000#Q#");
+        fileSystem.editFile("e2", "M 4096#D Scanner 2 2000#C 2000Q#");
+        fileSystem.editFile("e3", "M 10240#C 5000#D USB 3 10000#C 5000#Q#");
 
 
         // 回到根目录
