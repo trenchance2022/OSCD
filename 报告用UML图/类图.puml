@@ -1,0 +1,111 @@
+@startuml
+class org.example.oscdspring.process_management.PCB {
+}
+class org.example.oscdspring.interrupt_management.InterruptHandler {
+}
+class org.example.oscdspring.util.LogEmitterService {
+}
+class org.example.oscdspring.main.StartupInitializer {
+}
+class org.example.oscdspring.controller.ShellSseController {
+}
+class org.example.oscdspring.memory_management.MMU {
+}
+class org.example.oscdspring.memory_management.PTR {
+}
+class org.example.oscdspring.memory_management.TLB {
+}
+class org.example.oscdspring.memory_management.TLBEntry {
+}
+class org.example.oscdspring.memory_management.PageFaultHandler {
+}
+class org.example.oscdspring.file_disk_management.FileSystemImpl {
+}
+class org.example.oscdspring.memory_management.PageTableArea {
+}
+class org.example.oscdspring.snapshot.SystemSnapshot {
+}
+class org.example.oscdspring.OscdSpringApplication {
+}
+enum org.example.oscdspring.process_management.ProcessState {
++  NEW
++  READY
++  RUNNING
++  WAITING
++  TERMINATED
+}
+
+class org.example.oscdspring.file_disk_management.Bitmap {
+}
+class org.example.oscdspring.controller.ShellController {
+}
+class org.example.oscdspring.controller.ViSaveRequest {
+}
+class org.example.oscdspring.file_disk_management.Directory {
+}
+class org.example.oscdspring.memory_management.MemoryManagementImpl {
+}
+class org.example.oscdspring.file_disk_management.Inode {
+}
+interface org.example.oscdspring.file_disk_management.FileDiskManagement {
+}
+class org.example.oscdspring.memory_management.PageTableEntry {
+}
+class org.example.oscdspring.file_disk_management.FileLockManager {
+}
+class org.example.oscdspring.file_disk_management.FileLockManager$FileLock {
+}
+class org.example.oscdspring.file_disk_management.FileLockManager$FileLock$WaitingProcess {
+}
+class org.example.oscdspring.file_disk_management.Disk {
+}
+class org.example.oscdspring.memory_management.PageTable {
+}
+class org.example.oscdspring.process_management.CPU {
+}
+class org.example.oscdspring.main.Constants {
+}
+class org.example.oscdspring.process_management.Scheduler {
+}
+enum org.example.oscdspring.process_management.SchedulingPolicy {
++  FCFS
++  SJF
++  RR
++  PRIORITY
++  MLFQ
++  PRIORITY_Preemptive
+}
+
+class org.example.oscdspring.controller.SnapshotController {
+}
+interface org.example.oscdspring.memory_management.MemoryManagement {
+}
+class org.example.oscdspring.util.SnapshotEmitterService {
+}
+class org.example.oscdspring.device_management.DeviceManager {
+}
+class org.example.oscdspring.device_management.IODevice {
+}
+class org.example.oscdspring.process_management.PIDBitmap {
+}
+class org.example.oscdspring.device_management.IORequest {
+}
+class org.example.oscdspring.memory_management.Memory {
+}
+class org.example.oscdspring.memory_management.MemoryBlockStatus {
+}
+class org.example.oscdspring.main.Shell {
+}
+class org.example.oscdspring.main.Library {
+}
+
+
+org.springframework.boot.ApplicationRunner <|.. org.example.oscdspring.main.StartupInitializer
+org.example.oscdspring.file_disk_management.FileDiskManagement <|.. org.example.oscdspring.file_disk_management.FileSystemImpl
+org.example.oscdspring.memory_management.MemoryManagement <|.. org.example.oscdspring.memory_management.MemoryManagementImpl
+org.example.oscdspring.file_disk_management.FileLockManager +.. org.example.oscdspring.file_disk_management.FileLockManager$FileLock
+org.example.oscdspring.file_disk_management.FileLockManager$FileLock +.. org.example.oscdspring.file_disk_management.FileLockManager$FileLock$WaitingProcess
+org.example.oscdspring.process_management.Thread <|-- org.example.oscdspring.process_management.CPU
+org.example.oscdspring.process_management.Thread <|-- org.example.oscdspring.process_management.Scheduler
+org.example.oscdspring.device_management.Thread <|-- org.example.oscdspring.device_management.IODevice
+@enduml
