@@ -52,8 +52,12 @@ public class CPU extends Thread {
         }
     }
 
+    public String InstructionFetchForTest() {
+        return InstructionFetch();
+    }
+
     // 从当前进程的程序计数器中获取指令
-    public String InstructionFetch() {
+    private String InstructionFetch() {
         if (currentPCB == null) {
             return null;
         }
@@ -126,9 +130,13 @@ public class CPU extends Thread {
         return instruction.toString();
     }
 
+    public void executeInstructionForTest(String instruction) {
+        executeInstruction(instruction);
+    }
+
     // 解析并执行指令
     // 在 CPU 类中完善 executeInstruction 方法
-    public void executeInstruction(String instruction) {
+    private void executeInstruction(String instruction) {
         LogEmitterService.getInstance().sendLog("CPU-" + cpuId + " 执行指令: " + instruction);
 
         // 将指令按空格分割成操作码和操作数

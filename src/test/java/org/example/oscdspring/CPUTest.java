@@ -119,7 +119,7 @@ public class CPUTest {
         );
 
         // 4. 执行并断言
-        String inst = cpu.InstructionFetch();
+        String inst = cpu.InstructionFetchForTest();
         assertEquals("XY", inst);
         // 50 + 3 次读取后，PC 应该是 53
         assertEquals(53, pcb.getPc());
@@ -139,7 +139,7 @@ public class CPUTest {
         cpu.setCurrentPCB(pcb);
 
         // 调用 InstructionFetch
-        String inst = cpu.InstructionFetch();
+        String inst = cpu.InstructionFetchForTest();
 
         // 应当直接返回 remainInstruction，且不触发任何内存读取
         assertEquals("AB", inst);
@@ -159,7 +159,7 @@ public class CPUTest {
         cpu.setCurrentPCB(pcb);
 
         // Execute compute instruction "C 200"
-        cpu.executeInstruction("C 200");
+        cpu.executeInstructionForTest("C 200");
 
         // After execution, total time used should equal 200
         assertEquals(200, pcb.getTimeUsed());
