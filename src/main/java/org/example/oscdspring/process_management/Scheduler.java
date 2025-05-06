@@ -23,9 +23,6 @@ import static org.example.oscdspring.main.Library.getFileSystem;
 @Component
 public class Scheduler extends Thread {
 
-
-
-
     public enum SchedulingPolicy { FCFS, SJF, RR, PRIORITY, MLFQ ,PRIORITY_Preemptive}
     private static Scheduler instance;
     private List<BlockingQueue<PCB>> readyQueues; // 多级反馈队列

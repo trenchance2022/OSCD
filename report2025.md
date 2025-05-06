@@ -601,7 +601,7 @@ Info memory			#查看内存
 
 ### 进程管理实现
 
-（可以写一点你想说的）
+进程管理模块作为操作系统的核心组件，负责进程的创建、调度、状态管理和资源回收。该模块支持多种调度算法，实现了进程的五状态模型，并与内存管理、设备管理和中断处理等模块紧密协作。
 
 #### 用户指令集
 
@@ -618,7 +618,348 @@ Q# 									#进程结束，释放资源
 
 #### 数据结构
 
-（描述PCB的数据结构即可，如果有别的重要的数据结构可以补充）
+```java
+public class PCB {
+    private int pid;                    // 进程标识符
+    private String processName;         // 进程名称
+    private int priority;               // 进程优先级（值越小优先级越高）
+    // 进程状态（NEW/READY/RUNNING/WAITING/TERMINATED）
+    private ProcessState state;         
+    private int pc;                     // 程序计数器
+    private PageTable pageTable;        // 页表指针
+    private String lastInstruction;     // 最后执行的指令
+    private String remainingInstruction; // 未执行完的指令残留片段
+    private int timeUsed;               // 已占用的CPU时间
+    private int timeLeft;               // 当前时间片剩余时间
+    private long arrivalTime;           // 进程创建时间
+    private int waitingTime;            // 等待时间
+    private List<Integer> allocatedFrames; // 已分配的物理帧列表
+    private String waitingReason;       // 进程等待原因（设备、文件等）
+    private int MLFQLevel;              // 多级反馈队列的当前队列级别
+}
+```
+
+#### 模块流程图
+
+```mermaid
+graph TD
+    A[start] --> B[初始化调度器]
+    B --> C[创建就绪/等待队列]
+    C --> D[注册CPU]
+    D --> E[启动调度线程]
+    E --> F{选择调度算法}
+    F -->|FCFS| G[先来先服务]
+    F -->|RR| H[时间片轮转]
+    F -->|PRIORITY| I[优先级调度]
+    F -->|SJF| J[短作业优先]
+    F -->|MLFQ| K[多级反馈队列]
+    G --> L[执行调度]
+    H --> L
+    I --> L
+    J --> L
+    K --> L
+    L --> M[CPU执行进程]
+    M --> N{进程执行完毕?}
+    N -->|否| O[更新进程状态]
+    N -->|是| P[释放资源]
+    O --> L
+    P --> L
+```
+
+#### CPU流程图
+
+##### run()实现
+
+```mermaid
+graph TD
+    A[开始] --> B[run方法]
+    B --> D[获取进程]
+    
+    D --> E{进程是否为空?}
+    E -->|是| F[重新获取进程]
+    F --> E
+    
+    E -->|否| I[execute方法]
+    I --> M[InstructionFetch方法]
+    M --> N{有残留指令?}
+    N -->|是| O[返回残留指令]
+    N -->|否| P[从内存读取新指令]
+    
+    O --> S[executeInstruction方法]
+    P --> S
+    
+    S --> T[执行不同类型指令]
+    
+    T --> V{继续执行?}
+    
+    V -->|是| W[检查时钟中断]
+    V -->|否| U[返回到run]
+    
+    W -->|发生中断| U
+    W -->|未发生中断| X[更新剩余时间片]
+    X --> L{剩余时间>0?}
+    L -->|否| U[回收进程资源或进行进程调度]
+    L -->|是| M[InstructionFetch方法]
+    
+    U --> Y[返回到run]
+    Y --> D
+```
+
+#####  InstructionFetch()实现
+
+```mermaid
+graph TD
+    A[开始] --> B{当前PCB为空?}
+    B -->|是| C[返回null]
+    B -->|否| D{有残留指令?}
+    
+    D -->|是| E[返回残留指令]
+    D -->|否| F[获取PC值]
+    
+    F --> G[初始化指令字符串和缓冲区]
+    G --> H[逐字节读取内存]
+    
+    H --> I{读取成功?}
+    I -->|否| J[回收进程资源]
+    J --> Q[获取下一个进程]
+    
+    Q --> R{获取到进程?}
+    R -->|是| S[设置进程状态为RUNNING]
+    S --> T[调用changeProcess]
+    R -->|否| U[CPU空闲]
+    
+    T --> V[返回null]
+    U --> V
+    
+    I -->|是| W[读取字符到指令缓冲区]
+    W --> X[当前地址+1]
+    X --> Y{字符是#?}
+    Y -->|否| H
+    Y -->|是| Z[更新PC指向下一条指令]
+    Z --> AA[返回指令字符串]
+    
+    E --> AB[结束]
+    C --> AB
+    V --> AB
+    AA --> AB
+```
+
+##### executeInstruction(String instruction)实现
+
+```mermaid
+graph TD
+    A[开始] --> B[记录日志:执行指令]
+    B --> C[分割指令为操作码和操作数]
+    C --> F[获取操作码]
+    
+    F --> G{根据操作码}
+    
+    G -->|C| H[计算指令]
+    G -->|R| I[读文件指令]
+    G -->|W| J[写文件指令]
+    G -->|D| K[设备IO指令]
+    G -->|Q| L[退出指令]
+    G -->|M| M[内存分配指令]
+    G -->|MW| N[内存写入指令]
+    G -->|MR| O[内存读取指令]
+    G -->|其他| P[未知指令]
+    
+    H --> H1[设置剩余时间]
+    H1 --> H2{是否为第一次执行?}
+    H2 -->|是| H3[保存原始指令]
+    H2 -->|否| H4{是否为抢占式策略?}
+    
+    H3 --> H4
+    H4 -->|否| H5[计算可执行时间]
+    H4 -->|是| H6[休眠一个时钟周期]
+    
+    H5 --> H7[分段执行,直到完成]
+    H7 --> H8[清空指令残留]
+    H8 --> Z[结束]
+    
+    H6 --> H9[更新已用时间]
+    H9 --> H10{是否执行完毕?}
+    H10 -->|是| H11[清空指令残留]
+    H10 -->|否| H12[保存剩余指令]
+    H11 --> H13[触发时钟中断]
+    H12 --> H13
+    H13 --> Z
+    
+    I --> I1[尝试获取文件读锁]
+    I1 --> I2{获取成功?}
+    I2 -->|是| I3[设置为WAITING状态]
+    I3 --> I4[创建读取线程]
+    I4 --> I5[切换到下一进程]
+    
+    I2 -->|否| I6[加入文件读锁等待队列]
+    I6 --> I7[回退PC值]
+    I7 --> I5
+    
+    I5 --> Z
+    
+    J --> J1[尝试获取文件写锁]
+    J1 --> J2{获取成功?}
+    J2 -->|是| J3[设置为WAITING状态]
+    J3 --> J4[创建写入线程]
+    J4 --> J5[切换到下一进程]
+    
+    J2 -->|否| J6[加入文件写锁等待队列]
+    J6 --> J7[回退PC值]
+    J7 --> J5
+    
+    J5 --> Z
+    
+    K --> K1[记录设备请求日志]
+    K1 --> K2{设备存在?}
+    K2 -->|是| K3[将进程交给设备管理器]
+    K3 --> K4[切换到下一进程]
+    
+    K2 -->|否| K5[记录设备不存在日志]
+    K5 --> Z
+    
+    K4 --> Z
+    
+    L --> L1[记录进程退出日志]
+    L1 --> L2[保存当前进程引用]
+    L2 --> L3[设置状态为TERMINATED]
+    L3 --> L4[释放所有资源]
+    L4 --> L5[从列表中移除]
+    L5 --> L6[切换到下一进程]
+    
+    L6 --> Z
+    
+    M --> M1[尝试分配内存]
+    M1 --> M2{分配成功?}
+    M2 -->|否| M3[记录分配失败日志]
+    M2 -->|是| Z
+    M3 --> Z
+    
+    N --> N1[生成随机数据]
+    N1 --> N2[尝试写入内存]
+    N2 --> N3{写入成功?}
+    N3 -->|否| N4[记录写入失败日志]
+    N3 -->|是| Z
+    N4 --> Z
+    
+    O --> O1[尝试读取内存]
+    O1 --> O2{读取成功?}
+    O2 -->|否| O3[记录读取失败日志]
+    O2 -->|是| O4[显示读取结果]
+    O3 --> Z
+    O4 --> Z
+    
+    P --> P1[记录未知指令日志]
+    P1 --> Z
+```
+
+#### Scheduler流程图
+
+##### run()实现
+
+```mermaid
+graph TD
+    A[run方法开始] --> B[进入主循环]
+    B --> C[调用schedule方法]
+    C --> D{当前策略是MLFQ?}
+    D -->|是| E[调用updateWaitingTimeAndAging方法]
+    D -->|否| F[休眠一个时钟周期]
+    E --> F
+    F --> B
+```
+
+##### schedule()实现
+
+```mermaid
+graph TD
+    G[schedule方法开始] --> H[获取锁]
+    H --> I[遍历所有CPU]
+    I --> J{当前CPU空闲?}
+    J -->|否| K{还有更多CPU?}
+    J -->|是| L[调用getNextProcess方法]
+    L --> M{获取到进程?}
+    M -->|否| K
+    M -->|是| N[调用assignProcessToCPU方法]
+    N --> O[调用nextProcess.addPCB方法]
+    O --> K
+    
+    K -->|是| I
+    K -->|否| P[释放锁]
+    P --> Q[schedule方法结束]
+```
+
+##### getNextProcess()实现
+
+```mermaid
+graph TD
+    A[getNextProcess开始] --> B[获取锁]
+    B --> C{当前策略是MLFQ?}
+    
+    C -->|是| D[初始化队列索引i=0]
+    D --> E{i < 4 ?}
+    E -->|是| F{readyQueues非空?}
+    F -->|否| G[i++]
+    G --> E
+    F -->|是| H[从队列i取出进程]
+    
+    H --> L[设置进程当前队列为i]
+    L --> M[返回进程]
+    
+    E -->|否| N[返回null]
+    
+    C -->|否| O[从readyQueues取出进程]
+    O --> P[返回进程]
+    
+    M --> Q[释放锁]
+    N --> Q
+    P --> Q
+    Q --> R[getNextProcess结束]
+```
+
+##### assignProcessToCPU()实现
+
+```mermaid
+graph TD
+    A[assignProcessToCPU开始] --> B[设置进程状态为RUNNING]
+    B --> C[记录日志:分配进程到CPU]
+    C --> D[调用cpu.changeProcess方法]
+    D --> E[assignProcessToCPU结束]
+```
+
+##### updateWaitingTimeAndAging()实现
+
+```mermaid
+graph TD
+    A[updateWaitingTimeAndAging开始] --> B[获取锁]
+    B --> C[初始化队列优先级priority=1]
+    
+    C --> D{priority < readyQueues.size?}
+    D -->|是| E[获取当前优先级队列]
+    E --> F[创建临时列表tempList]
+    
+    F --> G{队列非空?}
+    G -->|是| H[取出进程]
+    H --> I[更新进程等待时间]
+    
+    I --> J{等待时间 >= 老化阈值?}
+    J -->|是| K[计算新优先级]
+    K --> L[更新进程优先级]
+    L --> M[记录日志:进程提升优先级]
+    M --> N[重置等待时间]
+    N --> O[将进程加入新优先级队列]
+    
+    J -->|否| P[将进程加入tempList]
+    O --> G
+    P --> G
+    
+    G -->|否| Q[将tempList中所有进程放回原队列]
+    Q --> R[priority++]
+    R --> D
+    
+    D -->|否| S[释放锁]
+    S --> T[updateWaitingTimeAndAging结束]
+```
+
+
 
 #### 方法1实现（如run()实现）
 
