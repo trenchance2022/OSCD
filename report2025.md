@@ -1,5 +1,7 @@
 # 《操作系统课程设计》实验报告
 
+目录
+
 [TOC]
 
 
@@ -1340,7 +1342,319 @@ graph TD
 
 ### 文件管理实现
 
-（文件锁需要ayd来写，其他部分我来写）
+#### 数据结构说明
+
+##### 索引节点 Inode
+
+```java
+class Inode {
+    int inodeNumber;  // inode编号
+    String fileName;  // 文件名
+    int size;         // 文件大小，单位字节
+    int[] blockIndexes;  // 存储文件的非连续块索引
+}
+```
+
+用于表示文件的元数据和索引信息。每个文件对应一个 Inode，包含文件的编号（inodeNumber）、名称（fileName）、大小（size）以及一个块指针数组（blockIndexes）。块指针数组记录了该文件存储的所有磁盘块的索引（相当于文件的数据块号集合），起到“索引块”的作用。创建 Inode 时会根据文件大小按块大小（例如1KB）计算所需的数据块数量并初始化块索引数组。
+
+
+
+##### 目录项 Directory
+
+```java
+class Directory {
+    String name;
+    Directory parent;  // 父目录
+    List<Inode> files;  // 存储目录下的文件
+    List<Directory> subdirectories;  // 存储子目录
+}
+```
+
+采用树形结构组织文件系统。每个目录用一个 Directory 对象表示，包含该目录的名称和指向父目录的引用，以及两个列表用于存储当前目录下的文件 Inode 列表和子目录列表。通过这种方式，目录节点彼此嵌套形成层次树结构：根目录的父指针为 `null`，子目录的 parent 指向其所在的上级目录。文件在目录中的分布由 Directory 的文件列表维护，子目录通过子目录列表链接，实现类似 Unix 的树状目录结构（如 `/root/subdir/...`）。系统维护一个全局的 `currentDirectory` 指针表示当前工作目录，以便进行路径解析和文件查找。
+
+
+
+##### 位图 Bitmap
+
+```java
+class Bitmap {
+    private int[] bitmap;   // 位图，1表示已分配，0表示空闲
+    private int size;       // 位图的大小（即磁盘块的总数）
+}
+```
+
+使用位图管理磁盘块的分配状态。Bitmap内部用一个整数数组表示所有磁盘块的使用情况，每个元素位（0 或 1）对应一个磁盘块：0表示空闲，1表示已分配。分配块时，调用 `allocateBlock()` 顺序扫描位图找到第一个空闲位（值为0）并将其置为1，返回对应的块索引；如果没有空闲块则返回 -1 表示磁盘已满。释放块时，调用 `freeBlock(int index)` 将指定索引的位清0，表示该磁盘块已恢复空闲。
+
+
+
+##### 磁盘 Disk
+
+```java
+class Disk {
+    private int diskSize = Constants.DISK_SIZE;  // 1MB磁盘，块大小为1KB，总共有1024个块
+    private int blockSize = Constants.BLOCK_SIZE_BYTES;  // 块大小为1KB
+    private Bitmap bitmap;        // 位图管理空闲块
+    private byte[] diskData;      // 模拟磁盘的数据数组
+}
+```
+
+ Disk类模拟了磁盘存储介质，其设计采用固定大小和固定块长度的方式。比如初始化一个大小为1MB、块大小1KB的磁盘，共有1024个块可用。Disk内部使用一个字节数组 (`diskData`) 来表示连续的磁盘存储空间，支持按块读写数据。
+
+
+
+####  allocateBlock、freeBlock、 readBlock、writeBlock 实现
+
+```java
+int allocateBlock();
+void freeBlock(int blockIndex);
+byte[] readBlock(int blockAddress);
+void writeBlock(int blockAddress, byte[] data);  
+```
+
+
+
+##### int allocateBlock()
+
+从磁盘的空闲块位图中申请一个可用的磁盘块编号，返回分配成功的块索引（blockIndex），若无可用块则返回 `-1`。
+
+###### 模块调用关系
+
+文件系统模块（FileSystemImpl） 在 `createFile()` 和 `editFile()` 中调用该方法，用于为文件分配实际物理块；
+
+内存管理模块（MemoryManagement） 当发生Page Fault，并需要从磁盘调入页面时，文件系统需要调用 `allocateBlock()` ；
+
+###### 流程图
+
+```mermaid
+flowchart TD
+    A["调用 allocateBlock()"] --> B["遍历位图 Bitmap"]
+    B --> C{"找到空闲位？"}
+    C -->|是| D["标记为已分配（置1）"]
+    D --> E["返回块索引"]
+    C -->|否| F["返回 -1（磁盘满）"]
+
+```
+
+
+
+##### void freeBlock(int blockIndex)
+
+释放指定编号的磁盘块，将其标记为空闲块。
+
+###### 模块调用关系
+
+文件系统模块（FileSystemImpl）删除文件（`removeFile()`）时会释放所有块；
+
+内存管理模块（MemoryManagement） 释放进程的时候会相应释放由于页面换出占用的磁盘空间。
+
+###### 流程图
+
+```mermaid
+flowchart TD
+    A["调用 freeBlock(blockIndex)"] --> B["访问位图 Bitmap"]
+    B --> C["将指定位置位清 0"]
+    C --> D["释放成功，退出"]
+
+```
+
+
+
+##### byte[] readBlock(int blockAddress)
+
+按块编号读取磁盘中对应块的数据内容，并返回其字节数组。
+
+###### 模块调用关系
+
+内存管理模块（MemoryManagement）在缺页中断处理时，从磁盘读取数据，加载到内存。
+
+###### 流程图
+
+```mermaid
+flowchart TD
+    A["调用 readBlock(blockAddress)"] --> B["计算物理偏移 = blockAddress × BLOCK_SIZE"]
+    B --> C["从 diskData 拷贝 BLOCK_SIZE 字节"]
+    C --> D["返回 byte[] 数据"]
+
+```
+
+
+
+##### void writeBlock(int blockAddress, byte[] data)
+
+将指定数据写入磁盘中某块，覆盖该块原有内容。
+
+###### 模块调用关系
+
+内存管理模块（MemoryManagement）在页面置换中，当脏页（Dirty Page）被置换出内存时，调用该方法将其写回磁盘块。
+
+###### 流程图
+
+```mermaid
+flowchart TD
+    A["调用 writeBlock(blockAddress, data)"] --> B["计算物理偏移 = blockAddress × BLOCK_SIZE"]
+    B --> C["将 data 拷贝进 diskData 对应位置"]
+    C --> D["写入完成，退出"]
+
+```
+
+
+
+#### void createFile(String filename, int size) 实现
+
+该方法用于在当前目录下创建一个新的文件，分配相应的 inode 和磁盘空间，建立目录项。
+
+下面的流程图展示了文件创建的流程：
+
+```mermaid
+flowchart TD
+    exists{文件已存在?} 
+    exists -- 是 --> dup[已存在同名文件, 日志提示并终止]
+    exists -- 否 --> spaceOK{空闲空间足够?}
+    spaceOK -- 否 --> noSpace[磁盘空间不足, 日志提示并终止]
+    spaceOK -- 是 --> inode["创建Inode(文件名,大小,编号)"]
+    inode --> allocBlock(申请一个磁盘块)
+    allocBlock --> allocFail[无空闲块, 日志错误并终止]
+    allocBlock --> write[写入数据到分配块]
+    write --> nextBlock{还有未分配块?}
+    nextBlock -- 是 --> allocBlock
+    nextBlock -- 否 --> addToDir["在当前目录添加目录项(Inode)"]
+    addToDir --> done[文件创建成功, 日志记录]
+
+```
+
+检查当前目录中是否已存在同名文件。若发现重复文件名，则不创建新文件，直接返回并记录错误日志提示文件已存在。
+
+使用 Disk 提供的空闲空间查询 `disk.getFreeSpace()`确认磁盘剩余空间是否足够容纳新文件的大小。如果可用空间不足，则终止创建并报告“空间不足，无法创建文件”。
+
+为新文件创建一个 Inode 节点，指定一个新的 inode 编号（按照当前目录已有文件数+1生成）以及文件名和文件大小等信息。此时 Inode 内部会初始化块索引数组，但尚未填充具体块号。
+
+计算新文件所需的磁盘块数量（ `ceil(size / BLOCK_SIZE)`）。然后循环请求分配所需数量的磁盘块：每次调用 Disk 的 `allocateBlock()` 从位图找到一个空闲块，并取得块索引。如果磁盘块成功分配，则将该块索引记录到文件 Inode 的 blockIndexes 数组相应位置；同时生成该块要写入的数据（写入随机数据以模拟占位）。在本实现中，采用 `writeRandomDataToDisk()` 方法向分配的块写入随机内容以模拟文件数据写入，并减少剩余待写字节数。如果在分配过程中出现没有空闲块（allocateBlock返回 -1）的情况，则停止分配并记录“磁盘空间不足”错误。
+
+当所有所需块成功分配并写入后，将新建的 Inode 添加到当前目录的文件列表中，表示该目录下新增了此文件的目录项。随后，通过日志服务输出文件创建成功的消息（包括文件名和大小）以反馈结果。
+
+
+
+#### void editFile(String filename, String content) 实现
+
+该方法用于编辑（修改）现有文件的内容，将文件重新写入新的数据。
+
+下面的流程图展示了文件编辑的流程：
+
+```mermaid
+flowchart TD
+    Start["开始：editFile(filename, content)"] --> FindInode["查找 Inode（当前目录搜索文件名）"]
+    FindInode -->|未找到| ErrorNotFound["日志输出：File not found，退出"]
+    FindInode -->|找到| Convert["将 content 转换为 byte[] 数组"]
+
+    Convert --> CalcBlocks["计算所需块数 = ceil(content.length / BLOCK_SIZE)"]
+    CalcBlocks --> CheckSpace["检查磁盘剩余空间是否足够"]
+    CheckSpace -->|不足| ErrorNoSpace["日志输出：磁盘空间不足，退出"]
+    CheckSpace -->|足够| FreeOld["释放原有块（调用 freeBlock）"]
+
+    FreeOld --> AllocLoopStart["分配新块并写入数据（循环）"]
+    AllocLoopStart -->|每块| AllocateBlock["调用 allocateBlock() 获取空闲块"]
+    AllocateBlock --> WriteBlock["写入数据至磁盘块（writeDataToDisk）"]
+    WriteBlock --> CheckDone{"是否写完全部内容？"}
+    CheckDone -->|否| AllocLoopStart
+    CheckDone -->|是| UpdateMeta["更新 Inode：blockIndexes 和 size"]
+
+    UpdateMeta --> LogSuccess["日志输出：文件内容更新成功"]
+    LogSuccess --> End["结束"]
+
+```
+
+在当前目录的文件列表中查找名称匹配的文件 Inode。如果找不到对应文件，则输出“File not found”错误日志并返回。不存在目标文件时无法进行编辑操作。
+
+将传入的新的文件内容（content字符串）转换为字节数组，并计算新内容所需的磁盘块数量（同样采用 `ceil(newContentLength / BLOCK_SIZE)` 的方式确定需要多少块）。同时，检查磁盘剩余空间是否足够容纳新内容。
+
+在写入新内容之前，先释放掉文件当前占用的所有磁盘块，以腾出空间。通过遍历该文件 Inode 原有的 blockIndexes 数组，逐一调用 `Disk.freeBlock()` 来释放块。Bitmap 相应位置会被清0，之前存放旧文件内容的数据块变为空闲。这一步相当于清空文件旧内容。
+
+根据新内容大小重新分配足够的磁盘块。为文件 Inode 创建新的块索引数组（长度为新内容所需块数），然后循环调用 `Disk.allocateBlock` 分配块，将返回的块号填入新的 blockIndexes。对于每一个成功分配的块，从新内容字节数组中依次取出最多1KB的数据片段写入该块（利用 `Disk.writeDataToDisk` 按偏移写入）。如果 allocateBlock 返回 -1 意味着磁盘已无空闲块，则应停止并报告错误。写入过程中使用一个索引累计已写字节数，确保遍历完整个新内容。
+
+新内容全部写入后，更新文件 Inode 的文件大小字段为新内容的字节长度，并保持 Inode 的块索引列表已经更新为新分配的块集合。最后输出日志提示文件内容已更新成功。
+
+
+
+#### String readFileData(String filename) 实现
+
+该方法用于读取指定文件的完整内容并以字符串形式返回，其实现流程如下：
+
+在当前目录的文件列表中定位名称为 filename 的文件对应的 Inode。如果找不到则返回特殊标识（例如返回字符串 "-1" 表示文件未找到）以提示错误。
+
+找到文件后，遍历该文件 Inode 的块索引数组 blockIndexes，将文件的数据从磁盘逐块读出。对于每一个块索引，调用 `Disk.readDataFromDisk(块号 * 块大小, 要读取的字节数)` 来读取该块上的数据。需要注意最后一个块可能只部分使用（文件大小不是块大小整数倍），因此对于最后一个块只读取文件大小余下的那部分字节（例如字节数 = inode.size mod 1024），而对其他完整块则读取1KB数据。每块读取到的字节数据都会转换成对应的文本（字符）并追加到一个 StringBuilder中。
+
+当所有块数据读取完毕后，将累积的完整文件内容字符串返回。这样调用者获得文件的所有文本内容。若中途发现文件不存在，则直接返回 "-1" 或相应标识，不进行后续读取。
+
+
+
+#### void removeFile(String filename) 实现
+
+该方法用于删除当前目录中的单个文件，释放其占用的资源。实现逻辑如下：
+
+在当前目录的文件列表中查找名称匹配的文件 Inode。如果找不到，则输出错误日志“文件未找到”，并结束操作。
+
+若找到目标文件，则获取其 Inode 中记录的所有数据块索引。通过遍历这些块号，调用 `Disk.freeBlock(块号)` 将每个块释放。这将把相应块位置的位图标志置0，使这些块重新变为空闲可用状态，从而回收文件所占用的磁盘空间。
+
+在释放完所有数据块后，将该 Inode 从当前目录的文件列表中移除，意味着在逻辑目录结构中删除了对该文件的引用。随后记录日志提示文件已删除成功。
+
+
+
+#### void createDirectory(String name)、void changeDirectory(String path)、void goBack() 实现
+
+**createDirectory(String name)**： 在当前目录下创建一个新的子目录。
+
+首先检查当前目录的子目录列表，确保没有同名目录冲突；如果已存在同名子目录，则记录错误日志并不创建新目录。如果名称可用，则实例化一个新的 Directory 对象，指定目录名称并将其父目录设为当前目录（this），然后将该对象加入当前目录的 subdirectories 列表。这样就在当前层级下新增了一个子目录节点。最后输出日志确认目录创建成功。该方法不涉及磁盘块分配（因为目录信息在本实现中主要存在于内存结构中，这里是对实际操作系统的一个简化），只是更新了目录树的结构。上层模块（Shell 中的 `mkdir` 命令）调用此方法以在文件系统中新增目录节点。
+
+**changeDirectory(String path)**： 切换当前工作目录。
+
+支持相对路径和绝对路径两种情况：如果传入的路径为 "/"，则直接将当前目录设为根目录；如果是以 "/" 开头的绝对路径，则先将 currentDirectory 重置为根目录，再按路径逐层解析。如果是相对路径（不以斜杠开头），则从当前目录出发解析。实现时，将路径按 "/" 分隔成各级名称，然后逐级查找：对于每个路径组件，调用当前 Directory 对象的 `changeDirectory(String name)` 方法在其子目录列表中查找匹配名称的目录并返回之。该功能对应上层 Shell 的 `cd` 命令，用户通过路径导航文件系统。
+
+**goBack()**： 返回上一级目录，即实现 `cd ..` 的功能。
+
+该方法依赖 Directory 对象的父引用：通过 `currentDirectory.parent` 获取父目录并将 currentDirectory 设置为此父目录。如果当前目录没有父（说明已在根目录），则保持不变或返回根目录本身。该方法相当简单，主要利用了在 Directory 对象构造时保存的 parent 指针。Shell 调用 goBack 实现返回上层的导航命令。当用户在目录树中深入若干层后，调用 goBack 可以逐步回到上级目录。
+
+
+
+#### void removeDirectory(String name)、void removeDirectoryRecursively(String name) 实现
+
+**非递归删除 (`removeDirectory`)：** 只能删除空目录。若目录确实为空，则将其从当前目录的 subdirectories 列表中移除，释放对该 Directory 对象的引用。
+
+```mermaid
+flowchart TD
+    A["调用 removeDirectory(name)"] --> B["在当前目录查找子目录 name"]
+    B --> C{"是否找到？"}
+    C -->|否| D["输出错误：目录未找到"]
+    C -->|是| E{"目录是否为空？<br/>（无文件 & 无子目录）"}
+    E -->|否| F["输出错误：目录非空，提示使用递归删除"]
+    E -->|是| G["从 subdirectories 中移除目录"]
+    G --> H["日志输出：目录删除成功"]
+
+```
+
+
+
+**递归删除 (`removeDirectoryRecursively`)：** 能够删除目录及其所有内部的文件和子目录，实现采用深度优先遍历与栈结构来递归删除。
+
+```mermaid
+flowchart TD
+    A["调用 removeDirectoryRecursively(name)"] --> B["查找目标子目录"]
+    B --> C{"是否找到？"}
+    C -->|否| D["输出错误：目录未找到"]
+    C -->|是| E["创建栈并将目标目录入栈"]
+
+    E --> F["开始循环处理栈"]
+    F --> G["弹出一个目录 currDir"]
+    G --> H["释放 currDir 中所有文件占用的磁盘块"]
+    H --> I["将子目录入栈等待处理"]
+
+    I --> J["从父目录中移除 currDir"]
+    J --> K{"栈是否为空？"}
+    K -->|否| F
+    K -->|是| L["递归删除完成，日志输出"]
+
+```
+
+### 文件锁实现
 
 
 
@@ -1431,7 +1745,7 @@ SystemSnapshot 类负责定时采集操作系统各模块状态并通过 SSE 推
 
 
 
-##### Snapshot JSON 格式
+#### Snapshot JSON 格式
 
 ```json
 {
@@ -1525,19 +1839,58 @@ SystemSnapshot 类负责定时采集操作系统各模块状态并通过 SSE 推
 
 `GET /api/snapshot`，建立系统状态快照推送的EventSource连接。后端`SnapshotController`调用`SnapshotEmitterService.addEmitter()`生成连接。前端snapshotManager.js脚本打开该连接并监听`snapshot`事件。每当SystemSnapshot定时发送状态更新时，前端收到包含各模块数据的JSON串，解析后分发为自定义事件`snapshot-update`。各UI模块的JS监听该事件并更新界面元素。例如，process.js监听snapshot-update，从数据中提取进程管理部分刷新进程表格、就绪/等待队列和调度策略显示；memory.js获取内存快照，重新绘制64格内存方格，每个已占用帧用颜色和标签标明所属进程及页号；disk.js据快照中occupiedBlocks数组高亮磁盘栅格中占用的块（实现类似于内存，可视化磁盘1KB块的使用分布）；filesystem.js读取文件目录字符串，在文件目录面板以预格式文本呈现（带缩进的树结构)；device.js根据设备列表重绘设备表格，包括每个设备名、正在服务的进程以及等待队列进程列表。通过快照SSE，前端实现了对后端状态变化的被动拉取（实为服务端推送）更新。
 
-#### 进程管理展示实现
+#### 系统快照的接收与广播 snapshotManager.js
 
-（写各js的逻辑）
+它的作用是在页面加载完成后建立与后端 `/api/snapshot` 接口的 SSE 连接，实时接收后端推送的系统快照数据，并将其广播为一个自定义事件，供页面中其他模块监听和使用。
 
-#### 内存管理展示实现
+代码注册了一个 DOMContentLoaded 事件监听器，确保当整个 HTML 文档加载完成后再执行快照监听逻辑。在回调函数中，通过 `new EventSource("/api/snapshot")` 建立了与后端的 SSE 连接。这个连接持续开放，服务器可以不断地向前端推送事件。
 
-#### 目录展示实现
+当服务器通过该连接发送一个名为 `"snapshot"` 的事件时，前端的 `eventSource.addEventListener("snapshot", ...)` 会捕获这个事件。事件中包含的数据是一个 JSON 字符串，代表当前系统的状态快照。代码通过 `JSON.parse(event.data)` 将其解析为 JavaScript 对象，这个快照对象被封装成一个自定义事件 `"snapshot-update"`，并通过 `document.dispatchEvent()` 广播出去。
 
-#### Shell模块界面交互实现
+页面上的其他脚本（如 `process.js`, `memory.js`, `disk.js`, `device.js` 等）会监听这个 `"snapshot-update"` 事件，并从 `event.detail` 中获取快照数据，以更新自己的显示内容。
 
-#### 磁盘占用展示实现
+#### 进程管理展示实现 process.js
 
-#### 设备管理展示实现
+进程管理界面的脚本监听 `"snapshot-update"`事件，从中提取快照的 `processManagement` 部分。然后按照快照内容刷新进程状态面板：
+
+- **CPU运行信息表：** 脚本获取页面中用于显示CPU信息的表格容器。每次收到新快照时先清空该表格，然后遍历快照中的 `cpuDetails` 列表，为每个CPU核心创建一行，填入该核心ID以及其上运行的进程信息。如果某项数据不存在则以`--`标示空白。这样多个CPU核心的当前执行情况（运行进程PID、程序名称、当前指令、剩余运行时间、优先级等）都会在表格中实时更新。
+- **队列和策略显示：** 脚本更新界面上显示当前运行进程、就绪队列、等待队列和调度策略的元素文本。将 `processManagement.cpuRunning`（当前运行进程）直接显示，如果为空则显示`--`；将 `readyQueue` 和 `waitingQueue` 列表转换为逗号分隔的字符串显示（若队列为空则显示`--`）；以及显示当前使用的CPU调度算法名称（如先来先服务FCFS、时间片轮转RR等）。通过这些动态更新，前端“进程状态”面板即可反映内核调度器的实时队列变化和当前执行的进程。
+
+#### 内存管理展示实现 memory.js
+
+内存管理界面的脚本同样监听 `snapshot-update` 事件，从快照中获取 `memoryManagement` 数据。该数据包括物理内存总页框数以及已分配页框的信息列表。前端据此以图形化网格方式展示内存使用情况：
+
+- **准备数据结构：** 脚本先读取 `memory.totalFrames` 确定总页框数量，并取出 `frameInfo` 列表。`frameInfo` 中每个元素包含一个已占用页框的详情（例如 `{pid: 2, page: 3, frameId: 10}` 表示帧号10被PID为2的进程的第3页占用）。为了方便绘制，脚本创建一个 `frameMap` 将每个 frameId 映射到对应信息，并为不同PID分配不同的颜色类，以便直观区分。
+- **绘制内存帧网格：** 清空显示区域后，前端按索引0到`totalFrames-1`迭代每个页框号，创建一个方块元素代表该页框。如果当前帧号在已使用的映射中，则表示该帧被占用：给方块添加对应PID的颜色样式，文本内容显示该PID号，并设置鼠标悬停提示 来显示帧号、所属进程PID及页号。若当前帧号不在已用映射中，则将方块标记为空闲颜色，文本留空，提示内容标明“空闲”。最后将方块加入页面网格容器。通过这一方式，内存面板呈现出总内存页框的使用分布图：不同颜色代表不同进程，占用的块上标注进程ID，悬停可见详细信息，而空闲块则无标注。
+
+#### 目录展示实现 filesystem.js
+
+该模块监听 `snapshot-update` 事件并读取快照中的 `fileDirectory` 字符串。`fileDirectory` 是后端生成的当前目录树结构文本，例如包含根目录和子目录、文件的层次缩进格式。前端获取到此字符串后，直接将其设置为页面中表示文件系统树的元素的文本内容（innerText）。
+
+#### Shell模块界面交互实现 shell.js
+
+Shell 模块提供一个模拟终端界面，允许用户输入命令并显示执行结果日志。它与快照推送同样使用 SSE 机制，但处理的内容不同。前端脚本（`shell.js`）建立到后端 `/api/shell/stream` 的 EventSource 连接，以接收日志输出和提示符更新等事件。该模块并不处理系统快照JSON，而是通过监听特定的日志事件来更新终端界面：
+
+- **实时日志输出：** 后端通过 LogEmitterService 将命令执行过程中的日志行以名为“log”的事件推送给前端。Shell 前端监听到`log`事件后，获取其中的日志消息字符串。如果消息以特定前缀开头，则执行特殊处理；否则将消息作为普通输出追加到终端显示区域。例如，若收到 `"OPEN_VI:filename"` 则表示需要打开一个文件编辑器，此时Shell脚本会弹出VI编辑窗口以编辑指定文件。再如，收到 `"PROMPT:/root/dir"` 则表示后端更新了当前提示符（当前工作目录路径变化），Shell 脚本会提取新提示符并更新终端输入行前的提示符显示。
+- **命令输入处理：** 用户在终端输入命令并按下回车时，Shell脚本通过`fetch("/api/shell/command")`将命令发送给后端执行，并立即在本地先打印回显（将用户输入的命令连同当前提示符显示出来）。随后，后端执行该命令产生的任何输出都会再次通过上述 SSE 日志机制发送回来，前端即时将其显示在终端区域。对于改变当前目录的命令（如`cd`），Shell 脚本会特殊处理：先移除旧的提示符显示，等待后端推送新的PROMPT事件以更新提示符，从而保持终端提示符与实际工作目录同步。
+- **SSE 通道共用情况：** Shell 模块和系统快照模块都采用了服务器推送（SSE）来实现前端实时更新，但二者在后端通过不同的Service管理各自的事件流（一个发送`snapshot`事件，一个发送`log`事件）。前端也使用不同的EventSource连接或事件名加以区分。因此，Shell界面不参与快照 JSON 的处理，而是通过SSE获得日志/提示符信息，实现命令行交互界面的刷新。
+- 总结来说，Shell模块共享了类似的SSE实时推送机制，但其关注的数据流（日志输出）与系统快照数据独立。
+
+#### 磁盘占用展示实现 disk.js
+
+该脚本监听 `snapshot-update` 事件，从中读取 `diskManagement` 数据结构。其中包含磁盘总块数 (`totalBlocks`) 和已占用块列表 (`occupiedBlocks`)。界面以网格或列表形式展示磁盘块的占用状态。
+
+收到快照后，脚本首先清空之前的磁盘显示区域，然后按照块编号从0一直迭代到 `totalBlocks - 1`，为每个磁盘块创建一个小方格元素。若当前块号存在于 `occupiedBlocks` 列表中，表示该块已被占用，则将方格标记为占用状态，并在方格内显示块号。如果块号不在占用列表，则表示为空闲块，此时方格添加空闲样式（`color-empty`），内容留空。
+
+#### 设备管理展示实现 device.js
+
+快照中的 `deviceManagement` 包含设备总数和设备列表。前端脚本获取该数据后，主要利用其中的 `deviceList` 数组更新设备状态表格。
+
+流程是先清空现有设备表的内容，然后遍历 `deviceList`，对每个设备生成一行表格：每行包括：设备名称、当前运行进程、等待队列三列。
+
+`deviceName` 直接显示设备标识，`runningProcess`显示该设备正在服务的进程的PID（如果为“空闲”则前端会显示此汉字或用`-`表示无进程），`waitingQueue`则将等待该设备的所有进程PID列表拼接成字符串（若列表为空则显示`-`）。
+
+
 
 
 
@@ -1794,6 +2147,8 @@ src/test/java/org/example/oscdspring/ProcessManagementTest.java
 ### 源代码
 
 源代码见提交。
+
+
 
 
 
