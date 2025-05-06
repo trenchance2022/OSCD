@@ -570,9 +570,111 @@ OSCD/
 
 ## 详细设计
 
-### Shell交互实现
+### 系统初始化实现
 
-（待完成）
+本系统采用 Spring Boot 框架构建，在系统启动时，通过实现 `ApplicationRunner` 接口的 `StartupInitializer` 类自动完成系统的初始化操作，配合 `Library` 类完成模块的全局共享注册与配置。系统初始化的关键目标包括：注入核心模块、配置调度策略、创建 CPU 核心线程、注册模拟设备、构建测试用文件系统、并启动调度器。
+
+
+
+#### 类与方法
+
+<img src="./report2025.assets/屏幕截图 2025-05-06 092738.png" style="zoom:33%;" />
+
+<img src="./report2025.assets/image-20250506092749923.png" alt="image-20250506092749923" style="zoom:33%;" />
+
+
+
+#### 流程图
+
+```mermaid
+flowchart TD
+  Start([系统启动])
+
+  Start --> A1[注入核心模块到 Spring 容器]
+  A1 --> A2[注册核心模块到 Library]
+  A2 --> B1[读取配置: CPU 数量 & 调度策略]
+  B1 --> B2[配置 Scheduler 策略]
+  B2 --> C1[循环创建 CPU 实例]
+  C1 --> C2[启动 CPU 线程]
+  C2 --> D1[添加默认设备: Printer, Scanner, USB]
+  D1 --> E1[创建根目录 d1]
+  E1 --> E2[创建测试程序文件: t1-t16, m1, m2 ,e1-e3]
+  E2 --> E3[写入模拟操作指令串]
+  E3 --> F1[返回根目录]
+  F1 --> G1[启动 Scheduler 主线程]
+  G1 --> End([初始化完成, 系统运行中])
+
+```
+
+
+
+#### StartupInitializer 的实现逻辑
+
+`StartupInitializer` 是系统的启动初始化入口类，实现了 `ApplicationRunner` 接口，其 `run()` 方法会在 Spring Boot 应用启动后自动执行。该类主要负责以下几个方面的初始化工作：
+
+1. 核心模块注入与注册
+
+     通过 Spring 的依赖注入机制，系统自动注入 `FileSystemImpl`、`MemoryManagement`、`DeviceManager` 等核心模块对象。随后，将这些模块通过 `Library.setXXX()` 方法注册到全局共享库 `Library` 中，以便其他非 Spring 管理的类（如 `CPU`、`Scheduler`）能访问这些模块。
+
+2. 调度器策略配置
+
+     根据配置文件 `application.properties` 中设定的调度策略（如 FCFS、SJF、RR、MLFQ 等），调用 `scheduler.configure()` 方法配置对应的 `SchedulingPolicy` 枚举值，确保系统以正确的调度算法运行。
+
+3. CPU 核心创建与线程启动
+
+     系统根据配置的 CPU 数量（默认为 4 个），循环创建对应数量的 `CPU` 实例。每个 CPU 实例通过构造函数注入 `Scheduler` 与 `DeviceManager`，随后被加入调度器，并调用 `start()` 方法以启动其工作线程。
+
+4. 模拟设备注册
+
+     使用 `DeviceManager.addDevice()` 方法向系统添加几个预设设备，包括 Printer、Scanner 和 USB。每个设备通过编号和名称唯一标识，并为后续进程中的设备 I/O 模拟操作提供支持。
+
+5. 测试程序初始化
+
+     在文件系统中创建测试用目录 `d1` 并切换进入，在该目录下依次创建多个测试程序文件（如 `t1` ~ `t16`、`m1`、`m2`、`e1` ~ `e3`），每个文件代表一个模拟程序，写入模拟的操作指令串。指令内容涵盖内存分配与访问、进程调度行为、设备请求及文件读写等典型操作，作为系统测试用例来源。
+
+6. 启动调度器主线程
+
+     所有初始化完成后，调用 `scheduler.start()` 启动调度器线程，正式进入系统调度与运行阶段。
+
+
+
+#### Library 的设计与作用
+
+`Library` 类作为系统的模块注册中心，采用静态方法与静态字段的形式实现，是一个典型的**全局访问单例类**。其设计目的是为了解决以下问题：
+
+- 非 Spring 管理的类（如多线程类 CPU）无法通过自动注入方式获取核心服务组件；
+- 核心模块之间存在跨层访问需求，例如调度器访问设备、CPU 调用内存管理等。
+
+`Library` 提供以下静态方法用于注册与获取模块：
+
+- `setFileSystem()` / `getFileSystem()`
+- `setMemoryManagement()` / `getMemoryManagement()`
+- `setDeviceManager()` / `getDeviceManager()`
+- `setScheduler()` / `getScheduler()`
+
+模块在初始化阶段由 `StartupInitializer` 进行注册，其他模块可在任意位置调用对应的 `getXXX()` 方法来访问这些核心服务实例。
+
+
+
+
+
+### Shell命令解析实现
+
+计了一个可交互的 Shell 模块，模拟真实操作系统的命令行接口（CLI），允许用户通过前端输入系统命令。
+
+实现Shell的交互主要包含三个部分：
+
+`Shell` 类：负责命令的解析与调度执行（后端核心逻辑）
+
+`ShellController`：REST 接口控制器，连接前端与 Shell 后端
+
+`shell.js`：前端终端交互脚本，实现命令行 UI 与 SSE 实时日志机制
+
+这节我们主要讲Shell类的解析逻辑，前端逻辑在API实现一节中详细探讨。
+
+
+
+#### Shell命令集
 
 ```cmd
 mkdir <directory>		#创建目录
@@ -594,6 +696,159 @@ info dir			#查看目录树
 info disk			#查看磁盘位图
 Info memory			#查看内存
 ```
+
+
+
+#### 类与方法
+
+<img src="./report2025.assets/image-20250506094510341.png" alt="image-20250506094510341" style="zoom:33%;" />
+
+
+
+#### Shell命令解析流程图
+
+```mermaid
+flowchart TD
+    A[接收到命令字符串] --> B[以空格分割指令]
+    B --> C{指令是否为空?}
+    C -->|是| Z1[直接 return]
+    C -->|否| D[对指令switch]
+
+    D --> E1[case mkdir : ]
+    D --> E2[case exec : ]
+    D --> E3[case vi :]
+    D --> E4[... 其他 case如 ls, rm, info 等]
+    D --> F5[default: 前端发送Unknown command]
+
+    E1 --> F1[调用fileSystem.createDirectory]
+    E2 --> F2[调用Scheduler.createProcess]
+    E3 --> F3[判断文件是否存在 : 发送 OPEN_VI 信号]
+    E4 --> F4[调用相应模块]
+    
+
+    F1 --> G[logEmitterService.sendLog 发送输出]
+    F2 --> G
+    F3 --> G
+    F4 --> G
+    F5 --> G
+    
+    G --> G2[若不是 vi,调用fileSystem.currentDirectory,并发送 PROMPT 更新,更新前端当前所在目录]
+
+```
+
+
+
+#### Shell与前端和控制器交互的流程图
+
+```mermaid
+flowchart TD
+    subgraph 前端界面
+        A1[用户输入命令]
+        A2[JS 捕获并发送命令请求]
+        A3[建立 SSE, 监听日志与提示符]
+    end
+
+    subgraph 控制器
+        B1[ShellController 接收命令]
+        B2[ViController 保存文件内容]
+    end
+
+    subgraph Shell 模块
+        C1[Shell 接收命令]
+        C2[解析命令]
+        C3[推送日志]
+        C4[分发至模块]
+    end
+
+    subgraph 文件系统
+        D1[FileSystemImpl]
+    end
+
+    subgraph 核心模块
+        E1[DeviceManager]
+        E2[Scheduler]
+        E3[MemoryManagement]
+    end
+
+    %% 主流程
+    A1 --> A2
+    A2 --> B1
+    B1 --> C1
+    C1 --> C2
+    C2 --> C4
+
+    %% 命令分发
+    C4 -->|文件相关| D1
+    C4 -->|进程相关| E2
+    C4 -->|设备相关| E1
+    C4 -->|内存信息| E3
+
+    %% 日志推送
+    C2 --> C3
+    C3 --> A3
+
+    %% vi 编辑保存流程
+    A1 -->|保存 vi 内容| B2
+    B2 --> D1
+
+    %% 提示符 & 编辑器控制
+    C3 -->|PROMPT 更新| A3
+    C3 -->|OPEN_VI 信号| A3
+
+```
+
+
+
+#### processCommand() 实现
+
+```java
+public String processCommand(String command)
+```
+
+该方法为 Shell 的对外主入口，通常由 `ShellController` 调用。
+
+它首先调用内部 `parseCommand()` 进行命令解析与实际执行。
+
+返回简要处理状态字符串，但核心输出依赖 SSE 实时日志机制（前端并不依赖 return 值，return 值和前端输出的内容无关）。
+
+
+
+#### parseCommand() 实现
+
+```java
+private void parseCommand(String command)
+```
+
+##### 识别命令
+
+该方法是 Shell 的核心处理逻辑，承担了用户命令的解析、分发与模块调用工作。
+
+首先通过空格分割用户输入，识别命令关键字与参数。
+
+使用 `switch-case` 模式匹配命令类型并执行相应操作。
+
+对于参数缺失、类型错误、语法错误等情况，统一通过 `logEmitterService.sendLog()` 返回错误提示。
+
+##### vi 信号
+
+特别地，`vi` 命令中会判断文件是否存在，并发送特殊信号：
+
+- `OPEN_VI:<filename>`：打开现有文件并编辑
+- `OPEN_VI_*:<filename>`：新建文件后编辑
+
+##### 前端输出返回
+
+Shell 类中所有执行反馈均不通过返回值，而是使用：
+
+```java
+logEmitterService.sendLog("message")
+```
+
+来将信息推送至前端终端。
+
+##### 提示符更新信号
+
+除 `vi` 命令外，每条命令执行结束后会发送新的提示符信号如`PROMPT:/root/d1>`前端通过该消息自动更新终端提示符状态。
 
 
 
@@ -1053,11 +1308,132 @@ graph TD
 
 ### 系统快照展示与API实现
 
+#### 界面展示图
+
 ![image-20250505213739069](./report2025.assets/image-20250505213739069.png)
+
+
+
+#### 系统快照展示流程图
+
+```mermaid
+flowchart TD
+    subgraph "后端 Backend"
+        SS["SystemSnapshot<br/>@Scheduled(100ms)"] -->|采集各模块状态| SNAPSHOT["组装 Snapshot JSON<br/>包含进程、内存、文件、磁盘、设备"]
+        SNAPSHOT -->|"调用 sendSnapshot(json)"| Emitter["SnapshotEmitterService<br/>(SSE事件“snapshot”)"]
+    end
+    subgraph "前端 Frontend"
+        ES["EventSource 连接 /api/snapshot"] -->|"收到“snapshot”事件<br/>解析 JSON"| Dispatch["dispatch<br/>\snapshot-update事件"]
+        Dispatch --> UI1["process.js 刷新<br/>进程状态面板"]
+        Dispatch --> UI2["memory.js 刷新<br/>内存分页视图"]
+        Dispatch --> UI3["disk.js 刷新<br/>磁盘占用图"]
+        Dispatch --> UI4["filesystem.js 刷新<br/>目录树展示"]
+        Dispatch --> UI5["device.js 刷新<br/>设备状态表"]
+        Dispatch --> UI6["shell.js 监听日志<br/>（不处理snapshot）"]
+    end
+    Emitter --SSE--> ES
+
+```
+
+
 
 #### 系统快照类实现（SystemSnapshot.java）
 
-（写系统快照类的逻辑）
+<img src="./report2025.assets/image-20250506110151272.png" alt="image-20250506110151272" style="zoom:50%;" />
+
+SystemSnapshot 类负责定时采集操作系统各模块状态并通过 SSE 推送快照数据。它被 `@Scheduled(fixedRate = 100)` 注解设定为每100毫秒运行一次（设置了初始延迟500毫秒，这是为了等待系统初始化完毕）。在定时任务方法 `updateSnapshot()` 中，系统从各模块获取当前状态，组装成一个包含多个部分的快照 JSON 对象，并通过 SnapshotEmitterService 推送给前端。
+
+**进程管理状态：** 从Library中，调用调度器（Scheduler）单例 `Library.getScheduler()` 获取当前正在运行的进程（cpuRunning）、就绪队列（readyQueue）和等待队列（waitingQueue）的列表。此外，还记录CPU数量和当前调度策略。对于每个CPU核心，如果有进程在运行，则收集该进程的详细信息（如PID、程序名、当前指令、剩余时间、优先级），构造成列表 cpuDetails。这些数据最终封装在一个`processManagement`中。
+
+**内存管理状态：** 从内存管理模块（MemoryManagement）获取物理内存使用情况，即调用 `getPageUse()` 方法。该方法返回包括总页框数和已使用页框信息的结构：`totalFrames` 表示内存总页框数，`frameInfo` 列表包含每个已分配页框的详情（所属进程PID、该进程的页号page、物理帧号frameId）。
+
+**目录结构：** 调用文件系统模块（FileSystemImpl）的 `getDirectoryStructure()` 方法获取当前文件目录结构的字符串表示。该字符串描绘了文件系统中目录和文件的层次关系，用于前端以树状格式展示。
+
+**磁盘使用状态：** 构建磁盘管理快照数据，包括磁盘总块数 `totalBlocks`（例如常量Disk Size）和已占用的磁盘块索引列表 `occupiedBlocks`。这些数据源自文件系统模块，通过 `getOccupiedBlockIndices()` 获取当前占用的磁盘块号。
+
+**设备管理状态：** 遍历设备管理器（DeviceManager）维护的所有模拟设备，收集每个设备的状态。对每个设备，获取设备名称（例如组合类型名和ID）、当前正在服务的进程（runningProcess，如果无则标记为“空闲”），以及该设备的等待队列进程列表（waitingQueue）。同时记录设备总数 deviceCount。这些信息组装在`deviceManagement`中并加入快照。
+
+**快照发送机制：** 将上述所有部分放入一个快照 Map 后，利用 Jackson 的 ObjectMapper 将其序列化为 JSON 字符串 jsonSnapshot，然后调用 `snapshotEmitterService.sendSnapshot(jsonSnapshot)` 通过 Server-Sent Events 推送。SnapshotEmitterService 会将快照字符串封装为名为“snapshot”的SSE事件并广播给所有已注册的前端监听器。这样，每当后端采集到新状态，前端都会实时收到更新的系统快照数据。
+
+
+
+##### Snapshot JSON 格式
+
+```json
+{
+  "processManagement": {
+    "cpuRunning": [1, 3],
+    "readyQueue": [4, 5],
+    "waitingQueue": [6],
+    "cpuCount": 2,
+    "schedulingPolicy": "RR",
+    "cpuDetails": [
+      {
+        "cpuId": 1,
+        "pid": 1,
+        "name": "t1",
+        "instruction": "C 2000",
+        "remainingTime": 1200,
+        "priority": 2
+      },
+      {
+        "cpuId": 2,
+        "pid": 3,
+        "name": "t3",
+        "instruction": "M 4096",
+        "remainingTime": 5000,
+        "priority": 1
+      }
+    ]
+  },
+
+  "memoryManagement": {
+    "totalFrames": 256,
+    "frameInfo": [
+      {
+        "frameId": 0,
+        "pid": 1,
+        "page": 0
+      },
+      {
+        "frameId": 1,
+        "pid": 1,
+        "page": 1
+      },
+      {
+        "frameId": 5,
+        "pid": 3,
+        "page": 0
+      }
+    ]
+  },
+
+  "fileDirectory": "/root\n└── d1\n    ├── t1\n    ├── t2\n    └── t3",
+
+  "diskManagement": {
+    "totalBlocks": 512,
+    "occupiedBlocks": [0, 1, 2, 3, 4, 7, 8]
+  },
+
+  "deviceManagement": {
+    "deviceCount": 2,
+    "deviceList": [
+      {
+        "deviceName": "Printer_1",
+        "runningProcess": 2,
+        "waitingQueue": [4, 5]
+      },
+      {
+        "deviceName": "USB_3",
+        "runningProcess": 6,
+        "waitingQueue": []
+      }
+    ]
+  }
+}
+```
+
+
 
 #### Shell指令解析API实现 
 
@@ -2026,6 +2402,8 @@ gantt
 
 ![](.\report2025.assets\多CPU-优先抢占-3.png)
 
+
+
 #### 设备调度测试
 
 测试程序：
@@ -2169,7 +2547,7 @@ t7和t8读之后同时释放：
 
 #### 内存管理测试
 
-##### 测试程序：
+##### 测试程序
 
 ```yaml
 m1:
@@ -2184,7 +2562,7 @@ C 2000#M 100000#C 2000#MW 100 101000#Q#
 
 
 
-##### 测试说明：
+##### 测试说明
 
 文件`m1` 测试正常读写：
 
@@ -2196,7 +2574,7 @@ C 2000#M 100000#C 2000#MW 100 101000#Q#
 
 
 
-##### 预期结果：
+##### 预期结果
 
 `m1`:
 
@@ -2214,7 +2592,7 @@ C 2000#M 100000#C 2000#MW 100 101000#Q#
 
 
 
-##### 测试结果：
+##### 测试结果
 
 `m1`:
 
