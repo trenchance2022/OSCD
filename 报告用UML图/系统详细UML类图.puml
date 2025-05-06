@@ -1,0 +1,665 @@
+@startuml
+class org.example.oscdspring.process_management.PCB {
+- {static} List<PCB> activePCBs
+- {static} List<PCB> allPCBs
+- int currentQueue
+- int pid
+- int size
+- int priority
+- ProcessState state
+- int timeSlice
+- int timeRemain
+- int timeUsed
+- String executedFile
+- int pc
+- int codeSize
+- int innerFragmentation
+- int lastPageSize
+- int pageTableSize
+- int pageTableAddress
+- String originalInstruction
+- String remainInstruction
++ {static} List<PCB> getActivePCBs()
++ void removePCB()
++ void addPCB()
++ int getPid()
++ int getSize()
++ void addSize(int)
++ int getTimeRemain()
++ void setTimeRemain(int)
++ void freshTimeRemain()
++ int getPriority()
++ void setPriority(int)
++ ProcessState getState()
++ void setState(ProcessState)
++ int getTimeSlice()
++ void setTimeSlice(int)
++ int getTimeUsed()
++ void incrementTimeUsed(int)
++ void resetTimeUsed()
++ void setExecutedFile(String)
++ String getExecutedFile()
++ int getPc()
++ void setPc(int)
++ int getCodeSize()
++ int getInnerFragmentation()
++ int getLastPageSize()
++ void setLastPageSize(int)
++ void addPage(int)
++ int getPageTableSize()
++ int getPageTableAddress()
++ void setPageTableAddress(int)
++ String getOriginalInstruction()
++ void setOriginalInstruction(String)
++ String getRemainInstruction()
++ void setRemainInstruction(String)
++ int getCurrentQueue()
++ void setCurrentQueue(int)
++ {static} PCB getPCB(int)
++ void addPCB_all()
++ void removePCB_all()
+}
+
+
+class org.example.oscdspring.interrupt_management.InterruptHandler {
+- {static} InterruptHandler instance
++ {static} InterruptHandler getInstance()
++ void handleClockInterrupt(CPU,PCB,Scheduler)
++ void handleDeviceInterrupt(PCB,Scheduler)
++ void handleIOInterrupt(PCB,String,Scheduler,boolean)
+}
+
+
+class org.example.oscdspring.util.LogEmitterService {
+- CopyOnWriteArrayList<SseEmitter> emitters
+- {static} LogEmitterService instance
++ void init()
++ {static} LogEmitterService getInstance()
++ SseEmitter addEmitter()
++ void sendLog(String)
+}
+
+
+class org.example.oscdspring.main.StartupInitializer {
+- FileSystemImpl fileSystem
+- MemoryManagement memoryManagement
+- DeviceManager deviceManager
+~ Scheduler scheduler
+- int cpuNum
+- String schedulerPolicy
++ void run(ApplicationArguments)
+}
+
+
+class org.example.oscdspring.controller.ShellSseController {
+- LogEmitterService logEmitterService
++ SseEmitter stream()
+}
+
+
+class org.example.oscdspring.memory_management.MMU {
+- PTR ptr
+- TLB tlb
++ boolean equals(Object)
++ MMU clone()
++ void update(PCB)
++ void addPageSize(int)
++ void setLastPageSize(int)
++ int getLastPageSize()
++ int addressTranslation(int,boolean)
++ int getInnerFragmentation()
++ int getPageTableAddress()
++ int getPageTableSize()
++ int getCodeSize()
++ Object getTLB()
++ boolean isTLBEmpty()
+}
+
+
+class org.example.oscdspring.memory_management.PTR {
+- int pageTableAddress
+- int pageTableSize
+- int codeSize
+- int innerFragmentation
+- int lastPageSize
++ boolean equals(Object)
++ PTR clone()
++ void update(PCB)
++ int getPageTableAddress()
++ int getPageTableSize()
++ int getCodeSize()
++ int getInnerFragmentation()
++ void addPageSize(int)
++ int getLastPageSize()
++ void setLastPageSize(int)
+}
+
+
+class org.example.oscdspring.memory_management.TLB {
+- TLBEntry[] TLB
+- int clockHand
++ boolean equals(Object)
++ TLB clone()
++ boolean isEmpty()
++ void addEntry(int,int)
++ int getFrameNumber(int,boolean)
++ void deleteEntry(int)
++ void refresh()
++ void writeBackPageTable(PageTable)
+}
+
+
+class org.example.oscdspring.memory_management.TLBEntry {
+- int pageNumber
+- int frameNumber
+- boolean valid
+- boolean dirty
+- boolean accessed
++ boolean equals(Object)
++ TLBEntry clone()
++ boolean isAccessed()
++ void setAccessed(boolean)
++ boolean isDirty()
++ void setDirty(boolean)
++ boolean isValid()
++ void setValid(boolean)
++ int getFrameNumber()
++ int getPageNumber()
+}
+
+
+class org.example.oscdspring.memory_management.PageFaultHandler {
+- {static} Object lock
++ {static} boolean handlePageFault(int,TLB,int)
+}
+
+
+class org.example.oscdspring.file_disk_management.FileSystemImpl {
++ {static} Disk disk
++ {static} Directory root
++ {static} Directory currentDirectory
+- LogEmitterService logEmitterService
++ void createFile(String,int)
++ void createDirectory(String)
++ int allocateBlock()
++ void freeBlock(int)
++ byte[] readBlock(int)
++ void writeBlock(int,byte[])
++ void listDirectory()
++ void changeDirectory(String)
++ void goBack()
++ void removeFile(String)
++ void removeDirectory(String)
++ void removeDirectoryRecursively(String)
++ void showFileBlock(String)
++ void displayDiskInfo()
++ void showDirectoryStructure()
++ String getDirectoryStructure()
++ String getCurrentPath()
++ void editFile(String,String)
++ boolean fileExists(String)
++ void showFileData(String)
++ String readFileData(String)
++ int[] getFileDiskBlock(String)
++ List<Integer> getOccupiedBlockIndices()
+}
+
+
+class org.example.oscdspring.memory_management.PageTableArea {
+- {static} PageTableArea INSTANCE
+~ Map<Integer,PageTable> pageTables
+- int addressSpace
++ {static} PageTableArea getInstance()
++ int addPageTable(int,int,int[])
++ PageTable getPageTable(int)
++ void removePageTable(int)
+- int getAddress()
+}
+
+
+class org.example.oscdspring.snapshot.SystemSnapshot {
+- FileSystemImpl fileSystem
+- MemoryManagement memoryManagement
+- SnapshotEmitterService snapshotEmitterService
++ void updateSnapshot()
+}
+
+
+class org.example.oscdspring.OscdSpringApplication {
++ {static} void main(String[])
+}
+
+enum org.example.oscdspring.process_management.ProcessState {
++  NEW
++  READY
++  RUNNING
++  WAITING
++  TERMINATED
+}
+
+class org.example.oscdspring.file_disk_management.Bitmap {
+- int[] bitmap
+- int size
++ int allocateBlock()
++ void freeBlock(int)
++ void displayBitmap()
++ int getOccupiedBlocks()
++ List<Integer> getOccupiedBlockIndices()
++ int getFreeBlocks()
+}
+
+
+class org.example.oscdspring.controller.ShellController {
+- Shell shell
+- FileSystemImpl fileSystem
++ String executeCommand(String)
++ String saveFileContent(ViSaveRequest)
+}
+
+
+class org.example.oscdspring.controller.ViSaveRequest {
+- String fileName
+- String content
++ String getFileName()
++ void setFileName(String)
++ String getContent()
++ void setContent(String)
+}
+
+
+class org.example.oscdspring.file_disk_management.Directory {
+~ String name
+~ Directory parent
+~ List<Inode> files
+~ List<Directory> subdirectories
++ void createFile(Disk,String,int,int)
++ void createDirectory(String)
++ void removeFile(Disk,String)
++ void removeDirectory(String)
++ void removeDirectoryRecursively(Disk,String)
++ void listDirectory()
++ Directory changeDirectory(String)
++ Directory goBack()
++ void showFileBlock(String)
++ void showDirectoryStructure(String)
++ void appendDirectoryStructure(String,boolean,PrintWriter)
++ int[] getFileDiskBlock(String)
+}
+
+
+class org.example.oscdspring.memory_management.MemoryManagementImpl {
+- FileDiskManagement fileDiskManagement
++ boolean Allocate(CPU,int)
++ boolean FreeProcess(CPU)
++ boolean Read(CPU,int,byte[],int)
++ boolean Write(CPU,int,byte[],int)
++ Map<String,Object> getPageUse()
++ void showPageUse(int,int)
++ void releaseProcess(PCB)
+}
+
+
+class org.example.oscdspring.file_disk_management.Inode {
+~ int inodeNumber
+~ String fileName
+~ int size
+~ int[] blockIndexes
+}
+
+interface org.example.oscdspring.file_disk_management.FileDiskManagement {
+~ void createFile(String,int)
+~ void createDirectory(String)
+~ int allocateBlock()
+~ void freeBlock(int)
+~ byte[] readBlock(int)
+~ void writeBlock(int,byte[])
+~ void listDirectory()
+~ void changeDirectory(String)
+~ void goBack()
+~ void removeFile(String)
+~ void removeDirectory(String)
+~ void removeDirectoryRecursively(String)
+~ void showFileBlock(String)
+~ void displayDiskInfo()
+~ void showDirectoryStructure()
+~ String getCurrentPath()
+~ void editFile(String,String)
+~ void showFileData(String)
+~ String readFileData(String)
+~ int[] getFileDiskBlock(String)
+~ List<Integer> getOccupiedBlockIndices()
+}
+
+class org.example.oscdspring.memory_management.PageTableEntry {
+- int frameNumber
+- boolean valid
+- boolean dirty
+- boolean accessed
+- int diskAddress
+- boolean allocatedDisk
++ PageTableEntry clone()
++ boolean equals(Object)
++ int getFrameNumber()
++ boolean isAllocatedDisk()
++ void AllocatedDisk()
++ void setFrameNumber(int)
++ void setDiskAddress(int)
++ boolean isValid()
++ void setValid(boolean)
++ boolean isAccessed()
++ void setAccessed(boolean)
++ boolean isDirty()
++ void setDirty(boolean)
++ int getDiskAddress()
+}
+
+
+class org.example.oscdspring.file_disk_management.FileLockManager {
+- {static} FileLockManager instance
+- Map<String,FileLock> lockMap
+- Scheduler scheduler
++ {static} FileLockManager getInstance()
++ void setScheduler(Scheduler)
++ void addReadWaitingProcess(String,PCB)
++ void addWriteWaitingProcess(String,PCB)
++ boolean acquireReadLock(String,int)
++ void releaseReadLock(String,int)
++ boolean acquireWriteLock(String,int)
++ void releaseWriteLock(String,int)
+- void notifyWaitingProcesses(String)
++ void releaseAllLocks(int)
+- FileLock getOrCreateLock(String)
++ List<PCB> getWaitingProcess()
+}
+
+
+class org.example.oscdspring.file_disk_management.FileLockManager$FileLock {
+- String filename
+- List<Integer> readLockHolders
+- int writeLockHolder
+- Queue<WaitingProcess> waitingQueue
++ boolean canAcquireReadLock()
++ boolean canAcquireWriteLock()
++ boolean acquireReadLock(int)
++ void releaseReadLock(int)
++ boolean acquireWriteLock(int)
++ void releaseWriteLock(int)
++ void addReadWaitingProcess(PCB)
++ void addWriteWaitingProcess(PCB)
++ void notifyWaitingProcesses(Scheduler)
++ boolean isReadLockHeldBy(int)
++ boolean isWriteLockHeldBy(int)
++ void removeFromWaitingQueue(int)
+}
+
+
+class org.example.oscdspring.file_disk_management.FileLockManager$FileLock$WaitingProcess {
+~ PCB process
+~ boolean isRead
+}
+
+class org.example.oscdspring.file_disk_management.Disk {
+- int diskSize
+- int blockSize
+- Bitmap bitmap
+- byte[] diskData
+- {static} Disk INSTANCE
++ {static} Disk getInstance()
++ int allocateBlock()
++ void freeBlock(int)
++ void writeRandomDataToDisk(int,int)
++ void writeDataToDisk(int,byte[])
++ String readDataFromDisk(int,int)
++ byte[] readBlock(int)
++ void writeBlock(int,byte[])
++ void displayDiskInfo()
++ List<Integer> getOccupiedBlockIndices()
++ int getOccupiedBlocks()
++ int getDiskSize()
++ void setDiskSize(int)
++ int getFreeSpace()
++ byte[] getDiskData()
+}
+
+
+class org.example.oscdspring.memory_management.PageTable {
+- List<PageTableEntry> entries
+- int pid
+- int memoryBlockSize
+- int memoryBlockUsed
+- int pointer
++ PageTable clone()
++ boolean equals(Object)
++ boolean hasValidPage()
++ boolean hasEmptyFrame()
++ void addMemoryUsed()
++ int getReplacePage()
++ int getPageTableSize()
++ PageTableEntry getEntry(int,boolean)
++ void addEntry()
++ void addEntries(int)
++ int getPid()
+}
+
+
+class org.example.oscdspring.process_management.CPU {
+- int cpuId
+- PCB currentPCB
+- Scheduler scheduler
+- DeviceManager deviceManager
+- MemoryManagement memoryManagement
+- MMU mmu
++ void run()
+- void execute()
++ String InstructionFetchForTest()
+- String InstructionFetch()
++ void executeInstructionForTest(String)
+- void executeInstruction(String)
++ void changeProcess(PCB)
++ int getCpuId()
++ boolean isIdle()
++ PCB getCurrentPCB()
++ void setCurrentPCB(PCB)
++ MMU getMMU()
++ void setMemoryManagement(MemoryManagement)
+}
+
+
+class org.example.oscdspring.main.Constants {
++ {static} int PAGE_SIZE_BYTES
++ {static} int DISK_SIZE
++ {static} int MEMORY_PAGE_SIZE
++ {static} int TLB_SIZE
++ {static} int SYSTEM_MEMORY_PAGE_SIZE
++ {static} int BLOCK_SIZE_BYTES
++ {static} int CLOCK_INTERRUPT_INTERVAL_MS
+}
+
+class org.example.oscdspring.process_management.Scheduler {
+- {static} Scheduler instance
+- List<BlockingQueue<PCB>> readyQueues
+- BlockingQueue<PCB> waitingQueue
+- List<CPU> cpus
+- SchedulingPolicy currentPolicy
+- ReentrantLock lock
+- int[] timeSlices
+- Map<Integer,Integer> waitingTimeMap
+- {static} int AGING_THRESHOLD
++ int getTimeSlice(int)
++ {static} Scheduler getInstance()
++ PCB createProcess(String,int)
++ void configure(SchedulingPolicy)
++ void run()
+- void schedule()
+- void assignProcessToCPU(PCB,CPU)
++ PCB getNextProcess()
+- void updateWaitingTimeAndAging()
++ void addCPU(CPU)
++ void addReadyProcess(PCB)
++ void terminateProcess(PCB)
++ SchedulingPolicy getCurrentPolicy()
++ void putPCBback(PCB)
++ void addWaitingProcess(PCB)
++ void removeWaitingProcess(PCB)
++ Object getRunningProcess()
++ Object getReadyProcess()
++ Object getWaitingProcess()
++ List<CPU> getCpus()
++ void addReadyProcess_test(PCB)
++ int[] getTimeSlices()
+}
+
+
+enum org.example.oscdspring.process_management.SchedulingPolicy {
++  FCFS
++  SJF
++  RR
++  PRIORITY
++  MLFQ
++  PRIORITY_Preemptive
+}
+
+class org.example.oscdspring.controller.SnapshotController {
+- SnapshotEmitterService snapshotEmitterService
++ SseEmitter streamSnapshot()
+}
+
+
+interface org.example.oscdspring.memory_management.MemoryManagement {
++ boolean Allocate(CPU,int)
++ boolean FreeProcess(CPU)
++ boolean Read(CPU,int,byte[],int)
++ boolean Write(CPU,int,byte[],int)
++ Map<String,Object> getPageUse()
++ void showPageUse(int,int)
+~ void releaseProcess(PCB)
+}
+
+class org.example.oscdspring.util.SnapshotEmitterService {
+- CopyOnWriteArrayList<SseEmitter> emitters
+- {static} SnapshotEmitterService instance
++ void init()
++ {static} SnapshotEmitterService getInstance()
++ SseEmitter addEmitter()
++ void sendSnapshot(String)
+}
+
+
+class org.example.oscdspring.device_management.DeviceManager {
+- {static} Map<String,IODevice> devices
++ void addDevice(int,String)
++ void requestIO(PCB,int,String,int)
+- String generateDeviceKey(int,String)
++ boolean deviceExists(int,String)
++ void shutdown()
++ void removeDevice(int,String)
++ {static} Map<String,IODevice> getDevices()
+}
+
+
+class org.example.oscdspring.device_management.IODevice {
+- int id
+- String name
+- BlockingQueue<IORequest> requests
+- IORequest runningrequest
++ void addRequest(IORequest)
++ void run()
++ void shutdown()
++ long getId()
++ String getname()
++ BlockingQueue<IORequest> getRequests()
++ IORequest getRunningrequest()
+}
+
+
+class org.example.oscdspring.process_management.PIDBitmap {
++ {static} int MAX_PID
++ {static} int SYSTEM_PID
++ {static} int EMPTY_PID
+- boolean[] bitmap
+- {static} PIDBitmap pidBitmap
++ {static} PIDBitmap getInstance()
++ int allocatePID()
++ void freePID(int)
+}
+
+
+class org.example.oscdspring.device_management.IORequest {
+- PCB pcb
+- int processingTime
+- String deviceName
+- int deviceId
++ PCB getPcb()
++ int getProcessingTime()
++ String getDeviceName()
++ int getDeviceId()
+}
+
+
+class org.example.oscdspring.memory_management.Memory {
+~ byte[][] memoryData
+~ MemoryBlockStatus[] blockStatus
+- {static} Memory INSTANCE
++ {static} Memory getInstance()
++ int findEmptyBlock()
++ void writeBlock(int,byte[],int,int)
++ void updateBlock(int,int,int)
++ byte[] readBlock(int)
++ void freeBlock(int)
++ byte[] read(int,int)
++ void write(int,int,byte[])
++ void showPageUse(int,int)
++ Map<String,Object> getPageUse()
+}
+
+
+class org.example.oscdspring.memory_management.MemoryBlockStatus {
+~ int frameNumber
+~ int pid
+~ int pageId
++ int getFrameNumber()
++ int getPid()
++ void setPid(int)
++ int getPageId()
++ void setPageId(int)
+}
+
+
+class org.example.oscdspring.main.Shell {
+- FileSystemImpl fileSystem
+- MemoryManagement memoryManagement
+- DeviceManager deviceManager
+- LogEmitterService logEmitterService
++ String processCommand(String)
+- void parseCommand(String)
++ void start()
+}
+
+
+class org.example.oscdspring.main.Library {
+- {static} FileSystemImpl fileSystem
+- {static} MemoryManagement memoryManagement
+- {static} DeviceManager deviceManager
+- {static} Scheduler scheduler
++ {static} FileSystemImpl getFileSystem()
++ {static} void setFileSystem(FileSystemImpl)
++ {static} MemoryManagement getMemoryManagement()
++ {static} void setMemoryManagement(MemoryManagement)
++ {static} DeviceManager getDeviceManager()
++ {static} void setDeviceManager(DeviceManager)
++ {static} Scheduler getScheduler()
++ {static} void setScheduler(Scheduler)
+}
+
+
+
+
+org.springframework.boot.ApplicationRunner <|.. org.example.oscdspring.main.StartupInitializer
+org.example.oscdspring.file_disk_management.FileDiskManagement <|.. org.example.oscdspring.file_disk_management.FileSystemImpl
+org.example.oscdspring.memory_management.MemoryManagement <|.. org.example.oscdspring.memory_management.MemoryManagementImpl
+org.example.oscdspring.file_disk_management.FileLockManager +.. org.example.oscdspring.file_disk_management.FileLockManager$FileLock
+org.example.oscdspring.file_disk_management.FileLockManager$FileLock +.. org.example.oscdspring.file_disk_management.FileLockManager$FileLock$WaitingProcess
+org.example.oscdspring.process_management.Thread <|-- org.example.oscdspring.process_management.CPU
+org.example.oscdspring.process_management.Thread <|-- org.example.oscdspring.process_management.Scheduler
+org.example.oscdspring.device_management.Thread <|-- org.example.oscdspring.device_management.IODevice
+@enduml
