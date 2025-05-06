@@ -960,6 +960,8 @@ graph TD
     Y --> D
 ```
 
+![](.\report2025.assets\详细设计-进程管理-CPU-run.png)
+
 #####  InstructionFetch()实现
 
 ```mermaid
