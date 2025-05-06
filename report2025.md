@@ -1216,7 +1216,7 @@ graph TD
     S --> T[updateWaitingTimeAndAging结束]
 ```
 
-
+![](.\report2025.assets\详细设计-进程管理-Scheduler-updateWaitingTimeAndAging.png)
 
 #### 方法1实现（如run()实现）
 
