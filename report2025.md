@@ -967,13 +967,56 @@ Q# 									#进程结束，释放资源
 
 ### 系统快照展示与API实现
 
+#### 界面展示图
+
 ![image-20250505213739069](./report2025.assets/image-20250505213739069.png)
+
+
+
+#### 系统快照展示流程图
+
+```mermaid
+flowchart TD
+    subgraph "后端 Backend"
+        SS["SystemSnapshot<br/>@Scheduled(100ms)"] -->|采集各模块状态| SNAPSHOT["组装 Snapshot JSON<br/>包含进程、内存、文件、磁盘、设备"]
+        SNAPSHOT -->|"调用 sendSnapshot(json)"| Emitter["SnapshotEmitterService<br/>(SSE事件“snapshot”)"]
+    end
+    subgraph "前端 Frontend"
+        ES["EventSource 连接 /api/snapshot"] -->|"收到“snapshot”事件<br/>解析 JSON"| Dispatch["dispatch<br/>\snapshot-update事件"]
+        Dispatch --> UI1["process.js 刷新<br/>进程状态面板"]
+        Dispatch --> UI2["memory.js 刷新<br/>内存分页视图"]
+        Dispatch --> UI3["disk.js 刷新<br/>磁盘占用图"]
+        Dispatch --> UI4["filesystem.js 刷新<br/>目录树展示"]
+        Dispatch --> UI5["device.js 刷新<br/>设备状态表"]
+        Dispatch --> UI6["shell.js 监听日志<br/>（不处理snapshot）"]
+    end
+    Emitter --SSE--> ES
+
+```
+
+
 
 #### 系统快照类实现（SystemSnapshot.java）
 
+<img src="./report2025.assets/image-20250506110151272.png" alt="image-20250506110151272" style="zoom:50%;" />
+
+SystemSnapshot 类负责定时采集操作系统各模块状态并通过 SSE 推送快照数据。它被 `@Scheduled(fixedRate = 100)` 注解设定为每100毫秒运行一次（设置了初始延迟500毫秒，这是为了等待系统初始化完毕）。在定时任务方法 `updateSnapshot()` 中，系统从各模块获取当前状态，组装成一个包含多个部分的快照 JSON 对象，并通过 SnapshotEmitterService 推送给前端。
+
+**进程管理状态：** 从Library中，调用调度器（Scheduler）单例 `Library.getScheduler()` 获取当前正在运行的进程（cpuRunning）、就绪队列（readyQueue）和等待队列（waitingQueue）的列表。此外，还记录CPU数量和当前调度策略。对于每个CPU核心，如果有进程在运行，则收集该进程的详细信息（如PID、程序名、当前指令、剩余时间、优先级），构造成列表 cpuDetails。这些数据最终封装在一个`processManagement`中。
+
+**内存管理状态：** 从内存管理模块（MemoryManagement）获取物理内存使用情况，即调用 `getPageUse()` 方法。该方法返回包括总页框数和已使用页框信息的结构：`totalFrames` 表示内存总页框数，`frameInfo` 列表包含每个已分配页框的详情（所属进程PID、该进程的页号page、物理帧号frameId）。
+
+**目录结构：** 调用文件系统模块（FileSystemImpl）的 `getDirectoryStructure()` 方法获取当前文件目录结构的字符串表示。该字符串描绘了文件系统中目录和文件的层次关系，用于前端以树状格式展示。
+
+**磁盘使用状态：** 构建磁盘管理快照数据，包括磁盘总块数 `totalBlocks`（例如常量Disk Size）和已占用的磁盘块索引列表 `occupiedBlocks`。这些数据源自文件系统模块，通过 `getOccupiedBlockIndices()` 获取当前占用的磁盘块号。
+
+**设备管理状态：** 遍历设备管理器（DeviceManager）维护的所有模拟设备，收集每个设备的状态。对每个设备，获取设备名称（例如组合类型名和ID）、当前正在服务的进程（runningProcess，如果无则标记为“空闲”），以及该设备的等待队列进程列表（waitingQueue）。同时记录设备总数 deviceCount。这些信息组装在`deviceManagement`中并加入快照。
+
+**快照发送机制：** 将上述所有部分放入一个快照 Map 后，利用 Jackson 的 ObjectMapper 将其序列化为 JSON 字符串 jsonSnapshot，然后调用 `snapshotEmitterService.sendSnapshot(jsonSnapshot)` 通过 Server-Sent Events 推送。SnapshotEmitterService 会将快照字符串封装为名为“snapshot”的SSE事件并广播给所有已注册的前端监听器。这样，每当后端采集到新状态，前端都会实时收到更新的系统快照数据。
 
 
-##### JSON 格式
+
+##### Snapshot JSON 格式
 
 ```json
 {
