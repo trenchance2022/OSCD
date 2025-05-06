@@ -999,6 +999,12 @@ graph TD
 
 ##### run()实现
 
+###### 模块调用关系
+
+调用进程管理模块内部的`execute()`函数，用于执行进程。
+
+###### 流程图
+
 ```mermaid
 graph TD
     A[开始] --> B[run方法]
@@ -1038,6 +1044,14 @@ graph TD
 
 #####  InstructionFetch()实现
 
+###### 模块调用关系
+
+被进程管理模块的`execute()`调用，用于取指令。
+
+调用内存管理模块的`Read()`，用于读取指令。
+
+###### 流程图
+
 ```mermaid
 graph TD
     A[开始] --> B{当前PCB为空?}
@@ -1076,6 +1090,58 @@ graph TD
 ```
 
 ##### executeInstruction(String instruction)实现
+
+###### 模块调用关系
+
+**进程调度相关**
+
+- 调用 scheduler.getNextProcess() 获取下一个执行进程
+
+- 调用 scheduler.addWaitingProcess() 将进程加入等待队列
+
+- 调用 scheduler.removeWaitingProcess() 将进程从等待队列移除
+
+- 调用 changeProcess() 切换当前执行进程
+
+内存管理相关
+
+- 调用 memoryManagement.Allocate() 为进程分配内存
+
+- 调用 memoryManagement.Write() 向内存写入数据
+
+- 调用 memoryManagement.Read() 从内存读取数据
+
+- 调用 memoryManagement.FreeProcess() 释放进程占用的内存
+
+**文件管理相关**
+
+- 调用 FileLockManager.getInstance().acquireReadLock() 获取文件读锁
+
+- 调用 FileLockManager.getInstance().acquireWriteLock() 获取文件写锁
+
+- 调用 FileLockManager.getInstance().addReadWaitingProcess() 加入读等待队列
+
+- 调用 FileLockManager.getInstance().addWriteWaitingProcess() 加入写等待队列
+
+- 调用 FileLockManager.getInstance().releaseAllLocks() 释放所有锁
+
+设备管理相关
+
+- 调用 deviceManager.deviceExists() 检查设备是否存在
+
+- 调用 deviceManager.requestIO() 请求设备I/O操作
+
+**中断处理相关**
+
+- 调用 InterruptHandler.getInstance().handleClockInterrupt() 处理时钟中断
+
+- 调用 InterruptHandler.getInstance().handleIOInterrupt() 处理I/O中断
+
+**进程ID管理**
+
+- 调用 PIDBitmap.getInstance().freePID() 释放进程ID
+
+###### 流程图
 
 ```mermaid
 graph TD
@@ -1187,6 +1253,12 @@ graph TD
 
 ##### run()实现
 
+###### 模块调用关系
+
+调用进程管理模块内`schedule()`用于调度进程和`updateWaitingTimeAndAging()`用于MLFQ调度算法的实现。
+
+###### 流程图
+
 ```mermaid
 graph TD
     A[run方法开始] --> B[进入主循环]
@@ -1199,6 +1271,14 @@ graph TD
 ```
 
 ##### schedule()实现
+
+###### 模块调用关系
+
+调用进程管理模块内`getNextProcess()`用于获取下一个执行的进程。
+
+调用进程管理模块内`assignProcessToCPU()`用于为CPU分配即将执行的进程。
+
+###### 流程图
 
 ```mermaid
 graph TD
@@ -1219,6 +1299,8 @@ graph TD
 ```
 
 ##### getNextProcess()实现
+
+###### 流程图
 
 ```mermaid
 graph TD
@@ -1248,6 +1330,12 @@ graph TD
 
 ##### assignProcessToCPU()实现
 
+###### 模块调用关系
+
+调用CPU类的`changeProcess()`切换CPU正在执行的进程。
+
+###### 流程图
+
 ```mermaid
 graph TD
     A[assignProcessToCPU开始] --> B[设置进程状态为RUNNING]
@@ -1257,6 +1345,8 @@ graph TD
 ```
 
 ##### updateWaitingTimeAndAging()实现
+
+###### 流程图
 
 ```mermaid
 graph TD
@@ -1291,26 +1381,6 @@ graph TD
 ```
 
 ![](.\report2025.assets\详细设计-进程管理-Scheduler-updateWaitingTimeAndAging.png)
-
-#### 方法1实现（如run()实现）
-
-##### 流程图+流程描述
-
-##### 调用方法（这个方法调用了谁，何时）
-
-##### 被调用方法（这个方法被谁调用，何时）
-
-#### 方法2实现（）
-
-##### 流程图+流程描述
-
-##### 调用方法（这个方法调用了谁，何时）
-
-##### 被调用方法（这个方法被谁调用，何时）
-
-……
-
-
 
 ### 内存管理实现
 
