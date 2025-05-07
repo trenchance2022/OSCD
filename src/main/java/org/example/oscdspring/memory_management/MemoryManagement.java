@@ -51,17 +51,22 @@ public interface MemoryManagement {
     /**
      * 获取内存的页面使用情况。
      *
+     * @return 内存的页面使用情况位图
      */
     public Map<String, Object> getPageUse();
 
     /**
-     * 获取内存的页面使用情况位图。 这里直接打印出来,是由Memory实现的
+     * 打印内存的页面使用情况位图。
      *
      * @param start 起始页号
      * @param end 结束页号(不包括)
      */
     public void showPageUse(int start, int end);
 
-
-    void releaseProcess(PCB pcb);
+    /**
+     * 释放指定进程的内存空间。
+     *
+     * @param pcb 进程控制块
+     */
+    public void releaseProcess(PCB pcb);
 }

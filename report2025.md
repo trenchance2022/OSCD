@@ -1383,31 +1383,643 @@ graph TD
 
 ### 内存管理实现
 
-（可以写一点你想说的）
+内存管理模块负责管理进程的内存分配、释放、读取、写入和展示操作。它通过接口 `MemoryManagement `对外提供服务，具体实现由 `MemoryManagementImpl `类完成。
 
-#### 数据结构
+#### 接口说明与模块设计
 
-（介绍TLB，页表等关键数据结构）
+内存管理的实现分为四个模块：接口实现模块，地址转换模块，页表管理模块，物理内存模块。
 
-#### 方法1实现（如handlePageFault()实现）
+##### **接口实现模块**
 
-##### 流程图+流程描述
+该模块对外提供内存管理的接口。具体提供以下接口：
 
-##### 调用方法（这个方法调用了谁，何时）
+- 给CPU当前进程分配指虚拟内存空间
+- 释放当前CPU进程内存
+- 释放指定进程内存
+- 从CPU当前进程的内存中读取数据
+- 向CPU当前进程的内存中写入数据
+- 打印当前物理内存使用情况
+- 获取当前物理内存使用位图
 
-##### 被调用方法（这个方法被谁调用，何时）
+##### **地址转换模块**
 
-#### 方法2实现（）
+该模块实现地址转换和缺页中断处理。包括以下类： 
 
-##### 流程图+流程描述
+- 地址转换器 MMU
+- 页表寄存器 PTR
+- 快表 TLB
+- TLB条目 TLBEntry
+- 缺页中断处理程序 PageFaultHandler
 
-##### 调用方法（这个方法调用了谁，何时）
+##### **页表管理模块**
 
-##### 被调用方法（这个方法被谁调用，何时）
+该模块进行页表数据管理。包括以下类： 
 
-……
+- 页表区 PageTableArea
+- 页表 PageTable
+- 页表项 PageTableEntry
+
+##### **物理内存模块**
+
+该模块模拟物理内存，记录内存信息。包括以下类： 
+
+- 物理内存 Memory
+- 物理内存块 MemoryBlockStatus
+
+#### 主要数据结构说明
+
+UML类图如下：（仅保留属性与重要的方法）
+
+~~~mermaid
+classDiagram
+    class MMU {
+        -PTR ptr
+        -TLB tlb
+        +addressTranslation()
+    }
+    
+    class PTR {
+        -int pageTableAddress
+        -int pageTableSize
+        -int codeSize
+        -int innerFragmentation
+        -int lastPageSize
+    }
+    
+    class TLB {
+        -TLBEntry[ ] entries
+        -int clockHand
+        +getFrameNumber()
+        +addEntry()
+    }
+    
+    class TLBEntry {
+        -int pageNumber
+        -int frameNumber
+        -boolean valid
+        -boolean dirty
+        -boolean accessed
+    }
+    
+    class PageTableArea {
+        -Map<Integer, PageTable> pageTables
+        +getPageTable()
+    }
+    
+    class PageTable {
+        -List~PageTableEntry~ entries
+        -int pid
+        -int memoryBlockSize
+        -int memoryBlockUsed
+        -int pointer
+        +getEntry()
+    }
+    
+    class PageTableEntry {
+        -int frameNumber
+        -boolean valid
+        -boolean dirty
+        -boolean accessed
+        -int diskAddress
+        -boolean allocatedDisk
+    }
+    
+    class Memory {
+        -byte[ ][ ] memoryData
+        -MemoryBlockStatus[ ] blockStatus
+    }
+    
+    class MemoryBlockStatus {
+        -int frameNumber
+        -int pid
+        -int pageId
+    }
+
+    MMU --> PTR : 组合
+    MMU --> TLB : 组合
+    TLB --> TLBEntry : 聚合
+    PageTableArea --> PageTable : 聚合
+    PageTable --> PageTableEntry : 聚合
+    Memory --> MemoryBlockStatus : 组合
+~~~
+
+##### 地址转换器 MMU
+
+~~~java
+public class MMU {
+    private final PTR ptr ;//页表寄存器
+    private final TLB tlb ;//TLB缓冲区
+// 相关方法
+}
+~~~
+
+- 每个CPU核心独立拥有，负责虚拟地址到物理地址的转换
+
+- 通过PTR获取当前进程页表信息
+
+- 使用TLB缓存加速地址转换
+
+##### 页表寄存器 PTR
+
+~~~java
+class PTR {
+    private int pageTableAddress;//页表地址
+    private int pageTableSize;//页表大小
+    private int codeSize;//代码段大小
+    private int innerFragmentation;//内部碎片(代码段与数据段之间的碎片)
+    private int lastPageSize;//数据段最后一页的大小
+}
+~~~
+
+- 存储当前运行进程的页表关键信息
+
+##### 快表 TLB
+
+~~~java
+class TLB {
+    private final TLBEntry[] TLB = new TLBEntry[Constants.TLB_SIZE];
+    private int clockHand = 0;//指针，指向下一个要替换的TLB项
+}
+~~~
+
+- 缓存最近使用的地址转换结果
+
+- 使用Clock算法管理条目替换
+
+##### TLB条目 TLBEntry
+
+~~~java
+class TLBEntry {
+    private int pageNumber;
+    private int frameNumber;
+    private boolean valid;//是否有效
+    private boolean dirty;//是否被修改过
+    private boolean accessed;//用于clock算法，是否被访问过
+}
+~~~
+
+- 存储单条地址转换记录
+
+- `valid`标识条目是否可用
+
+- `dirty`标记页面修改状态
+
+- `accessed`辅助Clock算法工作
+
+##### 页表区 PageTableArea
+
+~~~java
+public class PageTableArea {
+    private static final PageTableArea INSTANCE = new PageTableArea();
+    Map<Integer, PageTable> pageTables = new HashMap<>();
+}
+~~~
+
+- 单例模式管理所有进程页表，系统全局唯一页表存储区域
+
+- 通过页表起始地址快速查找（Map键）
+
+##### 页表 PageTable
+
+~~~java
+public class PageTable {
+    private final List<PageTableEntry> entries; // 页表项
+    private final int pid;//进程号
+    private final int memoryBlockSize;//实际分配的内存块数
+    private int memoryBlockUsed;//内存已使用大小
+    private int pointer;// 二次机会算法指针
+}
+~~~
+
+- 每个进程独立拥有，管理进程的所有页表项
+
+- 记录内存分配和使用情况
+
+- 通过指针实现页面置换算法
+
+##### 页表项 PageTableEntry
+
+~~~java
+public class PageTableEntry {
+
+    private int frameNumber; // 物理块号
+    private boolean valid;       // 有效位，表示页面是否在内存中
+    private boolean dirty;      // 修改位
+    private boolean accessed;      // 访问字段，用于页面置换算法
+    private int diskAddress;         // 外存地址，-1表示不在外存中。
+    private boolean allocatedDisk; // 是否已经分配外存地址
+}
+~~~
+
+- 存储单个虚拟页的映射信息
+
+- `valid`触发缺页中断的关键标志
+
+- `dirty`决定页面置换时是否需要写回
+
+- `diskAddress`实现虚拟内存的磁盘交换
+
+##### 物理内存 Memory
+
+~~~java
+public class Memory {
+    byte[][] memoryData = new byte[Constants.MEMORY_PAGE_SIZE][Constants.PAGE_SIZE_BYTES];
+    MemoryBlockStatus[] blockStatus = new MemoryBlockStatus[Constants.MEMORY_PAGE_SIZE];
+}
+~~~
+
+- 模拟物理内存空间，二维数组结构：内存页 × 页大小
+
+- 每个内存页对应一个状态记录
+
+##### 物理内存块 MemoryBlockStatus
+
+~~~java
+class MemoryBlockStatus {
+    final int frameNumber;//物理页号
+    int pid;//被分配的进程的id，
+    int pageId;//对应进程虚拟页号
+}
+~~~
+
+- 跟踪每个物理页的分配情况
+
+- `frameNumber`唯一标识物理页
+
+- `pid`+`pageId`建立与虚拟页的映射
+
+#### 接口实现说明
+
+##### Allocate 内存分配方法
+
+###### 调用方法：
+
+~~~java
+/**
+ * 给进程分配再分配指定大小的内存空间，
+ *
+ * @param cpu CPU对象,用于获取当前运行的进程,以及进程的快表，页表等信息
+ * @param size 分配的内存大小，byte(实际为虚拟页内存大小)
+ * @return 是否成功分配内存空间
+ */
+public boolean Allocate(CPU cpu, int size);
+~~~
+
+###### 流程图
+
+```mermaid
+graph TD
+A[开始] --> D[获取进程页表]
+D --> E[计算新增页数]
+E --> F[扩展页表项]
+F --> G[更新PCB信息]
+G --> H[更新MMU配置]
+H --> I[返回成功]
+```
+
+###### 流程说明：
+
+1. 获取当前进程页表
+2. 计算需要新增的页数
+3. 扩展页表项容量
+4. 更新进程控制块内存信息
+5. 更新MMU内存管理单元配置
+
+##### FreeProcess/releaseProcess 进程内存释放方法
+
+###### 调用方法：
+
+~~~java
+/**
+ * 释放指定进程的内存空间。
+ *
+ * @param cpu 待释放的进程的CPU对象
+ * @return 是否成功释放内存空间
+ */
+public boolean FreeProcess(CPU cpu);
+
+/**
+ * 释放指定进程的内存空间。
+ *
+ * @param pcb 进程控制块
+ */
+public void releaseProcess(PCB pcb);
+~~~
+
+###### 流程图：
+
+```mermaid
+graph TD
+B[获取页表]
+B --> C{遍历页表项}
+C -->|有效页| D[释放物理内存]
+C -->|磁盘页| E[释放磁盘空间]
+C -->|完成| F[移除页表]
+F --> H[返回成功]
+```
+
+###### 流程说明：
+
+1. 遍历进程所有页表项
+2. 释放占用的物理内存块
+3. 释放关联的磁盘空间
+4. 从页表区移除进程页表
+
+##### Read/Write 内存读写方法
+
+###### 调用方法：
+
+~~~java
+/**
+ * 从指定地址的内存中读取数据。
+ *
+ * @param cpu CPU对象,用于获取当前运行的进程,以及进程的快表，页表等信息
+ * @param logicAddress 进程逻辑地址
+ * @param data 实际返回的数据
+ * @param length 读取的数据长度
+ * @return 是否成功读取内存空间
+ */
+public boolean Read(CPU cpu, int logicAddress, byte[] data, int length);
+
+/**
+ * 向指定地址的内存中写入数据。 注意：根据返回值的不同，data有两种含义
+ *
+ * @param cpu CPU对象,用于获取当前运行的进程,以及进程的快表，页表等信息
+ * @param logicAddress 进程逻辑地址
+ * @param data 要写入的数据
+ * @param length 写入的数据长度
+ * @return 写入是否成功
+ */
+public boolean Write(CPU cpu, int logicAddress, byte[] data, int length);
+~~~
+
+###### 流程图：
+
+```mermaid
+graph TD
+A[开始] --> B{遍历地址进行转换}
+B -->|成功| C[执行内存操作（读/写）]
+B -->|失败| D[返回错误]
+C --> E{完成所有操作?}
+E -->|否| B
+E -->|是| F[返回成功]
+```
+
+###### 流程说明：
+
+1. 逐字节进行地址转换
+2. 处理可能的缺页中断
+3. 执行物理内存读写
+4. 循环直到完成所有操作
+
+##### getPageUse/showPageUse 内存状态获取方法
+
+###### 调用方法：
+
+~~~java
+/**
+ * 获取内存的页面使用情况
+ *
+ * @return 内存的页面使用情况位图
+ */
+public Map<String, Object> getPageUse();
+
+/**
+ * 打印内存的页面使用情况位图。
+ *
+ * @param start 起始页号
+ * @param end 结束页号(不包括)
+ */
+public void showPageUse(int start, int end);
+~~~
+
+###### 流程图：
 
 
+```mermaid
+graph TD
+B[开始]
+B --> C{遍历内存块}
+C -->|未完成| D[打印/添加内存块信息]
+C -->|完成| H[返回成功/内存块数据]
+```
+
+###### 流程说明：
+
+1. 遍历内存块
+2. 打印/添加内存块信息
+3. 返回成功/内存块数据
+
+#### 主要方法实现说明
+
+##### 地址转换
+
+在具体实现中，调用下面的函数地址转换
+
+~~~java
+public int addressTranslation(int logicalAddress, boolean dirty) 
+~~~
+
+###### **流程图：**
+
+
+```mermaid
+graph TD
+    A[开始] --> B{逻辑地址有效?}
+    B -->|否| C[返回错误-1]
+    B -->|是| D[计算页号和偏移量]
+    D --> E{TLB命中?}
+    E -->|是| F[获取物理帧号]
+    E -->|否| G[查询页表]
+    G --> H{页表项有效?}
+    H -->|否| I[触发缺页中断]
+    I --> J[中断处理成功?]
+    J -->|否| K[返回错误-3]
+    J -->|是| L[重新执行转换]
+    H -->|是| M[更新TLB]
+    M --> F
+    F --> N[计算物理地址]
+    N --> O[返回结果]
+```
+
+###### **流程说明：**
+
+1. 验证逻辑地址有效性
+2. 计算页号和页内偏移
+3. 优先查询TLB快表
+4. TLB未命中时查询页表
+5. 处理可能的缺页中断
+6. 最终组合物理地址
+
+###### **调用方法**：
+
+- `tlb.getFrameNumber()` - 查询TLB
+- `PageTableArea.getInstance().getPageTable()` - 获取页表
+- `PageFaultHandler.handlePageFault()` - 处理缺页
+
+###### **被调用**：
+
+- 内存管理模块读内存`read()` - 地址转换
+- 内存管理模块写内存`write()` - 地址转换
+
+##### 缺页中断处理
+
+在具体实现中，调用下面的函数进行缺页中断处理
+
+~~~java
+static public boolean handlePageFault(int pageTableAddress, TLB tlb, int pageNumber) 
+~~~
+
+###### 流程图：
+
+```mermaid
+graph TD
+    A[开始] --> B[获取页表和页表项]
+    B --> C{是否需要调出页面?}
+    C -->|是| D[选择牺牲页面]
+    D --> E{页面脏?}
+    E -->|是| F[脏页面写回磁盘]
+    E -->|否|I
+    F --> I
+    C -->|否| H[分配空闲帧]
+    H --> I[从磁盘加载数据]
+    I --> J[更新页表项]
+    J --> K[更新TLB]
+    K --> L[返回成功]
+```
+
+###### 流程说明：
+
+1. 同步锁保证线程安全
+2. 检查内存状态决定替换策略
+3. 处理脏页回写
+4. 加载请求页到内存
+5. 更新页表和TLB
+
+###### 调用方法：
+
+- `Memory.getInstance().findEmptyBlock()` - 查找空闲帧
+
+- `getFileSystem().writeBlock()` - 磁盘写入
+
+- `tlb.deleteEntry()` - 清除TLB项
+
+###### 被调用：
+
+- 被地址转换调用 - 处理缺页中断
+
+##### clock算法快表更新
+
+在具体实现中，调用下面的函数进行快表更新
+
+~~~java
+public void addEntry(int pageNumber, int frameNumber) 
+~~~
+
+###### 流程图：
+
+```mermaid
+graph TD
+    A[开始] --> B{有空闲TLB项?}
+    B -->|是| C[直接插入]
+    B -->|否| D[启动Clock算法]
+    D --> E{当前项访问位=1?}
+    F -->E
+    E -->|是| F[清访问位,指针++]
+    E -->|否| G[替换该项]
+    G --> H[指针++]
+    H --> I[完成更新]
+```
+
+###### 流程说明：
+
+1. 优先使用空闲TLB槽
+2. 采用Clock算法选择替换项
+3. 访问位为1时给第二次机会
+4. 最终替换最不活跃项
+
+###### 调用方法：
+
+- 无特殊调用
+
+###### 被调用：
+
+- 被地址转换调用 - 更新快表
+
+- 被缺页处理流程调用 - 更新快表
+
+##### 二次机会算法找到牺牲页面
+
+在具体实现中，调用下面的函数进行找到牺牲页面
+
+~~~java
+public int getReplacePage() 
+~~~
+
+###### 流程图：
+
+```mermaid
+graph TD
+    A[开始] --> B[第一轮扫描]
+    B --> C{找到未访问未修改页?}
+    C -->|是| D[返回该页]
+    C -->|否| E[第二轮扫描]
+    E --> F{找到已访问未修改页?}
+    F -->|是| G[清访问位,返回]
+    F -->|否| H[第三轮扫描]
+    H --> I{找到未修改页?}
+    I -->|是| J[返回]
+    I -->|否| K[第四轮扫描]
+    K --> L[返回任意有效页]
+```
+
+###### 流程说明：
+
+1. 四轮渐进式扫描策略
+2. 优先选择"未访问+未修改"页
+3. 其次选择"已访问+未修改"页
+4. 最后选择脏页
+
+######  调用方法：
+
+- `entries.get()` - 访问页表项
+
+###### 被调用：
+
+- 被缺页处理流程调用 - 找到要牺牲的页面
+
+#### 顺序图（以读内存为例）
+
+```mermaid
+sequenceDiagram
+    participant 其他模块
+    participant MemoryManager
+    participant MMU
+    participant TLB
+    participant PageTable
+    participant PageFaultHandler
+    participant Memory
+
+    其他模块->>MemoryManager: Read(0, buffer, 4)
+    MemoryManager->>MMU: addressTranslation(0)
+    MMU->>TLB: getFrameNumber(0)
+	
+	alt  TLB命中
+		TLB-->>MMU: 通过快表查询地址
+    else TLB未命中
+        MMU->>PageTable: getEntry(0)
+        PageTable-->>MMU: 通过页表查询地址
+        opt 缺页异常
+        	MMU->>PageFaultHandler: 触发缺页处理
+        	PageFaultHandler-->>PageTable: 更新页表项
+        	PageTable-->>MMU: 通过页表查询地址
+    	end
+    end    
+    MMU-->>MemoryManager:返回物理地址
+    MemoryManager->>Memory: 访问物理地址
+   
+    Memory-->>其他模块: 返回数据
+```
 
 ### 文件管理实现
 
@@ -1723,7 +2335,7 @@ flowchart TD
 
 ```
 
-### 文件锁实现
+#### 文件锁实现
 
 FileLockManager文件锁管理器采用读者-写者模型，主要运作机制如下：
 
@@ -2026,7 +2638,7 @@ flowchart LR
 
 
 
-### handleIOInterrupt(PCB pcb, String fileName, Scheduler scheduler, boolean isReadOperation)实现
+#### handleIOInterrupt(PCB pcb, String fileName, Scheduler scheduler, boolean isReadOperation)实现
 
 ```mermaid
 flowchart LR
