@@ -10,9 +10,10 @@ import org.example.oscdspring.util.LogEmitterService;
 public class InterruptHandler {
     // 单例模式
     private static InterruptHandler instance;
-    
-    private InterruptHandler() {}
-    
+
+    private InterruptHandler() {
+    }
+
     public static synchronized InterruptHandler getInstance() {
         if (instance == null) {
             instance = new InterruptHandler();
@@ -35,16 +36,16 @@ public class InterruptHandler {
             int remainTime = remainParts.length > 1 ? Integer.parseInt(remainParts[1]) : 0;
             int usedTime = originalTime - remainTime;
             if (usedTime == 0) usedTime = originalTime;
-            
-            if(scheduler.getCurrentPolicy()==Scheduler.SchedulingPolicy.PRIORITY_Preemptive) {
+
+            if (scheduler.getCurrentPolicy() == Scheduler.SchedulingPolicy.PRIORITY_Preemptive) {
                 PCB nextProcess = scheduler.getNextProcess();
-                if(nextProcess!=null && nextProcess.getPriority() < currentPCB.getPriority()) {
+                if (nextProcess != null && nextProcess.getPriority() < currentPCB.getPriority()) {
                     LogEmitterService.getInstance().sendLog("CPU-" + cpu.getCpuId() + " 进程 " + currentPCB.getPid() + "被抢占 已使用时间片 " + usedTime + "/" + originalTime);
                     currentPCB.setState(ProcessState.READY);
                     scheduler.addReadyProcess(currentPCB);
                     nextProcess.setState(ProcessState.RUNNING);
                     cpu.changeProcess(nextProcess);
-                } else if(nextProcess!=null) {
+                } else if (nextProcess != null) {
                     scheduler.putPCBback(nextProcess);
                 }
             } else {
@@ -93,7 +94,7 @@ public class InterruptHandler {
     public void handleIOInterrupt(PCB pcb, String fileName, Scheduler scheduler, boolean isReadOperation) {
         // 判断是否需要释放读锁或写锁
         org.example.oscdspring.file_disk_management.FileLockManager lockManager = org.example.oscdspring.file_disk_management.FileLockManager.getInstance();
-        
+
         if (isReadOperation) {
             // 释放读锁
             lockManager.releaseReadLock(fileName, pcb.getPid());
@@ -108,5 +109,5 @@ public class InterruptHandler {
         pcb.setState(ProcessState.READY);
         scheduler.addReadyProcess(pcb);
     }
-    
+
 }

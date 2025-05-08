@@ -12,20 +12,17 @@ class Disk {
     private Bitmap bitmap;        // 位图管理空闲块
     private byte[] diskData;      // 模拟磁盘的数据数组
 
-    // 使用单例模式，私有化构造方法
     private static final Disk INSTANCE = new Disk();
 
     private Disk() {
-        this.bitmap = new Bitmap(diskSize);  // 创建位图
-        this.diskData = new byte[diskSize * blockSize];  // 创建磁盘数据数组
+        this.bitmap = new Bitmap(diskSize);
+        this.diskData = new byte[diskSize * blockSize];
     }
 
-    // 提供公共的静态方法来获取唯一实例
     public static Disk getInstance() {
         return INSTANCE;
     }
 
-    // 分配一个块
     public int allocateBlock() {
         int blockIndex = bitmap.allocateBlock();
         if (blockIndex == -1) {
@@ -35,7 +32,6 @@ class Disk {
         return blockIndex;
     }
 
-    // 释放一个块
     public void freeBlock(int blockIndex) {
         bitmap.freeBlock(blockIndex);
     }
@@ -53,7 +49,6 @@ class Disk {
         System.arraycopy(data, 0, diskData, startIndex, data.length);
     }
 
-    // 读取文件数据（用于后续查看文件内容）
     public String readDataFromDisk(int startIndex, int sizeInBytes) {
         StringBuilder fileContent = new StringBuilder();
         for (int i = 0; i < sizeInBytes; i++) {
@@ -103,5 +98,5 @@ class Disk {
         return diskData;
     }
 
-    
+
 }

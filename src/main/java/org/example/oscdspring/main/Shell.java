@@ -204,14 +204,4 @@ public class Shell {
             logEmitterService.sendLog("PROMPT:" + fileSystem.getCurrentPath() + ">");
         }
     }
-
-    // 原来的 start() 方法保留用于命令行测试，不用于 Web 交互
-    public void start() {
-        java.util.Scanner scanner = new java.util.Scanner(System.in);
-        while (true) {
-            System.out.print(fileSystem.getCurrentPath() + "> ");
-            String command = scanner.nextLine();
-            parseCommand(command);
-        }
-    }
 }

@@ -1,18 +1,19 @@
 package org.example.oscdspring;
 
-import static org.mockito.Mockito.*;
-import static org.junit.jupiter.api.Assertions.*;
-
+import org.example.oscdspring.device_management.DeviceManager;
 import org.example.oscdspring.main.Library;
 import org.example.oscdspring.memory_management.MemoryManagement;
-import org.example.oscdspring.device_management.DeviceManager;
 import org.example.oscdspring.process_management.CPU;
 import org.example.oscdspring.process_management.PCB;
-import org.example.oscdspring.process_management.PIDBitmap;
 import org.example.oscdspring.process_management.Scheduler;
 import org.example.oscdspring.util.LogEmitterService;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 import org.mockito.MockedStatic;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.*;
 
 public class CPUTest {
 
@@ -57,7 +58,6 @@ public class CPUTest {
 
     @Test
     public void testInstructionFetch_readsUntilHash() {
-
 
 
         PCB pcb = new PCB(1, 0, new int[]{0}, 0);

@@ -2,10 +2,10 @@ package org.example.oscdspring.file_disk_management;
 
 import org.example.oscdspring.util.LogEmitterService;
 
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
-import java.io.PrintWriter;
 
 class Directory {
     String name;
@@ -92,10 +92,10 @@ class Directory {
                 if (dir.files.isEmpty() && dir.subdirectories.isEmpty()) { // 确保目录为空
                     subdirectories.remove(i);
                     LogEmitterService.getInstance().sendLog("Directory " + directoryName + " deleted.");
-                    return ;
+                    return;
                 } else {
                     LogEmitterService.getInstance().sendLog("Directory " + directoryName + " is not empty. Use rmrdir to remove non-empty directories.");
-                    return ;
+                    return;
                 }
             }
         }
@@ -198,23 +198,18 @@ class Directory {
         }
     }
 
-    // 目录结构展示——将输出写入 PrintWriter，而不是直接调用日志
     public void appendDirectoryStructure(String prefix, boolean isLast, PrintWriter writer) {
-        // 如果 prefix 为空，则表示顶层，不显示连接符，否则根据 isLast 决定连接符
         String connector = prefix.isEmpty() ? "" : (isLast ? "└── " : "├── ");
         writer.println(prefix + connector + name + "/");
 
-        // 定义新的前缀传给子节点：如果当前节点为最后一个，则增加四个空格，否则增加 "│   "
         String childPrefix = prefix + (isLast ? "    " : "│   ");
 
-        // 输出文件列表：对于每个文件，如果既没有子目录且为最后一个，则使用 "└── "，否则使用 "├── "
         for (int i = 0; i < files.size(); i++) {
             boolean isLastFile = (i == files.size() - 1) && subdirectories.isEmpty();
             String fileConnector = isLastFile ? "└── " : "├── ";
             writer.println(childPrefix + fileConnector + files.get(i).fileName);
         }
 
-        // 输出子目录列表：依次递归调用，最后一个子目录使用 true
         for (int j = 0; j < subdirectories.size(); j++) {
             boolean isLastDir = (j == subdirectories.size() - 1);
             subdirectories.get(j).appendDirectoryStructure(childPrefix, isLastDir, writer);
@@ -222,7 +217,7 @@ class Directory {
     }
 
 
-    public int[] getFileDiskBlock(String filename){
+    public int[] getFileDiskBlock(String filename) {
         for (Inode inode : files) {
             if (inode.fileName.equals(filename)) {
                 return inode.blockIndexes;

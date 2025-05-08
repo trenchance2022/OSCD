@@ -17,7 +17,7 @@ public class PageTable {
         this.pid = pid;
         entries = new ArrayList<>(pageTableSize);
         // 初始化页表项
-        for (int i = 0; i < pageTableSize-1; i++) {
+        for (int i = 0; i < pageTableSize - 1; i++) {
             entries.add(new PageTableEntry(diskAddressBlock[i]));
         }
         entries.add(new PageTableEntry(-1));//数据段页表项
@@ -27,7 +27,7 @@ public class PageTable {
     }
 
     @Override
-    public PageTable clone(){
+    public PageTable clone() {
         PageTable pageTable = new PageTable(this.pid, this.entries.size(), new int[this.entries.size()]);
         for (int i = 0; i < this.entries.size(); i++) {
             pageTable.entries.set(i, (PageTableEntry) this.entries.get(i).clone());
@@ -36,6 +36,7 @@ public class PageTable {
         pageTable.pointer = this.pointer;
         return pageTable;
     }
+
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
@@ -127,6 +128,7 @@ public class PageTable {
         PageTableEntry entry = new PageTableEntry(-1);
         entries.add(entry);
     }
+
     public void addEntries(int size) {
         for (int i = 0; i < size; i++) {
             addEntry();

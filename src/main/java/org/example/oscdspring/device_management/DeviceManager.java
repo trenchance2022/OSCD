@@ -15,7 +15,7 @@ public class DeviceManager {
 
     public void addDevice(int deviceId, String deviceName) {
         String deviceKey = generateDeviceKey(deviceId, deviceName);
-        if(devices.containsKey(deviceKey)){
+        if (devices.containsKey(deviceKey)) {
             LogEmitterService.getInstance().sendLog("添加失败：已存在id为" + deviceId + "，名称为" + deviceName + "的设备");
             return;
         }
@@ -53,12 +53,12 @@ public class DeviceManager {
 
     public void removeDevice(int deviceId, String deviceName) {
         String deviceKey = generateDeviceKey(deviceId, deviceName);
-        if(devices.containsKey(deviceKey)){
+        if (devices.containsKey(deviceKey)) {
             IODevice device = devices.get(deviceKey);
             device.shutdown();
             devices.remove(deviceKey);
             LogEmitterService.getInstance().sendLog("设备管理器: 移除设备 " + deviceName + "(ID:" + deviceId + ")");
-        }else{
+        } else {
             LogEmitterService.getInstance().sendLog("设备管理器: 设备 " + deviceName + "(ID:" + deviceId + ") 不存在");
         }
     }

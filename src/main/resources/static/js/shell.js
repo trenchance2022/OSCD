@@ -1,4 +1,4 @@
-document.addEventListener("DOMContentLoaded", function() {
+document.addEventListener("DOMContentLoaded", function () {
     // 获取 DOM 元素
     const terminal = document.getElementById("terminal");
     const commandLine = document.getElementById("command-line"); // 固定区域（不变）
@@ -47,29 +47,35 @@ document.addEventListener("DOMContentLoaded", function() {
         viModal.style.display = "block";
         viTextarea.focus();
     }
+
     function closeViEditor() {
         viModal.style.display = "none";
     }
-    viOkButton.addEventListener("click", function() {
+
+    viOkButton.addEventListener("click", function () {
         const fileName = viFilenameSpan.textContent;
         const content = viTextarea.value;
         fetch("/api/shell/vi", {
             method: "POST",
             headers: {"Content-Type": "application/json;charset=UTF-8"},
-            body: JSON.stringify({ fileName: fileName, content: content })
+            body: JSON.stringify({fileName: fileName, content: content})
         })
             .then(response => response.text())
-            .then(result => { console.log("File saved:", result); })
-            .catch(error => { console.error("Error saving file:", error); });
+            .then(result => {
+                console.log("File saved:", result);
+            })
+            .catch(error => {
+                console.error("Error saving file:", error);
+            });
         closeViEditor();
     });
-    viCancelButton.addEventListener("click", function() {
+    viCancelButton.addEventListener("click", function () {
         closeViEditor();
     });
 
     // 建立 SSE 连接以实时接收后端日志与提示符更新
     const eventSource = new EventSource("/api/shell/stream");
-    eventSource.addEventListener("log", function(event) {
+    eventSource.addEventListener("log", function (event) {
         const logMessage = event.data;
         // 特殊信号处理
         if (logMessage.startsWith("OPEN_VI_*:")) {
@@ -98,7 +104,7 @@ document.addEventListener("DOMContentLoaded", function() {
 
     // 绑定输入框回车事件
     const inputLine = getInputLine();
-    inputLine.addEventListener("keydown", function(e) {
+    inputLine.addEventListener("keydown", function (e) {
         if (e.key === "Enter") {
             e.preventDefault();  // 阻止 contenteditable 内换行
             const command = inputLine.textContent.trim();
@@ -115,7 +121,9 @@ document.addEventListener("DOMContentLoaded", function() {
                 body: command
             })
                 .then(response => response.text())
-                .then(result => { console.log("Command result:", result); })
+                .then(result => {
+                    console.log("Command result:", result);
+                })
                 .catch(error => {
                     const errorElem = document.createElement("p");
                     errorElem.textContent = "Error: " + error;
@@ -139,7 +147,7 @@ document.addEventListener("DOMContentLoaded", function() {
     });
 
     // 点击终端区域时聚焦输入框
-    terminal.addEventListener("click", function() {
+    terminal.addEventListener("click", function () {
         const inputLine = getInputLine();
         if (inputLine) {
             inputLine.focus();

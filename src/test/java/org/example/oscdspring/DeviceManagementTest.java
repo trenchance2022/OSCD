@@ -1,11 +1,16 @@
 package org.example.oscdspring;
 
-import org.example.oscdspring.device_management.*;
-import org.example.oscdspring.process_management.*;
-import org.junit.jupiter.api.Test;
-import static org.junit.jupiter.api.Assertions.*;
+import org.example.oscdspring.device_management.DeviceManager;
+import org.example.oscdspring.device_management.IODevice;
+import org.example.oscdspring.device_management.IORequest;
 import org.example.oscdspring.main.Library;
+import org.example.oscdspring.process_management.PCB;
+import org.example.oscdspring.process_management.PIDBitmap;
+import org.example.oscdspring.process_management.ProcessState;
+import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 class DeviceManagementTest {

@@ -11,6 +11,6 @@ class Inode {
         this.fileName = fileName;
         this.size = size;
         // 计算所需的块数
-        this.blockIndexes = new int[(int)Math.ceil((double)size / 1024)];
+        this.blockIndexes = new int[(int) Math.ceil((double) size / 1024)];
     }
 }

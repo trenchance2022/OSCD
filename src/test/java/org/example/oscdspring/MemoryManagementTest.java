@@ -1,26 +1,22 @@
 package org.example.oscdspring;
 
 import org.example.oscdspring.device_management.DeviceManager;
+import org.example.oscdspring.file_disk_management.FileSystemImpl;
+import org.example.oscdspring.main.Constants;
 import org.example.oscdspring.memory_management.*;
+import org.example.oscdspring.process_management.CPU;
 import org.example.oscdspring.process_management.PCB;
 import org.example.oscdspring.process_management.PIDBitmap;
-import org.example.oscdspring.file_disk_management.FileSystemImpl;
 import org.example.oscdspring.process_management.Scheduler;
-import org.example.oscdspring.process_management.CPU;
-import org.example.oscdspring.memory_management.Memory;
-import org.example.oscdspring.memory_management.MemoryManagement;
-import org.example.oscdspring.memory_management.MemoryManagementImpl;
-import org.example.oscdspring.memory_management.PageTable;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-
-import static org.junit.jupiter.api.Assertions.*;
-import org.example.oscdspring.main.Constants;
 import org.junit.jupiter.api.TestInstance;
 import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.Map;
 import java.util.Random;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 
 @SpringBootTest
@@ -28,7 +24,7 @@ import java.util.Random;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 class MemoryManagementTest {
     @Nested
-    class MemoryManagementImplTest{
+    class MemoryManagementImplTest {
         /*
          * 对内存管理的接口测试
          * 1.获取物理内存使用情况
@@ -47,14 +43,14 @@ class MemoryManagementTest {
             @SuppressWarnings("unchecked")
             java.util.List<Map<String, Object>> frameInfo = (java.util.List<Map<String, Object>>) usage.get("frameInfo");
             // Initially, frameInfo should list system frames (PID=0) and none for empty frames
-            long systemFramesCount = frameInfo.stream().filter(f -> ((int)f.get("pid")) == PIDBitmap.SYSTEM_PID).count();
+            long systemFramesCount = frameInfo.stream().filter(f -> ((int) f.get("pid")) == PIDBitmap.SYSTEM_PID).count();
             assertEquals(Constants.SYSTEM_MEMORY_PAGE_SIZE, systemFramesCount, "System frames should be accounted for in usage");
             // Allocate a new block to a process and verify it appears in frameInfo
             int block = Memory.getInstance().findEmptyBlock();
             Memory.getInstance().writeBlock(block, new byte[Constants.PAGE_SIZE_BYTES], 5, 0);
             usage = memMan.getPageUse();
             frameInfo = (java.util.List<Map<String, Object>>) usage.get("frameInfo");
-            boolean found = frameInfo.stream().anyMatch(f -> ((int)f.get("pid")) == 5 && ((int)f.get("frameId")) == block);
+            boolean found = frameInfo.stream().anyMatch(f -> ((int) f.get("pid")) == 5 && ((int) f.get("frameId")) == block);
             assertTrue(found, "Newly allocated frame should appear in page use info with correct PID and frame ID");
         }
 
@@ -65,7 +61,7 @@ class MemoryManagementTest {
             MemoryManagement memMan = new MemoryManagementImpl(fs);
             CPU cpu = new CPU(1, Scheduler.getInstance(), new DeviceManager());
 
-            Random r= new Random();
+            Random r = new Random();
             int codeSize = r.nextInt(10000);
             int blocks = (codeSize - 1) / Constants.BLOCK_SIZE_BYTES + 1;
             int[] addressBlock = new int[blocks];
@@ -73,91 +69,91 @@ class MemoryManagementTest {
                 addressBlock[i] = new Random().nextInt(Constants.DISK_SIZE);
             }
             // 创建一个进程,大小为10000内的随机数
-            PCB pcb = new PCB(1,codeSize , addressBlock, 1);
+            PCB pcb = new PCB(1, codeSize, addressBlock, 1);
             cpu.changeProcess(pcb);
             int initSize = pcb.getPageTableSize();
             int addSize = r.nextInt(10000);
-            memMan.Allocate(cpu,addSize);
+            memMan.Allocate(cpu, addSize);
             // 分配内存后，页表大小增加大小为addSize，增加的页数应该为addSize/PAGE_SIZE
-            int expectedPageTableSize = addSize/Constants.PAGE_SIZE_BYTES;
-            assertEquals(expectedPageTableSize, pcb.getPageTableSize()-initSize, "Page table size should increase after allocation");
+            int expectedPageTableSize = addSize / Constants.PAGE_SIZE_BYTES;
+            assertEquals(expectedPageTableSize, pcb.getPageTableSize() - initSize, "Page table size should increase after allocation");
 
         }
 
         // 测试读写内存：写入和读出的一样
         @Test
-        void testReadWriteMemory(){
+        void testReadWriteMemory() {
             FileSystemImpl fs = new FileSystemImpl();
             MemoryManagement memMan = new MemoryManagementImpl(fs);
             CPU cpu = new CPU(1, Scheduler.getInstance(), new DeviceManager());
 
-            Random r= new Random();
+            Random r = new Random();
             int codeSize = r.nextInt(10000);
             int blocks = (codeSize - 1) / Constants.BLOCK_SIZE_BYTES + 1;
             int[] addressBlock = new int[blocks];
             for (int i = 0; i < blocks; i++) {
                 addressBlock[i] = new Random().nextInt(Constants.DISK_SIZE);
             }
-            PCB pcb = new PCB(1,codeSize , addressBlock, 1);
+            PCB pcb = new PCB(1, codeSize, addressBlock, 1);
             cpu.changeProcess(pcb);
             int addSize = r.nextInt(10000);
-            memMan.Allocate(cpu,addSize);
+            memMan.Allocate(cpu, addSize);
             // 分配内存后，在分配的部分进行随机读写
-            int wrSize=r.nextInt(addSize);
-            byte []wrContent=new byte[wrSize];
+            int wrSize = r.nextInt(addSize);
+            byte[] wrContent = new byte[wrSize];
             r.nextBytes(wrContent);
 
             // 写
-            memMan.Write(cpu,codeSize,wrContent,wrSize);
+            memMan.Write(cpu, codeSize, wrContent, wrSize);
             // 读
-            byte []readContent =new byte[wrSize];
-            memMan.Read(cpu,codeSize,readContent,wrSize);
+            byte[] readContent = new byte[wrSize];
+            memMan.Read(cpu, codeSize, readContent, wrSize);
 
             assertArrayEquals(wrContent, readContent, "Read content should equal the write content");
         }
 
         // 测试释放内存
         @Test
-        void testFreeMemory(){
+        void testFreeMemory() {
             FileSystemImpl fs = new FileSystemImpl();
             MemoryManagement memMan = new MemoryManagementImpl(fs);
-            Map<String, Object> usage= memMan.getPageUse();
+            Map<String, Object> usage = memMan.getPageUse();
 
             CPU cpu = new CPU(1, Scheduler.getInstance(), new DeviceManager());
 
-            Random r= new Random();
+            Random r = new Random();
             int codeSize = r.nextInt(10000);
             int blocks = (codeSize - 1) / Constants.BLOCK_SIZE_BYTES + 1;
             int[] addressBlock = new int[blocks];
             for (int i = 0; i < blocks; i++) {
                 addressBlock[i] = new Random().nextInt(Constants.DISK_SIZE);
             }
-            PCB pcb = new PCB(1,codeSize , addressBlock, 1);
+            PCB pcb = new PCB(1, codeSize, addressBlock, 1);
             cpu.changeProcess(pcb);
             int addSize = r.nextInt(10000);
-            memMan.Allocate(cpu,addSize);
+            memMan.Allocate(cpu, addSize);
             // 分配内存后，在分配的部分进行随机读写
-            int wrSize=r.nextInt(addSize);
-            byte []wrContent=new byte[wrSize];
+            int wrSize = r.nextInt(addSize);
+            byte[] wrContent = new byte[wrSize];
             r.nextBytes(wrContent);
 
-            memMan.Write(cpu,codeSize,wrContent,wrSize);
-            byte []readContent =new byte[wrSize];
-            memMan.Read(cpu,codeSize,readContent,wrSize);
+            memMan.Write(cpu, codeSize, wrContent, wrSize);
+            byte[] readContent = new byte[wrSize];
+            memMan.Read(cpu, codeSize, readContent, wrSize);
 
-            Map<String, Object> usage2= memMan.getPageUse();
+            Map<String, Object> usage2 = memMan.getPageUse();
             assertNotEquals(usage, usage2, "Memory usage should change after allocation");
             // 释放内存
             memMan.releaseProcess(pcb);
 
             // 释放后，物理内存使用情况应该与之前相同
-            Map<String, Object> usage3= memMan.getPageUse();
+            Map<String, Object> usage3 = memMan.getPageUse();
             assertEquals(usage, usage3, "Memory usage should be the same after process release");
         }
     }
 
     @Nested
-    class MemoryTest{
+    class MemoryTest {
         /*
          * 对内存的测试
          * 1.正确查找空闲物理内存块
@@ -219,7 +215,7 @@ class MemoryManagementTest {
     }
 
     @Nested
-    class MMUTest{
+    class MMUTest {
         /*
          * 地址转换器的测试
          * 1. 切换进程时更新页表，快表等数据
@@ -232,8 +228,8 @@ class MemoryManagementTest {
         // 测试进程切换时更新页表，快表等数据
         @Test
         void testTranProcess() {
-            MMU mmu= new MMU();
-            Random r= new Random();
+            MMU mmu = new MMU();
+            Random r = new Random();
             int codeSize = r.nextInt(10000);
             int blocks = (codeSize - 1) / Constants.BLOCK_SIZE_BYTES + 1;
             int[] addressBlock = new int[blocks];
@@ -241,8 +237,8 @@ class MemoryManagementTest {
                 addressBlock[i] = new Random().nextInt(Constants.DISK_SIZE);
             }
             // 创建两个进程,大小为10000内的随机数
-            PCB pcb1 = new PCB(1,codeSize , addressBlock, 1);
-            PCB pcb2 = new PCB(2,codeSize , addressBlock, 1);
+            PCB pcb1 = new PCB(1, codeSize, addressBlock, 1);
+            PCB pcb2 = new PCB(2, codeSize, addressBlock, 1);
             mmu.update(pcb1);
             // 检查mmu的ptr是否更新
             assertEquals(mmu.getLastPageSize(), pcb1.getLastPageSize(), "MMU last page size should match PCB");
@@ -268,22 +264,22 @@ class MemoryManagementTest {
 
         // 测试地址转换
         @Test
-        void testAddressTran(){
-            MMU mmu=new MMU();
-            Random r= new Random();
+        void testAddressTran() {
+            MMU mmu = new MMU();
+            Random r = new Random();
             int codeSize = r.nextInt(10000);
             int blocks = (codeSize - 1) / Constants.BLOCK_SIZE_BYTES + 1;
             int[] addressBlock = new int[blocks];
             for (int i = 0; i < blocks; i++) {
                 addressBlock[i] = new Random().nextInt(Constants.DISK_SIZE);
             }
-            PCB pcb = new PCB(1,codeSize , addressBlock, 1);
+            PCB pcb = new PCB(1, codeSize, addressBlock, 1);
             mmu.update(pcb);
 
             // 检查地址转换
-            for(int i=0;i<codeSize;i++) {
-                int logicalAddress=i;
-                int mmutrans=mmu.addressTranslation(logicalAddress,false);
+            for (int i = 0; i < codeSize; i++) {
+                int logicalAddress = i;
+                int mmutrans = mmu.addressTranslation(logicalAddress, false);
 
                 if (logicalAddress >= mmu.getCodeSize()) {
                     logicalAddress += mmu.getInnerFragmentation();
@@ -294,61 +290,61 @@ class MemoryManagementTest {
                 PageTable pageTable = PageTableArea.getInstance().getPageTable(mmu.getPageTableAddress());
 
                 // 查找页表
-                PageTableEntry entry = pageTable.getEntry(pageNumber,false);
+                PageTableEntry entry = pageTable.getEntry(pageNumber, false);
 
-                assertEquals(entry.getFrameNumber() * Constants.PAGE_SIZE_BYTES + offset,mmutrans, "Address translation should match the expected physical address");
+                assertEquals(entry.getFrameNumber() * Constants.PAGE_SIZE_BYTES + offset, mmutrans, "Address translation should match the expected physical address");
             }
         }
 
         // 测试地址保护，对越界情况的处理
         @Test
-        void testAddressProtect(){
-            MMU mmu=new MMU();
+        void testAddressProtect() {
+            MMU mmu = new MMU();
             CPU cpu = new CPU(1, Scheduler.getInstance(), new DeviceManager());
 
-            Random r= new Random();
+            Random r = new Random();
             int codeSize = r.nextInt(10000);
             int blocks = (codeSize - 1) / Constants.BLOCK_SIZE_BYTES + 1;
             int[] addressBlock = new int[blocks];
             for (int i = 0; i < blocks; i++) {
                 addressBlock[i] = new Random().nextInt(Constants.DISK_SIZE);
             }
-            PCB pcb = new PCB(1,codeSize , addressBlock, 1);
+            PCB pcb = new PCB(1, codeSize, addressBlock, 1);
             cpu.changeProcess(pcb);
             // 分配内存后，进行随机读写，并且越界
-            int wrSize=r.nextInt(codeSize+1024,codeSize*10+1024);
-            assertEquals(mmu.addressTranslation(wrSize,false),-2, "Write should fail due to out of bounds");
+            int wrSize = r.nextInt(codeSize + 1024, codeSize * 10 + 1024);
+            assertEquals(mmu.addressTranslation(wrSize, false), -2, "Write should fail due to out of bounds");
         }
 
         // 测试快表替换
         @Test
-        void testTLBClock(){
-            MMU mmu=new MMU();
-            Random r= new Random();
-            int codeSize = r.nextInt(10000,50000);
+        void testTLBClock() {
+            MMU mmu = new MMU();
+            Random r = new Random();
+            int codeSize = r.nextInt(10000, 50000);
             int blocks = (codeSize - 1) / Constants.BLOCK_SIZE_BYTES + 1;
             int[] addressBlock = new int[blocks];
             for (int i = 0; i < blocks; i++) {
                 addressBlock[i] = new Random().nextInt(Constants.DISK_SIZE);
             }
-            PCB pcb = new PCB(1,codeSize , addressBlock, 1);
+            PCB pcb = new PCB(1, codeSize, addressBlock, 1);
             mmu.update(pcb);
 
-            MMU mmuc=mmu.clone();
+            MMU mmuc = mmu.clone();
 
             // 测试tlb的替换策略
-            for(int i=0;i<codeSize;i+=1050){
-                int logicalAddress=i;
-                mmu.addressTranslation(logicalAddress,false);
+            for (int i = 0; i < codeSize; i += 1050) {
+                int logicalAddress = i;
+                mmu.addressTranslation(logicalAddress, false);
                 assertNotEquals(mmuc.getTLB(), mmu.getTLB(), "TLB should be updated after address translation");
             }
 
             // 同一页进行多次地址转换，检查tlb是否一致
-            for(int i=0;i<1024;i++){
-                int logicalAddress=i;
-                mmu.addressTranslation(logicalAddress,false);
-                if(i==0){
-                    mmuc=mmu.clone();
+            for (int i = 0; i < 1024; i++) {
+                int logicalAddress = i;
+                mmu.addressTranslation(logicalAddress, false);
+                if (i == 0) {
+                    mmuc = mmu.clone();
                     continue;
                 }
                 assertEquals(mmuc.getTLB(), mmu.getTLB(), "TLB should be same after address translation");
@@ -357,33 +353,33 @@ class MemoryManagementTest {
 
         // 测试页面置换
         @Test
-        void testPageReplace(){
-            MMU mmu=new MMU();
-            Random r= new Random();
-            int codeSize = r.nextInt(10000,50000);
+        void testPageReplace() {
+            MMU mmu = new MMU();
+            Random r = new Random();
+            int codeSize = r.nextInt(10000, 50000);
             int blocks = (codeSize - 1) / Constants.BLOCK_SIZE_BYTES + 1;
             int[] addressBlock = new int[blocks];
             for (int i = 0; i < blocks; i++) {
                 addressBlock[i] = new Random().nextInt(Constants.DISK_SIZE);
             }
-            PCB pcb = new PCB(1,codeSize , addressBlock, 1);
+            PCB pcb = new PCB(1, codeSize, addressBlock, 1);
             mmu.update(pcb);
 
-            int pageTableAddress=mmu.getPageTableAddress();
-            PageTable pageTable= PageTableArea.getInstance().getPageTable(pageTableAddress).clone();
+            int pageTableAddress = mmu.getPageTableAddress();
+            PageTable pageTable = PageTableArea.getInstance().getPageTable(pageTableAddress).clone();
             // 测试tlb的替换策略
-            for(int i=0;i<codeSize;i+=1050){
-                int logicalAddress=i;
-                mmu.addressTranslation(logicalAddress,false);
+            for (int i = 0; i < codeSize; i += 1050) {
+                int logicalAddress = i;
+                mmu.addressTranslation(logicalAddress, false);
                 assertNotEquals(pageTable, PageTableArea.getInstance().getPageTable(pageTableAddress).clone(), "TLB should be updated after address translation");
             }
 
             // 同一页进行多次地址转换，检查tlb是否一致
-            for(int i=0;i<1024;i++){
-                int logicalAddress=i;
-                mmu.addressTranslation(logicalAddress,false);
-                if(i==0){
-                    pageTable=PageTableArea.getInstance().getPageTable(pageTableAddress).clone();
+            for (int i = 0; i < 1024; i++) {
+                int logicalAddress = i;
+                mmu.addressTranslation(logicalAddress, false);
+                if (i == 0) {
+                    pageTable = PageTableArea.getInstance().getPageTable(pageTableAddress).clone();
                     continue;
                 }
                 assertEquals(pageTable, PageTableArea.getInstance().getPageTable(pageTableAddress).clone(), "TLB should be same after address translation");

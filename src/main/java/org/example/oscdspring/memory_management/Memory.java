@@ -49,7 +49,7 @@ public class Memory {
     }
 
     // 更新块内容
-    public void updateBlock(int blockNumber,  int pid, int pageId) {
+    public void updateBlock(int blockNumber, int pid, int pageId) {
         blockStatus[blockNumber].setPid(pid);
         blockStatus[blockNumber].setPageId(pageId);
     }
@@ -122,7 +122,7 @@ public class Memory {
         List<Map<String, Object>> frameInfo = new ArrayList<>();
 
         for (int i = 0; i < Constants.MEMORY_PAGE_SIZE; i++) {
-            if(blockStatus[i].getPid()==-1) continue;
+            if (blockStatus[i].getPid() == -1) continue;
             Map<String, Object> frame = new HashMap<>();
             frame.put("frameId", blockStatus[i].getFrameNumber());
             frame.put("pid", blockStatus[i].getPid());

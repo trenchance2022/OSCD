@@ -9,8 +9,8 @@ import static org.example.oscdspring.main.Library.getFileSystem;
 // 每个CPU都有一个MMU，MMU负责地址转换，内含TLB缓冲区，页表寄存器
 public class MMU {
 
-    private final PTR ptr ;//页表寄存器
-    private final TLB tlb ;//TLB缓冲区
+    private final PTR ptr;//页表寄存器
+    private final TLB tlb;//TLB缓冲区
 
     @Override
     public boolean equals(Object obj) {
@@ -21,11 +21,11 @@ public class MMU {
     }
 
     @Override
-    public MMU clone(){
+    public MMU clone() {
         return new MMU(this.ptr.clone(), this.tlb.clone());
     }
 
-    public MMU(){
+    public MMU() {
         this.ptr = new PTR();
         this.tlb = new TLB();
     }
@@ -148,7 +148,7 @@ class PTR {
     }
 
     @Override
-    public PTR clone(){
+    public PTR clone() {
         PTR ptr = new PTR();
         ptr.pageTableAddress = pageTableAddress;
         ptr.pageTableSize = pageTableSize;
@@ -214,7 +214,7 @@ class TLB {
     }
 
     @Override
-    public TLB clone(){
+    public TLB clone() {
         TLB tlb = new TLB();
         for (int i = 0; i < Constants.TLB_SIZE; i++) {
             tlb.TLB[i] = (TLBEntry) TLB[i].clone();
@@ -456,10 +456,9 @@ class PageFaultHandler {
             // 将磁盘块读入内存
             if (faultPageTableEntry.getDiskAddress() != -1) {
                 byte[] block;
-                block= getFileSystem().readBlock(faultPageTableEntry.getDiskAddress());
+                block = getFileSystem().readBlock(faultPageTableEntry.getDiskAddress());
                 Memory.getInstance().writeBlock(freeFrame, block, pageTable.getPid(), pageNumber);
-            }
-            else{// 更新内存块状态
+            } else {// 更新内存块状态
                 Memory.getInstance().updateBlock(freeFrame, pageTable.getPid(), pageNumber);
             }
 

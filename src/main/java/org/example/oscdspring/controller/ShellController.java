@@ -3,7 +3,10 @@ package org.example.oscdspring.controller;
 import org.example.oscdspring.file_disk_management.FileSystemImpl;
 import org.example.oscdspring.main.Shell;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/shell")
@@ -28,12 +31,11 @@ public class ShellController {
     }
 
     /**
-     * 新增接口：保存 vi 模式下编辑的文件内容
+     * 保存 vi 模式下编辑的文件内容
      * 假设前端传来的数据格式为 JSON { "fileName": "...", "content": "..." }
      */
     @PostMapping("/vi")
     public String saveFileContent(@RequestBody ViSaveRequest request) {
-        // 调用 fileSystem 的编辑方法，注意需要修改 fileSystem.editFile(String, String) 方法
         fileSystem.editFile(request.getFileName(), request.getContent());
         return "File " + request.getFileName() + " has been updated.";
     }
@@ -47,12 +49,15 @@ class ViSaveRequest {
     public String getFileName() {
         return fileName;
     }
+
     public void setFileName(String fileName) {
         this.fileName = fileName;
     }
+
     public String getContent() {
         return content;
     }
+
     public void setContent(String content) {
         this.content = content;
     }

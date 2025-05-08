@@ -7,7 +7,6 @@ import org.example.oscdspring.process_management.PCB;
 import org.example.oscdspring.process_management.PIDBitmap;
 import org.springframework.stereotype.Component;
 
-import java.util.Arrays;
 import java.util.Map;
 
 @Component
@@ -28,9 +27,9 @@ public class MemoryManagementImpl implements MemoryManagement {
         PageTable pageTable = PageTableArea.getInstance().getPageTable(pageTableAddress);
 
         // 分配后的最后一页大小
-        int lastPageSize = cpu.getMMU().getLastPageSize()+size;
-        int addPageSize=lastPageSize/Constants.PAGE_SIZE_BYTES;
-        lastPageSize=lastPageSize%Constants.PAGE_SIZE_BYTES;
+        int lastPageSize = cpu.getMMU().getLastPageSize() + size;
+        int addPageSize = lastPageSize / Constants.PAGE_SIZE_BYTES;
+        lastPageSize = lastPageSize % Constants.PAGE_SIZE_BYTES;
 
         //更新页表
         pageTable.addEntries(addPageSize);
@@ -56,7 +55,7 @@ public class MemoryManagementImpl implements MemoryManagement {
             if (entry.isValid()) {
                 Memory.getInstance().freeBlock(entry.getFrameNumber());
             } else {
-                if(entry.getDiskAddress()!=-1&&entry.isAllocatedDisk())
+                if (entry.getDiskAddress() != -1 && entry.isAllocatedDisk())
                     fileDiskManagement.freeBlock(entry.getDiskAddress());
             }
         }
@@ -70,8 +69,8 @@ public class MemoryManagementImpl implements MemoryManagement {
     public boolean Read(CPU cpu, int logicAddress, byte[] data, int length) {
         MMU mmu = cpu.getMMU();
         // 逐字读写
-        for(int i=0;i<length;i++){
-            int physicalAddress = mmu.addressTranslation(logicAddress+i, false);
+        for (int i = 0; i < length; i++) {
+            int physicalAddress = mmu.addressTranslation(logicAddress + i, false);
             if (physicalAddress < 0) {
                 return false;
             }
@@ -114,8 +113,8 @@ public class MemoryManagementImpl implements MemoryManagement {
     public boolean Write(CPU cpu, int logicAddress, byte[] data, int length) {
         MMU mmu = cpu.getMMU();
 
-        for(int i=0;i<length;i++){
-            int physicalAddress = mmu.addressTranslation(logicAddress+i, true);
+        for (int i = 0; i < length; i++) {
+            int physicalAddress = mmu.addressTranslation(logicAddress + i, true);
             if (physicalAddress < 0) {
                 return false;
             }
@@ -171,13 +170,13 @@ public class MemoryManagementImpl implements MemoryManagement {
     @Override
     public void releaseProcess(PCB pcb) {
         PageTable pageTable = PageTableArea.getInstance().getPageTable(pcb.getPageTableAddress());
-        if(pageTable!=null) {
+        if (pageTable != null) {
             for (int i = 0; i < pageTable.getPageTableSize(); i++) {
                 PageTableEntry entry = pageTable.getEntry(i, false);
                 if (entry.isValid()) {
                     Memory.getInstance().freeBlock(entry.getFrameNumber());
                 } else {
-                    if(entry.getDiskAddress()!=-1&&entry.isAllocatedDisk())
+                    if (entry.getDiskAddress() != -1 && entry.isAllocatedDisk())
                         fileDiskManagement.freeBlock(entry.getDiskAddress());
                 }
             }

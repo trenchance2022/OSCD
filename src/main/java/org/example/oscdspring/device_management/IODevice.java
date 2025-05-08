@@ -1,11 +1,11 @@
 package org.example.oscdspring.device_management;
 
 import org.example.oscdspring.interrupt_management.InterruptHandler;
-import org.example.oscdspring.process_management.PCB;
-import org.example.oscdspring.process_management.Scheduler;
-import org.example.oscdspring.process_management.ProcessState;
-import org.example.oscdspring.main.Library;
 import org.example.oscdspring.main.Constants;
+import org.example.oscdspring.main.Library;
+import org.example.oscdspring.process_management.PCB;
+import org.example.oscdspring.process_management.ProcessState;
+import org.example.oscdspring.process_management.Scheduler;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -27,13 +27,13 @@ public class IODevice extends Thread {
 
     @Override
     public void run() {
-        new Thread(()->{
+        new Thread(() -> {
             //检查请求队列中是否已经有进程terminal
-            while(true){
+            while (true) {
                 try {
                     Thread.sleep(100);
-                    for(IORequest request: requests){
-                        if(request.getPcb().getState()== ProcessState.TERMINATED){
+                    for (IORequest request : requests) {
+                        if (request.getPcb().getState() == ProcessState.TERMINATED) {
                             requests.remove(request);
                             Library.getScheduler().removeWaitingProcess(request.getPcb());
                             break;
@@ -49,22 +49,22 @@ public class IODevice extends Thread {
             while (!isInterrupted()) {
                 IORequest request = requests.take();
                 runningrequest = request;
-                int time=request.getProcessingTime();
-                while(time> Constants.CLOCK_INTERRUPT_INTERVAL_MS){
+                int time = request.getProcessingTime();
+                while (time > Constants.CLOCK_INTERRUPT_INTERVAL_MS) {
                     Thread.sleep(Constants.CLOCK_INTERRUPT_INTERVAL_MS);
-                    time-=Constants.CLOCK_INTERRUPT_INTERVAL_MS;
-                    if(request.getPcb().getState()== ProcessState.TERMINATED){
+                    time -= Constants.CLOCK_INTERRUPT_INTERVAL_MS;
+                    if (request.getPcb().getState() == ProcessState.TERMINATED) {
                         break;
                     }
                 }
-                if(request.getPcb().getState()== ProcessState.TERMINATED) {
+                if (request.getPcb().getState() == ProcessState.TERMINATED) {
                     // 执行完毕恢复原状
                     runningrequest = null;
                     // 触发设备中断
                     PCB pcb = request.getPcb();
                     Library.getScheduler().removeWaitingProcess(pcb);
 
-                }else {
+                } else {
                     Thread.sleep(time);
                     // 执行完毕恢复原状
                     runningrequest = null;

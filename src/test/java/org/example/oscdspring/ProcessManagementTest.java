@@ -1,13 +1,14 @@
 package org.example.oscdspring;
 
 
-import org.junit.jupiter.api.Test;
+import org.example.oscdspring.device_management.DeviceManager;
 import org.example.oscdspring.process_management.*;
 import org.example.oscdspring.util.LogEmitterService;
-import static org.junit.jupiter.api.Assertions.*;
-import org.example.oscdspring.device_management.DeviceManager;
+import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+
+import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 class ProcessManagementTest {
@@ -57,7 +58,7 @@ class ProcessManagementTest {
         scheduler.configure(Scheduler.SchedulingPolicy.PRIORITY);
         // Create two processes with different priority values
         PCB highPri = new PCB(PIDBitmap.getInstance().allocatePID(), 50, new int[]{0}, 1);  // priority 1 (higher)
-        PCB lowPri  = new PCB(PIDBitmap.getInstance().allocatePID(), 50, new int[]{0}, 5);  // priority 5 (lower)
+        PCB lowPri = new PCB(PIDBitmap.getInstance().allocatePID(), 50, new int[]{0}, 5);  // priority 5 (lower)
         highPri.setState(ProcessState.READY);
         lowPri.setState(ProcessState.READY);
         // Add low priority first, then high priority

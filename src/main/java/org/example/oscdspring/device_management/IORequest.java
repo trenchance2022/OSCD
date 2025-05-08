@@ -10,22 +10,22 @@ public class IORequest {
     private int processingTime;
     private String deviceName;
     private int deviceId;
-    
+
     public IORequest(PCB pcb, int processingTime, String deviceName, int deviceId) {
         this.pcb = pcb;
         this.processingTime = processingTime;
         this.deviceName = deviceName;
         this.deviceId = deviceId;
     }
-    
+
     public PCB getPcb() {
         return pcb;
     }
-    
+
     public int getProcessingTime() {
         return processingTime;
     }
-    
+
     public String getDeviceName() {
         return deviceName;
     }

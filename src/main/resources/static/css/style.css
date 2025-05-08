@@ -1,254 +1,254 @@
 这是现在的css代码，，请你修改，使得每行有16个block，block大小可以相应缩小一些：body {
-	font-family: "Arial", sans-serif;
-	background-color: #fefefe;
-	margin: 0;
-	padding: 10px;
-	position: relative;
-	overflow: hidden;
+    font-family: "Arial", sans-serif;
+    background-color: #fefefe;
+    margin: 0;
+    padding: 10px;
+    position: relative;
+    overflow: hidden;
 }
 
 .background-blobs {
-	position: fixed;
-	top: 0;
-	left: 0;
-	width: 100%;
-	height: 100%;
-	z-index: -1;
-	overflow: hidden;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    overflow: hidden;
 }
 
 .blob {
-	position: absolute;
-	width: 300px;
-	height: 300px;
-	border-radius: 50%;
-	filter: blur(80px);
-	opacity: 0.7;
-	animation: floatBlob 10s infinite ease-in-out;
-	mix-blend-mode: multiply;
+    position: absolute;
+    width: 300px;
+    height: 300px;
+    border-radius: 50%;
+    filter: blur(80px);
+    opacity: 0.7;
+    animation: floatBlob 10s infinite ease-in-out;
+    mix-blend-mode: multiply;
 }
 
 .blob1 {
-	background: #32e89e;
-	top: 10%;
-	left: 5%;
-	animation-delay: 0s;
+    background: #32e89e;
+    top: 10%;
+    left: 5%;
+    animation-delay: 0s;
 }
 
 .blob2 {
-	background: #b466ff;
-	top: 20%;
-	right: 10%;
-	animation-delay: 5s;
+    background: #b466ff;
+    top: 20%;
+    right: 10%;
+    animation-delay: 5s;
 }
 
 .blob3 {
-	background: #3c8cff;
-	bottom: 5%;
-	right: 35%;
-	animation-delay: 10s;
+    background: #3c8cff;
+    bottom: 5%;
+    right: 35%;
+    animation-delay: 10s;
 }
 
 .blob4 {
-	background: #ffffff;
-	bottom: 15%;
-	right: 15%;
-	animation-delay: 15s;
-	opacity: 0.4;
+    background: #ffffff;
+    bottom: 15%;
+    right: 15%;
+    animation-delay: 15s;
+    opacity: 0.4;
 }
 
 @keyframes floatBlob {
-	0% {
-		transform: translate(0, 0) scale(1);
-	}
-	50% {
-		transform: translate(60px, -40px) scale(1.1);
-	}
-	100% {
-		transform: translate(0, 0) scale(1);
-	}
+    0% {
+        transform: translate(0, 0) scale(1);
+    }
+    50% {
+        transform: translate(60px, -40px) scale(1.1);
+    }
+    100% {
+        transform: translate(0, 0) scale(1);
+    }
 }
 
 .container {
-	display: grid;
-	grid-template-columns: repeat(3, 1fr);
-	grid-template-rows: repeat(2, 50%);
-	gap: 10px;
-	height: 98vh;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(2, 50%);
+    gap: 10px;
+    height: 98vh;
 }
 
 .box {
-	background: rgba(255, 255, 255, 0.3);
-	border: 1px solid rgba(255, 255, 255, 0.3);
-	border-radius: 16px;
-	box-shadow: 0 8px 32px rgba(31, 38, 135, 0.1);
-	backdrop-filter: blur(12px);
-	-webkit-backdrop-filter: blur(12px);
-	padding: 15px;
-	overflow: auto;
-	display: flex;
-	flex-direction: column;
-	transition: all 0.3s ease-in-out;
+    background: rgba(255, 255, 255, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(31, 38, 135, 0.1);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    padding: 15px;
+    overflow: auto;
+    display: flex;
+    flex-direction: column;
+    transition: all 0.3s ease-in-out;
 }
 
 h2 {
-	font-size: 20px;
-	margin-bottom: 10px;
-	color: #4a4a4a;
-	text-align: center;
-	letter-spacing: 1px;
-	font-weight: 600;
+    font-size: 20px;
+    margin-bottom: 10px;
+    color: #4a4a4a;
+    text-align: center;
+    letter-spacing: 1px;
+    font-weight: 600;
 }
 
 /* Process Table */
 .process-table,
 .device-table {
-	width: 100%;
-	border-collapse: collapse;
-	margin-bottom: 10px;
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 10px;
 }
 
 .process-table th,
 .process-table td,
 .device-table th,
 .device-table td {
-	border: 1px solid rgba(255, 255, 255, 0.2);
-	background-color: rgba(255, 255, 255, 0.2);
-	backdrop-filter: blur(4px);
-	color: #333;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    background-color: rgba(255, 255, 255, 0.2);
+    backdrop-filter: blur(4px);
+    color: #333;
 }
 
 .queue {
-	font-size: 12px;
-	margin: 3px 0;
+    font-size: 12px;
+    margin: 3px 0;
 }
 
 .grid-16 {
-	display: grid;
-	grid-template-columns: repeat(16, 1fr); /* 每行16格，平均分配宽度 */
-	gap: 4px;
-	margin-top: 10px;
-	overflow-y: auto;
-	max-height: 100%; /* 支持垂直滚动 */
-	overflow-x: hidden; /* 禁止水平滚动 */
-	padding-right: 25px;
+    display: grid;
+    grid-template-columns: repeat(16, 1fr); /* 每行16格，平均分配宽度 */
+    gap: 4px;
+    margin-top: 10px;
+    overflow-y: auto;
+    max-height: 100%; /* 支持垂直滚动 */
+    overflow-x: hidden; /* 禁止水平滚动 */
+    padding-right: 25px;
 }
 
 
 .grid-64 {
-	display: grid;
-	grid-template-columns: repeat(16, 1fr); /* 每行16格，平均分配宽度 */
-	gap: 4px;
-	margin-top: 10px;
-	overflow-y: hidden;
-	max-height: 100%; /* 支持垂直滚动 */
-	overflow-x: hidden; /* 禁止水平滚动 */
-	padding-right: 25px;
-	padding-bottom: 25px;
+    display: grid;
+    grid-template-columns: repeat(16, 1fr); /* 每行16格，平均分配宽度 */
+    gap: 4px;
+    margin-top: 10px;
+    overflow-y: hidden;
+    max-height: 100%; /* 支持垂直滚动 */
+    overflow-x: hidden; /* 禁止水平滚动 */
+    padding-right: 25px;
+    padding-bottom: 25px;
 }
 
 .block {
-	aspect-ratio: 1 / 1; /* 保持正方形 */
-	width: 100%;         /* 填满单元格 */
-	border-radius: 4px;
-	display: flex;
-	justify-content: center;
-	align-items: center;
-	font-size: 12px;
-	font-weight: bold;
-	color: #222;
-	border: 1px solid rgba(255, 255, 255, 0.2);
-	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    aspect-ratio: 1 / 1; /* 保持正方形 */
+    width: 100%; /* 填满单元格 */
+    border-radius: 4px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 12px;
+    font-weight: bold;
+    color: #222;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 
 .color-0 {
-	background-color: #ffccff;
+    background-color: #ffccff;
 }
 
 .color-1 {
-	background-color: #b3d9ff;
+    background-color: #b3d9ff;
 }
 
 .color-2 {
-	background-color: #99ff99;
+    background-color: #99ff99;
 }
 
 .color-3 {
-	background-color: #ffb3b3;
+    background-color: #ffb3b3;
 }
 
 .color-4 {
-	background-color: #ccccff;
+    background-color: #ccccff;
 }
 
 .color-5 {
-	background-color: #d9b38c;
+    background-color: #d9b38c;
 }
 
 .color-6 {
-	background-color: #ffcc99;
+    background-color: #ffcc99;
 }
 
 .color-7 {
-	background-color: #c2c2d6;
+    background-color: #c2c2d6;
 }
 
 .color-8 {
-	background-color: #e6e6e6;
+    background-color: #e6e6e6;
 }
 
 .color-9 {
-	background-color: #999999;
+    background-color: #999999;
 }
 
 .color-empty {
-	background-color: #e0e0e0;
+    background-color: #e0e0e0;
 }
 
 .tree {
-	font-family: monospace;
-	font-size: 14px;
-	padding-left: 20px;
+    font-family: monospace;
+    font-size: 14px;
+    padding-left: 20px;
 }
 
 /* 修改后的终端区域：使用flex布局，固定顶部输入框，独立滚动输出区 */
 .terminal {
-	display: flex;
-	flex-direction: column;
-	background-color: rgba(0, 0, 0, 0.7);
-	color: #9f9;
-	padding: 0; /* 输入区域和输出区域各自设置内边距 */
-	font-family: "Consolas", monospace;
-	font-size: 13px;
-	height: 100%;
-	border-radius: 10px;
-	backdrop-filter: blur(6px);
-	cursor: text;
+    display: flex;
+    flex-direction: column;
+    background-color: rgba(0, 0, 0, 0.7);
+    color: #9f9;
+    padding: 0; /* 输入区域和输出区域各自设置内边距 */
+    font-family: "Consolas", monospace;
+    font-size: 13px;
+    height: 100%;
+    border-radius: 10px;
+    backdrop-filter: blur(6px);
+    cursor: text;
 }
 
 #command-line {
-	flex: 0 0 auto;
-	padding: 10px;
-	border-bottom: 1px dashed #0f0;
-	margin: 0;
+    flex: 0 0 auto;
+    padding: 10px;
+    border-bottom: 1px dashed #0f0;
+    margin: 0;
 }
 
 #input-line {
-	display: inline-block;
-	min-width: 80%;
-	min-height: 1em;
-	outline: none;
-	color: #0f0;
-	cursor: text;
-	white-space: pre-wrap;
-	word-wrap: break-word;
+    display: inline-block;
+    min-width: 80%;
+    min-height: 1em;
+    outline: none;
+    color: #0f0;
+    cursor: text;
+    white-space: pre-wrap;
+    word-wrap: break-word;
 }
 
 #terminal-output {
-	flex: 1 1 auto;
-	padding: 10px;
-	overflow-y: auto;
+    flex: 1 1 auto;
+    padding: 10px;
+    overflow-y: auto;
 }
 
 /* 继承字体设置 */
@@ -256,75 +256,75 @@ h2 {
 .terminal pre,
 #command-line,
 #input-line {
-	font-family: inherit;
+    font-family: inherit;
 }
 
 /* 模态对话框样式 */
 .modal {
-	display: none;
-	position: fixed;
-	z-index: 1000;
-	left: 0;
-	top: 0;
-	width: 100%;
-	height: 100%;
-	overflow: auto;
-	background-color: rgba(0, 0, 0, 0.5);
+    display: none;
+    position: fixed;
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.5);
 }
 
 .modal-content {
-	background-color: #fefefe;
-	margin: 15% auto;
-	padding: 20px;
-	border: 1px solid #888;
-	width: 50%;
-	border-radius: 8px;
-	box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    background-color: #fefefe;
+    margin: 15% auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 50%;
+    border-radius: 8px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
 .modal-content h3 {
-	margin-top: 0;
+    margin-top: 0;
 }
 
 .modal-buttons {
-	text-align: right;
+    text-align: right;
 }
 
 .modal-buttons button {
-	padding: 6px 12px;
-	margin-left: 8px;
-	border: none;
-	border-radius: 4px;
-	cursor: pointer;
+    padding: 6px 12px;
+    margin-left: 8px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
 }
 
 .modal-buttons button.ok {
-	background-color: #4CAF50;
-	color: white;
+    background-color: #4CAF50;
+    color: white;
 }
 
 .modal-buttons button.cancel {
-	background-color: #f44336;
-	color: white;
+    background-color: #f44336;
+    color: white;
 }
 
 pre.tree {
-	/* 指定等宽字体 */
-	font-family: "Consolas", "JetBrains Mono", monospace;
-	/* 指定字号 */
-	font-size: 18px;
-	/* 指定字体颜色 */
-	color: #333;
-	/* 保留空白和换行 */
-	white-space: pre;
+    /* 指定等宽字体 */
+    font-family: "Consolas", "JetBrains Mono", monospace;
+    /* 指定字号 */
+    font-size: 18px;
+    /* 指定字体颜色 */
+    color: #333;
+    /* 保留空白和换行 */
+    white-space: pre;
 }
 
 #disk {
-	overflow-y: auto;
-	overflow-x: hidden;
+    overflow-y: auto;
+    overflow-x: hidden;
 }
 
 #memory {
-	overflow-y: hidden;
-	overflow-x: hidden;
+    overflow-y: hidden;
+    overflow-x: hidden;
 }

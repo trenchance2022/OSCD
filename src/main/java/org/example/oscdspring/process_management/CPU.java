@@ -3,14 +3,14 @@ package org.example.oscdspring.process_management;
 import org.example.oscdspring.device_management.DeviceManager;
 import org.example.oscdspring.interrupt_management.InterruptHandler;
 import org.example.oscdspring.main.Constants;
-import static org.example.oscdspring.main.Library.getMemoryManagement;
-
 import org.example.oscdspring.main.Library;
 import org.example.oscdspring.memory_management.MMU;
 import org.example.oscdspring.memory_management.MemoryManagement;
 import org.example.oscdspring.util.LogEmitterService;
 
 import java.util.Random;
+
+import static org.example.oscdspring.main.Library.getMemoryManagement;
 
 public class CPU extends Thread {
     private int cpuId; // CPU 的唯一标识符
@@ -31,7 +31,7 @@ public class CPU extends Thread {
     public void run() {
         while (true) {
             // 执行当前进程
-            if (currentPCB != null&& currentPCB.getState()!=ProcessState.TERMINATED) {
+            if (currentPCB != null && currentPCB.getState() != ProcessState.TERMINATED) {
                 execute();
             }
         }
@@ -153,20 +153,20 @@ public class CPU extends Thread {
                         currentPCB.setOriginalInstruction(instruction);
                         currentPCB.setRemainInstruction(instruction);
                     }
-                    if(scheduler.getCurrentPolicy()!=Scheduler.SchedulingPolicy.RR&&scheduler.getCurrentPolicy()!=Scheduler.SchedulingPolicy.PRIORITY_Preemptive&&scheduler.getCurrentPolicy()!=Scheduler.SchedulingPolicy.MLFQ) {
-                            // 计算本次能执行的时间
-                            int remainingTimeSlice = currentPCB.getTimeSlice() - currentPCB.getTimeUsed();
-                            int executeTime = Math.min(computeTime, remainingTimeSlice);
-                            //每次运行Constants.CLOCK_INTERRUPT_INTERVAL_MS，直到运行完
-                            while (executeTime > Constants.CLOCK_INTERRUPT_INTERVAL_MS) {
-                                Thread.sleep(Constants.CLOCK_INTERRUPT_INTERVAL_MS);
-                                currentPCB.incrementTimeUsed(Constants.CLOCK_INTERRUPT_INTERVAL_MS);
-                                executeTime -= Constants.CLOCK_INTERRUPT_INTERVAL_MS;
-                                currentPCB.freshTimeRemain();
-                            }
-                            Thread.sleep(executeTime);
-                            currentPCB.setRemainInstruction("");
-                            currentPCB.incrementTimeUsed(executeTime);
+                    if (scheduler.getCurrentPolicy() != Scheduler.SchedulingPolicy.RR && scheduler.getCurrentPolicy() != Scheduler.SchedulingPolicy.PRIORITY_Preemptive && scheduler.getCurrentPolicy() != Scheduler.SchedulingPolicy.MLFQ) {
+                        // 计算本次能执行的时间
+                        int remainingTimeSlice = currentPCB.getTimeSlice() - currentPCB.getTimeUsed();
+                        int executeTime = Math.min(computeTime, remainingTimeSlice);
+                        //每次运行Constants.CLOCK_INTERRUPT_INTERVAL_MS，直到运行完
+                        while (executeTime > Constants.CLOCK_INTERRUPT_INTERVAL_MS) {
+                            Thread.sleep(Constants.CLOCK_INTERRUPT_INTERVAL_MS);
+                            currentPCB.incrementTimeUsed(Constants.CLOCK_INTERRUPT_INTERVAL_MS);
+                            executeTime -= Constants.CLOCK_INTERRUPT_INTERVAL_MS;
+                            currentPCB.freshTimeRemain();
+                        }
+                        Thread.sleep(executeTime);
+                        currentPCB.setRemainInstruction("");
+                        currentPCB.incrementTimeUsed(executeTime);
                     } else {
                         Thread.sleep(Constants.CLOCK_INTERRUPT_INTERVAL_MS);
                         currentPCB.freshTimeRemain();
@@ -180,7 +180,7 @@ public class CPU extends Thread {
                         // 触发时钟中断
                         InterruptHandler.getInstance().handleClockInterrupt(this, currentPCB, scheduler);
                     }
-                    
+
                     break;
 
                 case "R": // 读取文件指令
@@ -199,17 +199,17 @@ public class CPU extends Thread {
                         // 创建一个新线程来处理文件读取
                         new Thread(() -> {
                             try {
-                                int time=readtime;
+                                int time = readtime;
                                 while (time > Constants.CLOCK_INTERRUPT_INTERVAL_MS) {
                                     Thread.sleep(Constants.CLOCK_INTERRUPT_INTERVAL_MS);
                                     time -= Constants.CLOCK_INTERRUPT_INTERVAL_MS;
-                                    if(pcbToRelease.getState()==ProcessState.TERMINATED){
+                                    if (pcbToRelease.getState() == ProcessState.TERMINATED) {
                                         break;
                                     }
                                 }
-                                if(pcbToRelease.getState()==ProcessState.TERMINATED) {
+                                if (pcbToRelease.getState() == ProcessState.TERMINATED) {
                                     Library.getScheduler().removeWaitingProcess(pcbToRelease);
-                                }else {
+                                } else {
                                     Thread.sleep(time);
                                     LogEmitterService.getInstance().sendLog("进程" + pcbToRelease.getPid() + "读取完毕");
                                     // 读取完成后，触发IO中断，第四个参数为true表示是读操作
@@ -263,17 +263,17 @@ public class CPU extends Thread {
 
                         new Thread(() -> {
                             try {
-                                int time=writeTime;
+                                int time = writeTime;
                                 while (time > Constants.CLOCK_INTERRUPT_INTERVAL_MS) {
                                     Thread.sleep(Constants.CLOCK_INTERRUPT_INTERVAL_MS);
                                     time -= Constants.CLOCK_INTERRUPT_INTERVAL_MS;
-                                    if(pcbToRelease.getState()==ProcessState.TERMINATED){
+                                    if (pcbToRelease.getState() == ProcessState.TERMINATED) {
                                         break;
                                     }
                                 }
-                                if(pcbToRelease.getState()==ProcessState.TERMINATED) {
+                                if (pcbToRelease.getState() == ProcessState.TERMINATED) {
                                     Library.getScheduler().removeWaitingProcess(pcbToRelease);
-                                }else {
+                                } else {
                                     LogEmitterService.getInstance().sendLog("进程" + pcbToRelease.getPid() + "写入完毕");
                                     // 写入完成后，触发IO中断，第四个参数为false表示是写操作
                                     InterruptHandler.getInstance().handleIOInterrupt(pcbToRelease, fileToWrite, scheduler, false);
@@ -318,15 +318,15 @@ public class CPU extends Thread {
                     int ioTime = Integer.parseInt(parts[3]);
 
                     LogEmitterService.getInstance().sendLog("CPU-" + cpuId + " 进程 " + currentPCB.getPid() +
-                            " 请求设备 "+ deviceName + " " + deviceId + " 进行I/O操作，预计耗时: " + ioTime + "ms");
+                            " 请求设备 " + deviceName + " " + deviceId + " 进行I/O操作，预计耗时: " + ioTime + "ms");
 
                     // 检查设备是否存在
-                    if (deviceManager.deviceExists(deviceId,deviceName)) {
+                    if (deviceManager.deviceExists(deviceId, deviceName)) {
                         // 保存当前进程的状态
                         PCB currentProcess = currentPCB;
 
                         // 将进程交给设备管理器处理，并传递IO操作时间
-                        deviceManager.requestIO(currentProcess, ioTime , deviceName, deviceId);
+                        deviceManager.requestIO(currentProcess, ioTime, deviceName, deviceId);
 
                         // 请求新进程执行
                         PCB nextProcess = scheduler.getNextProcess();
@@ -390,9 +390,9 @@ public class CPU extends Thread {
                     byte[] readData = new byte[readBytes];
                     if (!memoryManagement.Read(this, logicAddress, readData, readBytes)) {
                         LogEmitterService.getInstance().sendLog("CPU-" + cpuId + " 内存读取失败");
-                    }else{
+                    } else {
                         LogEmitterService.getInstance().sendLog("CPU-" + cpuId + " 内存读结果如下：");
-                        for (int i = 0; i < readBytes; i+=1024) {
+                        for (int i = 0; i < readBytes; i += 1024) {
                             StringBuilder sb = new StringBuilder();
                             for (int j = i; j < Math.min(i + 1024, readBytes); j++) {
                                 sb.append((char) readData[j]);
@@ -426,7 +426,7 @@ public class CPU extends Thread {
 
     // 判断CPU是否空闲
     public boolean isIdle() {
-        return currentPCB == null || currentPCB.getState()==ProcessState.TERMINATED;
+        return currentPCB == null || currentPCB.getState() == ProcessState.TERMINATED;
     }
 
     // 获取当前正在执行的进程

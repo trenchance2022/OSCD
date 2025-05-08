@@ -18,7 +18,7 @@ public class PageTableEntry {
     }
 
     @Override
-    public PageTableEntry clone(){
+    public PageTableEntry clone() {
         PageTableEntry pageTableEntry = new PageTableEntry(this.diskAddress);
         pageTableEntry.frameNumber = this.frameNumber;
         pageTableEntry.valid = this.valid;

@@ -1,6 +1,7 @@
 package org.example.oscdspring;
 
-import org.example.oscdspring.file_disk_management.*;
+import org.example.oscdspring.file_disk_management.FileLockManager;
+import org.example.oscdspring.file_disk_management.FileSystemImpl;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 

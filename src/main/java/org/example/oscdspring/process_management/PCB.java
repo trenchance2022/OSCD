@@ -36,7 +36,7 @@ public class PCB {
     public PCB(int pid, int codeSize, int[] diskAddressBlock, int priority) {
         this.pid = pid;
         this.priority = priority;
-        if(Scheduler.SchedulingPolicy.MLFQ == Scheduler.getInstance().getCurrentPolicy()) {
+        if (Scheduler.SchedulingPolicy.MLFQ == Scheduler.getInstance().getCurrentPolicy()) {
             this.currentQueue = priority;
         } else {
             this.currentQueue = 0;
@@ -45,7 +45,7 @@ public class PCB {
         this.timeUsed = 0;
         this.codeSize = codeSize;
         this.size = codeSize;
-        this.pageTableSize = (codeSize-1) / Constants.PAGE_SIZE_BYTES + 1;
+        this.pageTableSize = (codeSize - 1) / Constants.PAGE_SIZE_BYTES + 1;
         this.innerFragmentation = Constants.PAGE_SIZE_BYTES * pageTableSize - codeSize;
         this.pageTableSize += 1;//增加一个页表项用于存放数据段
         this.lastPageSize = 0;//数据段最后一页的大小,初始为0
@@ -89,12 +89,15 @@ public class PCB {
     public void setTimeRemain(int timeRemain) {
         this.timeRemain = timeRemain;
     }
+
     public void freshTimeRemain() {
-        if(this.timeRemain - Constants.CLOCK_INTERRUPT_INTERVAL_MS>=0){
-        this.timeRemain=this.timeRemain - Constants.CLOCK_INTERRUPT_INTERVAL_MS;}else{
-            this.timeRemain=0;
+        if (this.timeRemain - Constants.CLOCK_INTERRUPT_INTERVAL_MS >= 0) {
+            this.timeRemain = this.timeRemain - Constants.CLOCK_INTERRUPT_INTERVAL_MS;
+        } else {
+            this.timeRemain = 0;
         }
     }
+
     public int getPriority() {
         return priority;
     }
@@ -195,6 +198,7 @@ public class PCB {
     public void setRemainInstruction(String remainInstruction) {
         this.remainInstruction = remainInstruction;
     }
+
     public int getCurrentQueue() {
         return currentQueue;
     }
@@ -203,18 +207,20 @@ public class PCB {
         this.currentQueue = Math.min(queue, 3);
     }
 
-    public static PCB getPCB(int pid){
-        for(PCB pcb:PCB.allPCBs) {
+    public static PCB getPCB(int pid) {
+        for (PCB pcb : PCB.allPCBs) {
             if (pid == pcb.pid) {
                 return pcb;
             }
         }
         return null;
     }
-    public void addPCB_all(){
+
+    public void addPCB_all() {
         allPCBs.add(this);
     }
-    public void removePCB_all(){
+
+    public void removePCB_all() {
         allPCBs.remove(this);
     }
 }
