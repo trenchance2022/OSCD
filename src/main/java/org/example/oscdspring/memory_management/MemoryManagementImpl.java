@@ -77,34 +77,6 @@ public class MemoryManagementImpl implements MemoryManagement {
             data[i] = Memory.getInstance().read(physicalAddress, 1)[0];
         }
 
-        /*
-        //第一个页面读取的数据长度
-        int firstPageReadSize = Math.min(Constants.PAGE_SIZE_BYTES - logicAddress % Constants.PAGE_SIZE_BYTES, length);
-        //读取
-        int physicalAddress = mmu.addressTranslation(logicAddress, false);
-        if (physicalAddress < 0) {
-            return false;
-        }
-        System.arraycopy(Memory.getInstance().read(physicalAddress, firstPageReadSize), 0, data, 0, firstPageReadSize);
-        // 读取中间的整块页面
-        int remainBlock = (length - firstPageReadSize) / Constants.PAGE_SIZE_BYTES;
-        for (int i = 0; i < remainBlock; i++) {
-            physicalAddress = mmu.addressTranslation(logicAddress + firstPageReadSize + i * Constants.PAGE_SIZE_BYTES, false);
-            if (physicalAddress < 0) {
-                return false;
-            }
-            System.arraycopy(Memory.getInstance().read(physicalAddress, Constants.PAGE_SIZE_BYTES), 0, data, firstPageReadSize + i * Constants.PAGE_SIZE_BYTES, Constants.PAGE_SIZE_BYTES);
-        }
-        // 读取最后一个页面的数据
-        int lastPageReadSize = length - firstPageReadSize - remainBlock * Constants.PAGE_SIZE_BYTES;
-        if (lastPageReadSize > 0) {
-            physicalAddress = mmu.addressTranslation(logicAddress + firstPageReadSize + remainBlock * Constants.PAGE_SIZE_BYTES, false);
-            if (physicalAddress < 0) {
-                return false;
-            }
-            System.arraycopy(Memory.getInstance().read(physicalAddress, lastPageReadSize), 0, data, firstPageReadSize + remainBlock * Constants.PAGE_SIZE_BYTES, lastPageReadSize);
-        }
-        */
         return true;
     }
 
@@ -120,38 +92,6 @@ public class MemoryManagementImpl implements MemoryManagement {
             }
             Memory.getInstance().write(physicalAddress, 1, new byte[]{data[i]});
         }
-
-        /*
-        // 第一个页面写入的数据长度
-        int firstPageWriteSize = Math.min(Constants.PAGE_SIZE_BYTES - logicAddress % Constants.PAGE_SIZE_BYTES, length);
-        // 写入第一个页面的数据
-        int physicalAddress = mmu.addressTranslation(logicAddress, true);
-        if (physicalAddress < 0) {
-            return false;
-        }
-        Memory.getInstance().write(physicalAddress, firstPageWriteSize, Arrays.copyOfRange(data, 0, firstPageWriteSize));
-
-        // 写入中间的整块页面
-        int remainBlock = (length - firstPageWriteSize) / Constants.PAGE_SIZE_BYTES;
-        for (int i = 0; i < remainBlock; i++) {
-            physicalAddress = mmu.addressTranslation(logicAddress + firstPageWriteSize + i * Constants.PAGE_SIZE_BYTES, true);
-            if (physicalAddress < 0) {
-                return false;
-            }
-            Memory.getInstance().write(physicalAddress, Constants.PAGE_SIZE_BYTES, Arrays.copyOfRange(data, firstPageWriteSize + i * Constants.PAGE_SIZE_BYTES, firstPageWriteSize + (i + 1) * Constants.PAGE_SIZE_BYTES));
-        }
-
-        // 写入最后一个页面的数据
-        int lastPageWriteSize = length - firstPageWriteSize - remainBlock * Constants.PAGE_SIZE_BYTES;
-        if (lastPageWriteSize > 0) {
-            physicalAddress = mmu.addressTranslation(logicAddress + firstPageWriteSize + remainBlock * Constants.PAGE_SIZE_BYTES, true);
-            if (physicalAddress < 0) {
-                return false;
-            }
-            Memory.getInstance().write(physicalAddress, lastPageWriteSize, Arrays.copyOfRange(data, firstPageWriteSize + remainBlock * Constants.PAGE_SIZE_BYTES, firstPageWriteSize + remainBlock * Constants.PAGE_SIZE_BYTES + lastPageWriteSize));
-        }
-
-         */
 
         return true;
     }

@@ -8,6 +8,7 @@ import org.example.oscdspring.process_management.CPU;
 import org.example.oscdspring.process_management.PCB;
 import org.example.oscdspring.process_management.PIDBitmap;
 import org.example.oscdspring.process_management.Scheduler;
+import org.example.oscdspring.util.LogEmitterService;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.TestInstance;
@@ -387,4 +388,324 @@ class MemoryManagementTest {
         }
     }
 
+    @Nested
+    class AlgorithmTest {
+        /*
+         * 测试页面置换算法 二次机会
+         * 测试快表替换算法 clock
+         * */
+
+        // 精简的TLB，我们关注两个变量，一个是页框号，一个是访问位,实现了clock算法，用于验证TLB的替换策略
+        class SimpleTLB{
+            int[] pageNumber= new int[Constants.TLB_SIZE];
+            boolean[] accessed= new boolean[Constants.TLB_SIZE];
+            int clockHand=0;
+
+            void update(TLB tlb){
+                for (int i = 0; i < Constants.TLB_SIZE; i++) {
+                    pageNumber[i] = tlb.getPageNumber(i);
+                    accessed[i] = tlb.getAccessed(i);
+                }
+            }
+
+            boolean Same(TLB tlb){
+                for (int i = 0; i < Constants.TLB_SIZE; i++) {
+
+                    if(pageNumber[i] != tlb.getPageNumber(i)||accessed[i] != tlb.getAccessed(i)) {
+                        System.out.println("pageNumber "+pageNumber[i]+" tlbPageNumber "+tlb.getPageNumber(i));
+                        System.out.println("accessed "+accessed[i]+" tlbAccessed "+tlb.getAccessed(i));
+                        return false;
+                    }
+                }
+                return true;
+            }
+
+            boolean find(int pageNumber){
+                for (int i = 0; i < Constants.TLB_SIZE; i++) {
+                    if (this.pageNumber[i] == pageNumber){
+                        accessed[i] = true;
+                        return true;
+                    }
+                }
+                return false;
+            }
+
+            int add(int frameNumber){
+                if(find(frameNumber)){
+                    return -1;
+                }
+
+                while (true){
+                    if (accessed[clockHand] == false){
+                        pageNumber[clockHand] = frameNumber;
+                        accessed[clockHand] = true;
+                        clockHand = (clockHand + 1) % Constants.TLB_SIZE;
+                        return frameNumber;
+                    }
+                    accessed[clockHand] = false;
+                    clockHand = (clockHand + 1) % Constants.TLB_SIZE;
+                }
+            }
+
+            void show(){
+                for (int i = 0; i < Constants.TLB_SIZE; i++) {
+                    System.out.println("pageNumber "+pageNumber[i]+" accessed "+accessed[i]);
+                }
+                System.out.println("clockHand "+clockHand);
+            }
+        }
+
+        // 精简的页表,我们关注三个变量，一个有效位，一个是访问位, 最后是修改为，实现了二次机会算法，用于验证页表的替换策略
+        class SimplePage{
+            boolean[] valid;
+            boolean[] accessed;
+            boolean[] dirty;
+            int pointer=0;
+            int len;
+
+            SimplePage(int len){
+                this.len=len;
+                valid=new boolean[len];
+                accessed=new boolean[len];
+                dirty=new boolean[len];
+            }
+
+            void update(PageTable pg){
+                for (int i = 0; i < len; i++) {
+                    valid[i]=pg.getEntry(i, false).isValid();
+                    accessed[i]=pg.getEntry(i, false).isAccessed();
+                    dirty[i]=pg.getEntry(i, false).isDirty();
+                    pointer=pg.getPointer();
+                }
+            }
+
+            boolean Same(PageTable pg){
+                for (int i = 0; i < len; i++) {
+                    boolean flag=true;
+                    flag=flag&&valid[i]==pg.getEntry(i, false).isValid();
+
+                    if(pg.getEntry(i, false).isValid()){
+                        flag=flag&&dirty[i]==pg.getEntry(i, false).isDirty();
+                    }
+
+                    if(!flag){
+                        System.out.println("i = "+i);
+                        System.out.println("valid "+valid[i]+" pgValid "+pg.getEntry(i, false).isValid());
+                        System.out.println("dirty "+dirty[i]+" pgDirty "+pg.getEntry(i, false).isDirty());
+                        return flag;
+                    }
+                }
+                if(pointer!=pg.getPointer()){
+                    System.out.println("pointer "+pointer+" pgPointer "+pg.getPointer());
+                    return false;
+                }
+                return true;
+            }
+
+            boolean find(int pageNumber, boolean dirty){
+                if(valid[pageNumber]){
+                    accessed[pageNumber] = true;
+                    if (dirty) {
+                        this.dirty[pageNumber] = true;
+                    }
+                    return true;
+                }
+                return false;
+            }
+
+            int add(int pageNumber, boolean dirty){
+                if(find(pageNumber,dirty)){
+                    return -1;
+                }
+                for (int i = 0; i <len; i++) {
+                    // 第一次扫描，找到访问位为false,修改位为false的页
+                    if (valid[pointer]) {
+                        if (!accessed[pointer] && !this.dirty[pointer]) {
+                            int replace=pointer;
+                            pointer = (pointer + 1) %len;
+                            valid[replace]=false;
+                            valid[pageNumber]=true;
+                            accessed[pageNumber]=true;
+                            this.dirty[pageNumber]=dirty;
+                            return replace;
+                        }
+                    }
+                    pointer = (pointer + 1) %len;
+                }
+                for (int i = 0; i <len; i++) {
+                    // 第二次扫描，找到访问位为false,修改位为true的页,并将访问位设置为false
+                    if (valid[pointer]) {
+                        if (!accessed[pointer] && this.dirty[pointer]) {
+                            int replace=pointer;
+                            pointer = (pointer + 1) %len;
+                            valid[replace]=false;
+                            valid[pageNumber]=true;
+                            accessed[pageNumber]=true;
+                            this.dirty[pageNumber]=dirty;
+                            return replace;
+                        }
+                        accessed[pointer]=false;
+                    }
+                    pointer = (pointer + 1) %len;
+                }
+                for (int i = 0; i <len; i++) {
+                    // 第三次扫描，找到访问位为false,修改位为false的页(第二次扫描后所有页的访问位��为false)
+                    if (valid[pointer]) {
+                        if (!accessed[pointer] && !this.dirty[pointer]) {
+                            int replace=pointer;
+                            pointer = (pointer + 1) %len;
+                            valid[replace]=false;
+                            valid[pageNumber]=true;
+                            accessed[pageNumber]=true;
+                            this.dirty[pageNumber]=dirty;
+                            return replace;
+                        }
+                    }
+                    pointer = (pointer + 1) %len;
+                }
+                for (int i = 0; i <len; i++) {
+                    // 第四次扫描，找到访问位为false,修改位为true的页,此时所有页的访问位都为false，修改位都为true
+                    if (valid[pointer]) {
+                        if (!accessed[pointer] && this.dirty[pointer]) {
+                            int replace = pointer;
+                            pointer = (pointer + 1) % len;
+                            valid[replace] = false;
+                            valid[pageNumber] = true;
+                            accessed[pageNumber] = true;
+                            this.dirty[pageNumber] = dirty;
+                            return replace;
+                        }
+                    }
+                    pointer = (pointer + 1) %len;
+                }
+                return -1;
+
+            }
+
+            void show(){
+                for (int i = 0; i < len; i++) {
+                    if(valid[i])
+                    System.out.println("i "+i+" accessed "+accessed[i]+" dirty "+dirty[i]);
+                }
+                System.out.println("pointer "+pointer);
+                System.out.println();
+            }
+        }
+
+
+        // 测试快表替换 clock
+        @Test
+        void testTLBClock() {
+            // 屏蔽页面替换
+            final int oldConstants=Constants.MAX_RESIDENT;
+            Constants.MAX_RESIDENT=100;
+
+            MMU mmu = new MMU();
+            Random r = new Random();
+            int codeSize = r.nextInt(100000, 500000);
+            int blocks = (codeSize - 1) / Constants.BLOCK_SIZE_BYTES + 1;
+            int[] addressBlock = new int[blocks];
+            for (int i = 0; i < blocks; i++) {
+                addressBlock[i] = new Random().nextInt(Constants.DISK_SIZE);
+            }
+            PCB pcb = new PCB(1, codeSize, addressBlock, 1);
+            mmu.update(pcb);
+
+            for (int i = 0; i < Constants.TLB_SIZE; i++) {
+                int logicalAddress= i*Constants.PAGE_SIZE_BYTES;
+                mmu.addressTranslation(logicalAddress, false);
+            }
+
+            SimpleTLB STlb= new SimpleTLB();
+            STlb.update (mmu.getTLB().clone());
+
+            int testTimes=90;
+            boolean print = false;
+            print=true;
+            if(print) {
+                STlb.show();
+            }
+
+            // 测试tlb的替换策略
+
+            for (int i = 0; i < testTimes; i++) {
+                if(print){
+                    System.out.println("test "+i);
+                }
+                int logicalAddress= r.nextInt(codeSize);
+                mmu.addressTranslation(logicalAddress, false);
+                int newPage=mmu.getPageNumber(logicalAddress);
+                int oldPage=STlb.add(newPage);
+                if(print){
+                    System.out.println("logicalAddress "+logicalAddress+" newPage "+newPage);
+                    System.out.println("oldPage "+oldPage);
+                    STlb.show();
+                }
+
+                assertTrue(STlb.Same((TLB) mmu.getTLB().clone()), "TLB should be updated after address translation");
+            }
+
+            Constants.MAX_RESIDENT=oldConstants;
+
+        }
+
+        // 测试页面置换 二次机会
+        @Test
+        void testPageReplace() {
+            // 屏蔽TLB
+            final int oldConstants=Constants.TLB_SIZE;
+            Constants.TLB_SIZE=0;
+
+            MMU mmu = new MMU();
+            Random r = new Random();
+            int codeSize = r.nextInt(10000, 50000);
+            int blocks = (codeSize - 1) / Constants.BLOCK_SIZE_BYTES + 1;
+            int[] addressBlock = new int[blocks];
+            for (int i = 0; i < blocks; i++) {
+                addressBlock[i] = new Random().nextInt(Constants.DISK_SIZE);
+            }
+            PCB pcb = new PCB(1, codeSize, addressBlock, 1);
+            mmu.update(pcb);
+
+            for (int i = 0; i < Constants.MAX_RESIDENT; i++) {
+                int logicalAddress= i*Constants.PAGE_SIZE_BYTES;
+                mmu.addressTranslation(logicalAddress, false);
+            }
+
+            PageTable pageTable = PageTableArea.getInstance().getPageTable(mmu.getPageTableAddress()).clone();
+            SimplePage SPg=new SimplePage(mmu.getPageTableSize());
+            SPg.update(pageTable);
+
+            int testTimes=100;
+            boolean print = false;
+            print=true;
+            if(print) {
+                SPg.show();
+            }
+
+            // 测试页表的替换策略
+
+            for (int i = 0; i < testTimes; i++) {
+                if(print){
+                    System.out.println("test "+i);
+                }
+                int logicalAddress= r.nextInt(codeSize);
+                boolean dirty=r.nextBoolean();
+                mmu.addressTranslation(logicalAddress, dirty);
+                int newPage=mmu.getPageNumber(logicalAddress);
+                int oldPage=SPg.add(newPage,dirty);
+                if(print){
+                    System.out.println("logicalAddress "+logicalAddress+" newPage "+newPage);
+                    System.out.println("oldPage "+oldPage);
+                    SPg.show();
+                }
+
+                assertTrue(SPg.Same(PageTableArea.getInstance().getPageTable(mmu.getPageTableAddress()).clone()), "PageTable should be updated after address translation");
+            }
+
+            Constants.TLB_SIZE=oldConstants;
+
+        }
+
+    }
 }

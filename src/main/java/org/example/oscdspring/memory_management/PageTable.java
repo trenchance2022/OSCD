@@ -1,5 +1,6 @@
 package org.example.oscdspring.memory_management;
 
+import org.example.oscdspring.main.Constants;
 import org.example.oscdspring.util.LogEmitterService;
 
 import java.util.ArrayList;
@@ -22,7 +23,7 @@ public class PageTable {
         }
         entries.add(new PageTableEntry(-1));//数据段页表项
         memoryBlockUsed = 0;
-        memoryBlockSize = 4;
+        memoryBlockSize = Constants.MAX_RESIDENT;
 
     }
 
@@ -67,17 +68,20 @@ public class PageTable {
             // 第一次扫描，找到访问位为false,修改位为false的页
             if (entries.get(pointer).isValid()) {
                 if (!entries.get(pointer).isAccessed() && !entries.get(pointer).isDirty()) {
-                    return pointer;
+                    int replace=pointer;
+                    pointer = (pointer + 1) % entries.size();
+                    return replace;
                 }
             }
             pointer = (pointer + 1) % entries.size();
         }
         for (int i = 0; i < entries.size(); i++) {
-            // 第二次扫描，找到访问位为true,修改位为false的页,并将访问位设置为false
+            // 第二次扫描，找到访问位为false,修改位为true的页,并将访问位设置为false
             if (entries.get(pointer).isValid()) {
-                if (entries.get(pointer).isAccessed() && !entries.get(pointer).isDirty()) {
-                    entries.get(pointer).setDirty(false);
-                    return pointer;
+                if (!entries.get(pointer).isAccessed() && entries.get(pointer).isDirty()) {
+                    int replace=pointer;
+                    pointer = (pointer + 1) % entries.size();
+                    return replace;
                 }
                 entries.get(pointer).setAccessed(false);
             }
@@ -86,16 +90,20 @@ public class PageTable {
         for (int i = 0; i < entries.size(); i++) {
             // 第三次扫描，找到访问位为false,修改位为false的页(第二次扫描后所有页的访问位��为false)
             if (entries.get(pointer).isValid()) {
-                if (!entries.get(pointer).isDirty()) {
-                    return pointer;
+                if (!entries.get(pointer).isAccessed() && !entries.get(pointer).isDirty()) {
+                    int replace=pointer;
+                    pointer = (pointer + 1) % entries.size();
+                    return replace;
                 }
             }
             pointer = (pointer + 1) % entries.size();
         }
         for (int i = 0; i < entries.size(); i++) {
-            // 第四次扫描，找到访问位为true,修改位为true的页,此时所有页的访问位都为false，修改位都为true
-            if (entries.get(pointer).isValid()) {
-                return pointer;
+            // 第四次扫描，找到访问位为false,修改位为true的页,此时所有页的访问位都为false，修改位都为true
+            if (!entries.get(pointer).isAccessed() && entries.get(pointer).isDirty()) {
+                int replace=pointer;
+                pointer = (pointer + 1) % entries.size();
+                return replace;
             }
             pointer = (pointer + 1) % entries.size();
         }
@@ -138,5 +146,9 @@ public class PageTable {
     // 获取进程号
     public int getPid() {
         return pid;
+    }
+
+    public int getPointer(){
+        return pointer;
     }
 }
