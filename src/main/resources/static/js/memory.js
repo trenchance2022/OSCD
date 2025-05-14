@@ -13,7 +13,7 @@ document.addEventListener("DOMContentLoaded", function () {
     tooltip.style.whiteSpace = "pre-line";
     tooltip.style.zIndex = "999";
     document.body.appendChild(tooltip);
-
+    
     document.addEventListener("snapshot-update", function (event) {
         const snapshot = event.detail;
         const memory = snapshot.memoryManagement;
@@ -45,46 +45,18 @@ document.addEventListener("DOMContentLoaded", function () {
         for (let i = 0; i < totalFrames; i++) {
             const div = document.createElement("div");
             div.classList.add("block");
-            let tipText;
+            div.style.pointerEvents = "auto"; // 保证 hover 时 tooltip 能出现
+
             if (frameMap.hasOwnProperty(i)) {
-                const { pid, page } = frameMap[i];
+                const {pid, page} = frameMap[i];
                 div.classList.add(pidColorMap[pid]);
                 div.textContent = pid;
-                tipText = `Frame: ${i}\nPID: ${pid}\nPage: ${page}`;
+                div.title = `Frame: ${i}\nPID: ${pid}\nPage: ${page}`;
             } else {
                 div.classList.add("color-empty");
                 div.textContent = "";
-                tipText = `Frame: ${i} (空闲)`;
+                div.title = `Frame: ${i} (空闲)`;
             }
-
-            // 悬浮显示 tooltip（不锁定）
-            div.addEventListener("mouseenter", function (e) {
-                if (!tooltipLocked) {
-                    tooltip.textContent = tipText;
-                    tooltip.style.display = "block";
-                }
-            });
-
-            div.addEventListener("mousemove", function (e) {
-                if (!tooltipLocked || currentLockedTarget === div) {
-                    tooltip.style.left = (e.pageX + 10) + "px";
-                    tooltip.style.top = (e.pageY + 10) + "px";
-                }
-            });
-
-            div.addEventListener("mouseleave", function () {
-                if (!tooltipLocked) {
-                    tooltip.style.display = "none";
-                }
-            });
-
-            // 点击锁定 tooltip 显示
-            div.addEventListener("click", function (e) {
-                tooltip.textContent = tipText;
-                tooltip.style.display = "block";
-                tooltipLocked = true;
-                currentLockedTarget = div;
-            });
 
             memoryGrid.appendChild(div);
         }

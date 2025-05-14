@@ -3189,8 +3189,6 @@ src/test/java/org/example/oscdspring/ProcessManagementTest.java
 
 #### 内存管理单元测试
 
-
-
 <img src="./report2025.assets/image-20250505150002668.png" alt="image-20250505150002668" style="zoom: 33%;" />
 
 - **测试功能**：测试内存管理模块，包括物理内存使用统计、动态内存分配及页表扩展、内存读写一致性、进程内存释放，以及地址转换单元 (MMU) 的页表更新、地址转换正确性与越界保护、TLB 快表替换策略和页面置换算法。
