@@ -30,12 +30,16 @@ public class CPU extends Thread {
     @Override
     public void run() {
         while (true) {
-            // 执行当前进程
-            if (currentPCB != null && currentPCB.getState() != ProcessState.TERMINATED) {
+            PCB pcb;
+            synchronized (this) {
+                pcb = currentPCB;
+            }
+            if (pcb != null && pcb.getState() != ProcessState.TERMINATED) {
                 execute();
             }
         }
     }
+
 
     // 执行当前进程
     private void execute() {
