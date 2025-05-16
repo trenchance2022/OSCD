@@ -136,6 +136,31 @@ public class StartupInitializer implements ApplicationRunner {
         fileSystem.editFile("e2", "M 4096#D Scanner 2 2000#C 2000#Q#");
         fileSystem.editFile("e3", "M 10240#C 5000#D USB 3 10000#C 5000#Q#");
 
+        // 复杂测试
+        fileSystem.createFile("x1", 1);
+        fileSystem.createFile("x2", 1);
+        fileSystem.createFile("x3", 1);
+        fileSystem.createFile("x4", 1);
+        fileSystem.createFile("x5", 1);
+        fileSystem.createFile("x6", 1);
+        fileSystem.createFile("x7", 1);
+        fileSystem.createFile("x8", 1);
+        fileSystem.createFile("x9", 1);
+        fileSystem.createFile("x10", 1);
+        fileSystem.createFile("x11", 1);
+
+        fileSystem.editFile("x1", "M 10000#C 3000#MR 0 10000#C 3000#MW 100 9000#C 3000#MR 0 10000#C 3000#Q#");
+        fileSystem.editFile("x2", "M 4096#D Printer 1 10000#Q#");
+        fileSystem.editFile("x3", "M 4096#D Printer 1 10000#Q#");
+        fileSystem.editFile("x4", "M 10240#D USB 3 10000#Q#");
+        fileSystem.editFile("x5", "M 4096#W t4 2000#Q#");
+        fileSystem.editFile("x6", "M 4096#R t4 2000#Q#");
+        fileSystem.editFile("x7", "M 4096#W t4 2000#Q#");
+        fileSystem.editFile("x8", "M 4096#R t4 2000#Q#");
+        fileSystem.editFile("x9", "C 2000#Q#");
+        fileSystem.editFile("x10", "C 3000#Q#");
+        fileSystem.editFile("x11", "C 4000#Q#");
+
 
         // 回到根目录
         fileSystem.goBack();
