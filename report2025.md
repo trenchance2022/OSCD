@@ -8,7 +8,7 @@
 
 ------
 
-## 课程设计题目
+## 1 课程设计题目
 
 操作系统模拟程序的设计与实现。
 
@@ -16,9 +16,9 @@
 
 
 
-## 课程设计目标和要求
+## 2 课程设计目标和要求
 
-### 目标
+### 2.1 目标
 
 设计并实现一个具有操作系统基本功能的软件，具有操作系统的基本功能：
 
@@ -29,7 +29,7 @@
 5.  UI界面；
 6.  中断机制。
 
-### 基本要求
+### 2.2 基本要求
 
 要求完成的最小功能集合 ：
 
@@ -43,23 +43,23 @@
 
 
 
-## 需求分析
+## 3 需求分析
 
-### 引言
+### 3.1 引言
 
-#### 编写目的
+#### 3.1.1 编写目的
 
 本需求分析文档旨在系统、准确地描述操作系统模拟程序的功能与运行需求，为后续的系统设计、开发、测试与维护提供明确依据。文档面向本项目的开发者、测试人员以及指导教师，作为课程设计过程中的重要技术参考材料，确保系统功能设计满足实验教学目标，系统行为与用户预期保持一致。
 
-#### 项目背景
+#### 3.1.2 项目背景
 
 本项目以“操作系统模拟程序的设计与实现”为课题，模拟实现简化版操作系统内核功能，并通过前端图形界面进行动态展示和交互。系统以多进程调度为核心，集成内存管理、文件操作、设备请求与中断处理机制，帮助我们通过自己动手实践，以可视化方式深入理解操作系统的基本运行原理与模块协作机制。
 
 
 
-### 总体描述
+### 3.2 总体描述
 
-#### 系统目标
+#### 3.2.1 系统目标
 
 本项目旨在开发一个基于 Web 的操作系统模拟程序，集成进程管理、内存管理、文件操作、设备请求与中断处理机制等模块。系统通过模拟真实操作系统中的关键组件与行为，达成操作系统内核的仿真实现。
 
@@ -79,13 +79,13 @@
 
     
 
-#### 用户特征
+#### 3.2.2 用户特征
 
 本系统面向计算机及相关专业的本科生与教师，主要用于操作系统功能的演示与学生自我实践。用户具有一定的编程基础，能够理解命令行操作、以及操作系统的基本原理。
 
 
 
-#### 系统功能概要
+#### 3.2.3 系统功能概要
 
 系统划分为七个核心功能模块，分别为：
 
@@ -99,7 +99,7 @@
 
 
 
-#### 运行环境与约束
+#### 3.2.4 运行环境与约束
 
 系统采用前后端分离架构，整体运行环境要求如下：
 
@@ -115,9 +115,9 @@
 
 
 
-### 详细功能需求
+### 3.3 详细功能需求
 
-#### Shell交互功能
+#### 3.3.1 Shell交互功能
 
 Shell 交互模块为用户提供统一的命令输入入口，用于操作系统核心功能的访问与控制。用户可通过模拟终端界面输入指令，与文件系统、进程调度器、内存管理器、设备管理器等模块进行交互。所有操作过程中的提示、反馈与系统状态变化均实时推送至前端终端输出区域。
 
@@ -133,7 +133,7 @@ Shell支持根据当前所在目录动态更新终端提示符（如 `/root/dir1
 
 
 
-#### 进程管理功能
+#### 3.3.2 进程管理功能
 
 进程管理模块是操作系统模拟程序的核心，负责实现进程的五状态管理与调度控制。该模块协调多个 CPU、调度策略、时间片、状态转换与中断响应等机制，确保系统能稳定支持多道程序并发执行。
 
@@ -182,7 +182,7 @@ Shell支持根据当前所在目录动态更新终端提示符（如 `/root/dir1
 
 
 
-#### 内存管理功能
+#### 3.3.3 内存管理功能
 
 内存管理模块是操作系统核心组成部分之一，负责为进程提供隔离、高效的主存使用环境。内存管理模块负责管理进程的内存分配、释放、读取和写入操作，它协调 CPU 执行过程中的地址转换与页表映射，支持分页、缺页中断与页面置换机制，并与进程管理、文件系统和中断机制紧密协作。
 
@@ -227,7 +227,7 @@ Shell支持根据当前所在目录动态更新终端提示符（如 `/root/dir1
 
 
 
-#### 文件管理功能
+#### 3.3.4 文件管理功能
 
 文件管理模块负责模拟操作系统中的树状目录结构、磁盘存储模拟、块读写与分配释放管理、创建删除切换目录、文件创建编辑与读写、文件锁机制等关键功能。该模块与进程管理模块深度集成，支持文件驱动的程序执行，以及设备请求与文件资源同步控制。所有文件数据均存放在模拟磁盘中，通过对模拟磁盘读写进行文件读写，支持动态块分配、文件可视化、并发访问控制等操作。
 
@@ -270,7 +270,7 @@ Shell支持根据当前所在目录动态更新终端提示符（如 `/root/dir1
 
 
 
-#### 设备管理功能
+#### 3.3.5 设备管理功能
 
 设备管理模块用于模拟操作系统对外围设备的控制，包括设备的创建、删除、分配、使用、释放、进程阻塞与中断唤醒等全过程管理。模块支持多设备、进程阻塞与设备调度，并与中断机制协同工作，实现设备使用过程的完整生命周期管理。
 
@@ -303,7 +303,7 @@ Shell支持根据当前所在目录动态更新终端提示符（如 `/root/dir1
 
    
 
-#### 中断管理功能
+#### 3.3.6 中断管理功能
 
 中断管理模块负责协调处理操作系统运行过程中发生的异步事件，包括时钟中断、I/O设备完成中断和文件锁释放中断。通过中断机制，系统能够实现进程抢占、阻塞唤醒、资源释放等动态行为，从而保证多进程系统的实时性与响应性。
 
@@ -347,7 +347,7 @@ Shell支持根据当前所在目录动态更新终端提示符（如 `/root/dir1
 
 
 
-#### 系统快照展示功能
+#### 3.3.7 系统快照展示功能
 
 系统快照展示功能用于实时展示操作系统当前的系统快照，包括进程状态、内存使用情况、设备状态、文件系统等。通过系统快照，用户可以直观地看到操作系统的运行状况、资源分配与使用情况，有助于调试程序和监控系统的运行。
 
@@ -370,11 +370,11 @@ Shell支持根据当前所在目录动态更新终端提示符（如 `/root/dir1
 
 
 
-## 开发环境
+## 4 开发环境
 
 本操作系统模拟器项目基于 **Java 17 + Spring Boot 3.4.4** 构建，系统前后端分离。
 
-### 后端环境
+### 4.1 后端环境
 
 |            | 工具说明                                                     |
 | ---------- | ------------------------------------------------------------ |
@@ -386,7 +386,7 @@ Shell支持根据当前所在目录动态更新终端提示符（如 `/root/dir1
 | 热部署支持 | Spring DevTools                                              |
 | 测试框架   | JUnit 5                                                      |
 
-### 前端环境
+### 4.2 前端环境
 
 | 页面结构 | HTML5 + 原生 JavaScript                                      |
 | -------- | ------------------------------------------------------------ |
@@ -395,7 +395,7 @@ Shell支持根据当前所在目录动态更新终端提示符（如 `/root/dir1
 | 交互机制 | SSE（用于日志输出与快照更新）Fetch API（用于命令提交与 vi 编辑） |
 | 调试工具 | Chrome 开发者工具、浏览器控制台                              |
 
-### 项目目录结构
+### 4.3 项目目录结构
 
 ```elixir
 OSCD/
@@ -429,11 +429,11 @@ OSCD/
 
 
 
-## 总体设计
+## 5 总体设计
 
-### 系统架构设计
+### 5.1 系统架构设计
 
-#### 技术选型
+#### 5.1.1 技术选型
 
 本项目采用 Java 语言实现后端核心逻辑，基于 Spring Boot 框架构建 Web 服务接口，并使用 HTML+CSS+JavaScript 构建前端界面。
 
@@ -447,57 +447,57 @@ OSCD/
 
 
 
-#### 模块划分
+#### 5.1.2 模块划分
 
-##### 进程管理模块
+##### 5.1.2.1 进程管理模块
 
 负责进程的创建、调度与终止，包括进程控制块（PCB）管理、就绪/等待队列、调度算法以及多CPU内核调度等。
 
 <img src="./report2025.assets/image-20250505210734104.png" alt="image-20250505210734104" style="zoom: 33%;" />
 
-##### 内存管理模块
+##### 5.1.2.2 内存管理模块
 
 负责内存的分配、回收与地址转换。实现分页存储结构，包含页表、页表项和快表（TLB），以及缺页中断处理算法，实现页面置换。
 
 <img src="./report2025.assets/image-20250505210822131.png" alt="image-20250505210822131" style="zoom: 33%;" />
 
-##### 设备管理模块
+##### 5.1.2.3 设备管理模块
 
 模拟外部I/O设备管理。维护设备列表及每个设备的I/O请求队列，支持设备的动态添加移除，并通过设备线程异步处理I/O请求，完成后触发设备中断通知调度器。
 
 <img src="./report2025.assets/image-20250505210911779.png" alt="image-20250505210911779" style="zoom:33%;" />
 
-##### 文件系统模块
+##### 5.1.2.4 文件系统模块
 
 模拟简单的文件系统和磁盘管理。包括目录管理、文件的创建删除、文件内容读写、磁盘空间分配（位图法）、磁盘块读写等。文件以inode结构表示，包含文件名、大小和磁盘块索引列表（索引分配）。同时包含文件锁模块，提供文件读写锁同步功能。对文件I/O操作加锁，支持多个进程对同一文件的读共享和写独占。维护文件锁等待队列，在进程无法获取所需锁时将其阻塞，锁释放时唤醒等待的进程。
 
 <img src="./report2025.assets/image-20250505211015757.png" alt="image-20250505211015757" style="zoom:33%;" />
 
-##### 中断机制模块
+##### 5.1.2.5 中断机制模块
 
 统一处理各种中断事件，包括时钟中断（用于时间片轮转和进程抢占）、设备中断（I/O完成）和缺页中断（页不在内存时）。中断处理程序更新进程状态、执行上下文切换或内存页替换，并唤醒或调度相应的进程继续执行。
 
 <img src="./report2025.assets/image-20250505211134852.png" alt="image-20250505211134852" style="zoom:33%;" />
 
-##### 快照系统模块
+##### 5.1.2.6 快照系统模块
 
 周期性采集系统各模块状态并推送前端。通过定时任务调度，每隔固定时间收集进程列表、CPU占用、内存使用、文件目录结构、磁盘空闲情况、设备运行队列等信息，生成统一的系统状态快照用于前端可视化。
 
 <img src="./report2025.assets/image-20250505211229075.png" alt="image-20250505211229075" style="zoom:33%;" />
 
-##### 程序主控制模块
+##### 5.1.2.7 程序主控制模块
 
 `Shell`提供模拟操作系统的命令行接口。解析用户输入命令，调用上述模块执行相应操作。Shell模块将结果通过日志系统反馈给前端。`Constants`提供操作系统的各种常量。`Library`提供了核心模块静态共享注册中心，以单例静态变量形式注册和访问四大核心子系统：FileSystemImpl，MemoryManagement，DeviceManager，Scheduler，为非 Spring 管理类（如 CPU 线程）提供访问依赖模块的全局入口。`StartupInitializer`相当于系统的BIOS，在系统启动时即执行 run() 方法：将四大核心模块注入 Library 中，实现跨线程访问；根据配置文件设定的调度策略（如 FCFS、RR、MLFQ）初始化调度器；启动指定数量的 CPU 内核线程并注册到调度器；初始化测试用的文件目录、设备、测试程序文件；调用 scheduler.start() 启动调度器主线程。
 
 <img src="./report2025.assets/image-20250505211559295.png" alt="image-20250505211559295" style="zoom:33%;" />
 
-##### 控制器模块
+##### 5.1.2.8 控制器模块
 
 包含Spring Boot提供的REST API和SSE接口，实现与网页前端的通信。包括命令输入接口、VI编辑接口，以及日志和快照的SSE推送接口。前端页面通过JavaScript获取这些接口的数据，实现对各模块状态的实时展示和控制交互。
 
 <img src="./report2025.assets/image-20250505211441382.png" alt="image-20250505211441382" style="zoom:33%;" />
 
-##### 服务模块
+##### 5.1.2.9 服务模块
 
 维护所有日志 SSE 连接与快照 SSE 连接，实现系统的日志与状态快照的“实时消息推送”功能，便于用户在前端界面动态查看系统执行过程。
 
@@ -505,61 +505,61 @@ OSCD/
 
 
 
-#### 系统架构图
+#### 5.1.3 系统架构图
 
 ![image-20250505164224013](./report2025.assets/image-20250505164224013.png)
 
 
 
-### 用户交互接口设计
+### 5.2 用户交互接口设计
 
 交互主要包括两类：REST接口调用和SSE实时接收。REST接口由Spring Boot提供标准HTTP服务。
 
-#### Shell接口
+#### 5.2.1 Shell接口
 
 `POST /api/shell/command`，用于把前端输入的指令传给后端，ShellController接收后调用Shell模块处理命令，Shell根据指令内容再调用其他模块。
 
-#### VI接口
+#### 5.2.2 VI接口
 
 `POST /api/shell/vi`，由于vi的需求较为特殊，输入的内容不是Shell指令而是文本内容，因此需要另外一个接口保存前端vi文本编辑器中用户修改的文件内容。
 
-#### 日志SSE接口
+#### 5.2.3 日志SSE接口
 
 `GET /api/shell/stream`，后端各模块执行时调用日志发送方法，将消息广播给所有连接的SSE。前端收到日志事件后，将日志内容追加到终端输出区域。简而言之就是使用日志发送函数代替了之前的标准输出。
 
-#### 系统快照SSE接口
+#### 5.2.4 系统快照SSE接口
 
 `GET /api/snapshot`，系统快照的发送类，实现和上面的日志一致，只是发送的内容变为系统快照。每当SystemSnapshot定时发送状态更新时，前端根据接口收到包含各模块数据的JSON串，通过js进行各模块展示的内容更新。
 
 
 
-### 用户界面设计
+### 5.3 用户界面设计
 
 系统前端界面采用单页Web布局，界面截图如下所示：
 
 ![image-20250505141146434](./report2025.assets/image-20250505141146434.png)
 
-#### 进程管理区
+#### 5.3.1 进程管理区
 
 显示所有CPU核心上的当前运行进程及调度队列情况。界面采用表格形式：每个CPU作为一行，列出CPU编号、当前运行进程PID、进程名称、执行指令、剩余运行时间、优先级等动态信息。表格下方用文本列出全局就绪队列和等待队列的进程列表，以及当前采用的调度策略。用户据此可以观察调度算法的运行效果（如进程在就绪/等待队列间移动、时间片倒计时等）。该区域数据来源于快照系统的`processManagement`部分，前端每次收到快照事件即更新表格内容和队列文本，实现对调度状态的实时监控。
 
-#### 内存可视化区
+#### 5.3.2 内存可视化区
 
 模拟物理内存的使用情况，以8×8网格共64个小格表示固定数量的内存页帧。每个小格对应一个物理帧，颜色和文字标识其分配状态：空闲帧以灰色显示，已占用帧则填充特定进程的颜色并标注该进程PID及对应的页号（通过鼠标悬停可以显示）。当进程分配或释放内存、发生页面换入换出时，此区域相应格子会改变颜色或内容。用户可通过此图直观了解内存分配，以及页面置换时哪些帧被替换。网格支持悬停显示tooltip，提供帧号、所属进程、页号等详细信息。这种可视化有助于理解分页和虚拟内存机制的动态行为。
 
-#### 文件目录区
+#### 5.3.3 文件目录区
 
 以树状结构文本显示文件系统当前目录及其子目录、文件列表。采用ASCII绘图风格，如目录前有“`├──`”和“`└──`”符号区分层次结构。根目录`root/`作为起点，列出其中包含的所有文件和子目录，每个子目录下又以缩进方式列出其内容，递归显示整个文件系统层次。前端在每次收到快照中`fileDirectory`字符串后更新此文本区域。用户可以一目了然地看到当前磁盘上的目录结构和文件分布情况。例如，在Shell执行`mkdir`、`rm`等命令后，此区域会刷新体现新建或删除的文件/目录。由于快照频率高，对于文件系统变化用户几乎可以实时看到结果。
 
-#### Shell终端区
+#### 5.3.4 Shell终端区
 
 界面左侧下方留出一块终端模拟窗口，包含顶部的命令输入行和下方滚动的输出日志区域。用户在命令输入行中键入指令，类似真实终端以“`>`”提示符开头，支持自由编辑和使用退格等。按下回车后，输入的命令行连同当前提示符会追加到下方输出日志区域，模拟命令被提交执行的显示效果。随后，后台处理该命令产生的所有输出（例如`ls`列出的文件名）会逐行添加到日志区域。Shell区还能动态更新当前路径提示符：当用户改变目录后，提示符会相应变为新路径，如`/root/docs>`。此外，Shell区与前端VI编辑器交互：当用户输入`vi file`命令时，如果文件不存在，前端弹出提示（如“文件不存在，将创建新文件”），终端区暂停输出并弹出VI编辑窗口覆盖Shell区，等待用户输入文本。编辑完成保存后，VI窗口关闭，Shell终端继续显示后续日志。Shell区域基本模拟了一个交互式命令行环境。
 
-#### 磁盘状态区
+#### 5.3.5 磁盘状态区
 
 采用小格矩阵表示磁盘块使用情况。设计为16列×64行的网格，总计1024格对应磁盘的1024个块。每个小格代表一个磁盘块，使用颜色区分空闲和已占用状态（白色为空闲，深色为占用）。当有文件创建、扩展或删除时，此区域将有若干格子颜色发生变化，反映磁盘位图的改变情况。前端根据快照中`diskManagement`的occupiedBlocks列表，将对应索引的格子着色为占用，其余为空闲。直观上，用户可看到磁盘空间的分布碎片状况：如果连续创建大文件会有大片格子变色，删除文件会出现空洞。虽然无法精确显示文件内容，但此宏观视图有助于理解文件存储和磁盘分配机制。
 
-#### 设备列表区
+#### 5.3.6 设备列表区
 
 显示当前系统中登记的所有模拟设备及其工作状态。界面用表格列出每个设备：包括设备标识符（如“Printer_1”等）、当前正在为哪个进程服务（若空闲则标记“空闲”），以及其等待队列中的进程PID列表。每当有进程请求某设备I/O，该进程PID会出现在对应设备的等待队列栏，并在设备空闲时移至“运行进程”栏；I/O完成后，该进程PID将从设备表中消失并重新出现在就绪队列（由进程区显示）。用户通过此表可以观察设备并行工作的情况和I/O队列积压状况。例如，启动两个进程同时访问Printer_1，则设备列表会显示Printer_1的运行进程为其中一个，等待队列含另一个PID，当第一个完成后等待的进程转为运行。设备添加和移除操作（通过`addevc`/`rmdevc`）会动态更新此表增删行。设备列表区提供了对系统外围设备活动的直观监控。
 
@@ -569,15 +569,15 @@ OSCD/
 
 
 
-## 详细设计
+## 6 详细设计
 
-### 系统初始化实现
+### 6.1 系统初始化实现
 
 本系统采用 Spring Boot 框架构建，在系统启动时，通过实现 `ApplicationRunner` 接口的 `StartupInitializer` 类自动完成系统的初始化操作，配合 `Library` 类完成模块的全局共享注册与配置。系统初始化的关键目标包括：注入核心模块、配置调度策略、创建 CPU 核心线程、注册模拟设备、构建测试用文件系统、并启动调度器。
 
 
 
-#### 类与方法
+#### 6.1.1 类与方法
 
 <img src="./report2025.assets/屏幕截图 2025-05-06 092738.png" style="zoom:33%;" />
 
@@ -585,7 +585,7 @@ OSCD/
 
 
 
-#### 流程图
+#### 6.1.2 流程图
 
 ```mermaid
 flowchart TD
@@ -609,7 +609,7 @@ flowchart TD
 
 
 
-#### StartupInitializer 的实现逻辑
+#### 6.1.3 StartupInitializer 的实现逻辑
 
 `StartupInitializer` 是系统的启动初始化入口类，实现了 `ApplicationRunner` 接口，其 `run()` 方法会在 Spring Boot 应用启动后自动执行。该类主要负责以下几个方面的初始化工作：
 
@@ -639,7 +639,7 @@ flowchart TD
 
 
 
-#### Library 的设计与作用
+#### 6.1.4 Library 的设计与作用
 
 `Library` 类作为系统的模块注册中心，采用静态方法与静态字段的形式实现，是一个典型的**全局访问单例类**。其设计目的是为了解决以下问题：
 
@@ -659,7 +659,7 @@ flowchart TD
 
 
 
-### Shell命令解析实现
+### 6.2 Shell命令解析实现
 
 计了一个可交互的 Shell 模块，模拟真实操作系统的命令行接口（CLI），允许用户通过前端输入系统命令。
 
@@ -675,7 +675,7 @@ flowchart TD
 
 
 
-#### Shell命令集
+#### 6.2.1 Shell命令集
 
 ```cmd
 mkdir <directory>		#创建目录
@@ -700,13 +700,13 @@ Info memory			#查看内存
 
 
 
-#### 类与方法
+#### 6.2.2 类与方法
 
 <img src="./report2025.assets/image-20250506094510341.png" alt="image-20250506094510341" style="zoom:33%;" />
 
 
 
-#### Shell命令解析流程图
+#### 6.2.3 Shell命令解析流程图
 
 ```mermaid
 flowchart TD
@@ -739,7 +739,7 @@ flowchart TD
 
 
 
-#### Shell与前端和控制器交互的流程图
+#### 6.2.4 Shell与前端和控制器交互的流程图
 
 ```mermaid
 flowchart TD
@@ -800,7 +800,7 @@ flowchart TD
 
 
 
-#### processCommand() 实现
+#### 6.2.5 processCommand() 实现
 
 ```java
 public String processCommand(String command)
@@ -814,13 +814,13 @@ public String processCommand(String command)
 
 
 
-#### parseCommand() 实现
+#### 6.2.6 parseCommand() 实现
 
 ```java
 private void parseCommand(String command)
 ```
 
-##### 识别命令
+##### 6.2.6.1 识别命令
 
 该方法是 Shell 的核心处理逻辑，承担了用户命令的解析、分发与模块调用工作。
 
@@ -830,14 +830,14 @@ private void parseCommand(String command)
 
 对于参数缺失、类型错误、语法错误等情况，统一通过 `logEmitterService.sendLog()` 返回错误提示。
 
-##### vi 信号
+##### 6.2.6.2 vi 信号
 
 特别地，`vi` 命令中会判断文件是否存在，并发送特殊信号：
 
 - `OPEN_VI:<filename>`：打开现有文件并编辑
 - `OPEN_VI_*:<filename>`：新建文件后编辑
 
-##### 前端输出返回
+##### 6.2.6.3 前端输出返回
 
 Shell 类中所有执行反馈均不通过返回值，而是使用：
 
@@ -847,7 +847,7 @@ logEmitterService.sendLog("message")
 
 来将信息推送至前端终端。
 
-##### 提示符更新信号
+##### 6.2.6.4 提示符更新信号
 
 除 `vi` 命令外，每条命令执行结束后会发送新的提示符信号如`PROMPT:/root/d1>`前端通过该消息自动更新终端提示符状态。
 
@@ -855,13 +855,13 @@ logEmitterService.sendLog("message")
 
 
 
-### 进程管理实现
+### 6.3 进程管理实现
 
 进程管理模块作为操作系统的核心组件，负责进程的创建、调度、状态管理和资源回收。该模块支持多种调度算法，实现了进程的五状态模型，并与内存管理、设备管理和中断处理等模块紧密协作。
 
-#### 用户指令集
+#### 6.3.1 用户指令集
 
-##### C - 计算指令
+##### 6.3.1.1 C - 计算指令
 
 格式: C 时间值#
 
@@ -869,7 +869,7 @@ logEmitterService.sendLog("message")
 
 示例: C 5000# - 执行需要5000毫秒的计算操作
 
-##### R - 读取文件指令
+##### 6.3.1.2 R - 读取文件指令
 
 格式: R 文件名 读取时间#
 
@@ -877,7 +877,7 @@ logEmitterService.sendLog("message")
 
 示例: R file1.txt 3000# - 读取file1.txt文件，耗时3000毫秒
 
-##### W - 写入文件指令
+##### 6.3.1.3 W - 写入文件指令
 
 格式: W 文件名 写入时间#
 
@@ -885,7 +885,7 @@ logEmitterService.sendLog("message")
 
 示例: W file1.txt 2000# - 写入file1.txt文件，耗时2000毫秒
 
-##### D - 设备I/O指令
+##### 6.3.1.4 D - 设备I/O指令
 
 格式: D 设备类型 设备ID I/O时间#
 
@@ -893,7 +893,7 @@ logEmitterService.sendLog("message")
 
 示例: D disk 1 4000# - 请求ID为1的disk设备进行I/O操作，耗时4000毫秒
 
-##### Q - 结束进程指令
+##### 6.3.1.5 Q - 结束进程指令
 
 格式: Q#
 
@@ -901,7 +901,7 @@ logEmitterService.sendLog("message")
 
 示例: Q# - 结束当前进程的执行
 
-##### M - 内存分配指令
+##### 6.3.1.6 M - 内存分配指令
 
 格式: M 字节数#
 
@@ -909,7 +909,7 @@ logEmitterService.sendLog("message")
 
 示例: M 1024# - 请求分配1024字节的内存空间
 
-##### MW - 内存写入指令
+##### 6.3.1.7MW - 内存写入指令
 
 格式: MW 逻辑地址 字节数#
 
@@ -917,7 +917,7 @@ logEmitterService.sendLog("message")
 
 示例: MW 0 512# - 向逻辑地址0写入512字节的随机数据
 
-##### MR - 内存读取指令
+##### 6.3.1.8 MR - 内存读取指令
 
 格式: MR 逻辑地址 字节数#
 
@@ -925,7 +925,7 @@ logEmitterService.sendLog("message")
 
 示例: MR 0 512# - 从逻辑地址0读取512字节的数据
 
-##### 注意事项
+##### 6.3.1.9 注意事项
 
 - 所有指令都必须以#结尾
 
@@ -944,7 +944,7 @@ MW/MR <logicAddress> <Bytes># 			#写入指定长度随机数据或者读取指�
 Q# 									#进程结束，释放资源
 ```
 
-#### 数据结构
+#### 6.3.2 数据结构
 
 ```java
 public class PCB {
@@ -967,7 +967,7 @@ public class PCB {
 }
 ```
 
-#### 模块流程图
+#### 6.3.3 模块流程图
 
 ```mermaid
 graph TD
@@ -994,15 +994,15 @@ graph TD
     P --> L
 ```
 
-#### CPU流程图
+#### 6.3.4 CPU流程图
 
-##### run()实现
+##### 6.3.4.1 run()实现
 
-###### 模块调用关系
+###### 6.3.4.1.1 模块调用关系
 
 调用进程管理模块内部的`execute()`函数，用于执行进程。
 
-###### 流程图
+###### 6.3.4.1.2 流程图
 
 ```mermaid
 graph TD
@@ -1041,15 +1041,15 @@ graph TD
 
 ![](.\report2025.assets\详细设计-进程管理-CPU-run.png)
 
-#####  InstructionFetch()实现
+#####  6.3.4.2 InstructionFetch()实现
 
-###### 模块调用关系
+###### 6.3.4.2.1 模块调用关系
 
 被进程管理模块的`execute()`调用，用于取指令。
 
 调用内存管理模块的`Read()`，用于读取指令。
 
-###### 流程图
+###### 6.3.4.2.2 流程图
 
 ```mermaid
 graph TD
@@ -1088,9 +1088,9 @@ graph TD
     AA --> AB
 ```
 
-##### executeInstruction(String instruction)实现
+##### 6.3.4.3 executeInstruction(String instruction)实现
 
-###### 模块调用关系
+###### 6.3.4.3.1模块调用关系
 
 **进程调度相关**
 
@@ -1140,7 +1140,7 @@ graph TD
 
 - 调用 PIDBitmap.getInstance().freePID() 释放进程ID
 
-###### 流程图
+###### 6.3.4.3.2 流程图
 
 ```mermaid
 graph TD
@@ -1248,15 +1248,15 @@ graph TD
     P1 --> Z
 ```
 
-#### Scheduler流程图
+#### 6.3.5 Scheduler流程图
 
-##### run()实现
+##### 6.3.5.1 run()实现
 
-###### 模块调用关系
+###### 6.3.5.1.1 模块调用关系
 
 调用进程管理模块内`schedule()`用于调度进程和`updateWaitingTimeAndAging()`用于MLFQ调度算法的实现。
 
-###### 流程图
+###### 6.3.5.1.2 流程图
 
 ```mermaid
 graph TD
@@ -1269,15 +1269,15 @@ graph TD
     F --> B
 ```
 
-##### schedule()实现
+##### 6.3.5.2 schedule()实现
 
-###### 模块调用关系
+###### 6.3.5.2.1 模块调用关系
 
 调用进程管理模块内`getNextProcess()`用于获取下一个执行的进程。
 
 调用进程管理模块内`assignProcessToCPU()`用于为CPU分配即将执行的进程。
 
-###### 流程图
+###### 6.3.5.2.2 流程图
 
 ```mermaid
 graph TD
@@ -1297,9 +1297,9 @@ graph TD
     P --> Q[schedule方法结束]
 ```
 
-##### getNextProcess()实现
+##### 6.3.5.3 getNextProcess()实现
 
-###### 流程图
+###### 6.3.5.3.1 流程图
 
 ```mermaid
 graph TD
@@ -1327,13 +1327,13 @@ graph TD
     Q --> R[getNextProcess结束]
 ```
 
-##### assignProcessToCPU()实现
+##### 6.3.5.4 assignProcessToCPU()实现
 
-###### 模块调用关系
+###### 6.3.5.4.1 模块调用关系
 
 调用CPU类的`changeProcess()`切换CPU正在执行的进程。
 
-###### 流程图
+###### 6.3.5.4.2 流程图
 
 ```mermaid
 graph TD
@@ -1343,9 +1343,9 @@ graph TD
     D --> E[assignProcessToCPU结束]
 ```
 
-##### updateWaitingTimeAndAging()实现
+##### 6.3.5.5 updateWaitingTimeAndAging()实现
 
-###### 流程图
+###### 6.3.5.5.1 流程图
 
 ```mermaid
 graph TD
@@ -1381,15 +1381,17 @@ graph TD
 
 ![](.\report2025.assets\详细设计-进程管理-Scheduler-updateWaitingTimeAndAging.png)
 
-### 内存管理实现
+
+
+### 6.4 内存管理实现
 
 内存管理模块负责管理进程的内存分配、释放、读取、写入和展示操作。它通过接口 `MemoryManagement `对外提供服务，具体实现由 `MemoryManagementImpl `类完成。
 
-#### 接口说明与模块设计
+#### 6.4.1 接口说明与模块设计
 
 内存管理的实现分为四个模块：接口实现模块，地址转换模块，页表管理模块，物理内存模块。
 
-##### **接口实现模块**
+##### 6.4.1.1 接口实现模块
 
 该模块对外提供内存管理的接口。具体提供以下接口：
 
@@ -1401,7 +1403,7 @@ graph TD
 - 打印当前物理内存使用情况
 - 获取当前物理内存使用位图
 
-##### **地址转换模块**
+##### 6.4.1.2 地址转换模块
 
 该模块实现地址转换和缺页中断处理。包括以下类： 
 
@@ -1411,7 +1413,7 @@ graph TD
 - TLB条目 TLBEntry
 - 缺页中断处理程序 PageFaultHandler
 
-##### **页表管理模块**
+##### 6.4.1.3 页表管理模块
 
 该模块进行页表数据管理。包括以下类： 
 
@@ -1419,14 +1421,14 @@ graph TD
 - 页表 PageTable
 - 页表项 PageTableEntry
 
-##### **物理内存模块**
+##### 6.4.1.4 物理内存模块
 
 该模块模拟物理内存，记录内存信息。包括以下类： 
 
 - 物理内存 Memory
 - 物理内存块 MemoryBlockStatus
 
-#### 主要数据结构说明
+#### 6.4.2 主要数据结构说明
 
 UML类图如下：（仅保留属性与重要的方法）
 
@@ -1503,7 +1505,7 @@ classDiagram
     Memory --> MemoryBlockStatus : 组合
 ~~~
 
-##### 地址转换器 MMU
+##### 6.4.2.1 地址转换器 MMU
 
 ~~~java
 public class MMU {
@@ -1519,7 +1521,7 @@ public class MMU {
 
 - 使用TLB缓存加速地址转换
 
-##### 页表寄存器 PTR
+##### 6.4.2.2 页表寄存器 PTR
 
 ~~~java
 class PTR {
@@ -1533,7 +1535,7 @@ class PTR {
 
 - 存储当前运行进程的页表关键信息
 
-##### 快表 TLB
+##### 6.4.2.3 快表 TLB
 
 ~~~java
 class TLB {
@@ -1546,7 +1548,7 @@ class TLB {
 
 - 使用Clock算法管理条目替换
 
-##### TLB条目 TLBEntry
+##### 6.4.2.4 TLB条目 TLBEntry
 
 ~~~java
 class TLBEntry {
@@ -1566,7 +1568,7 @@ class TLBEntry {
 
 - `accessed`辅助Clock算法工作
 
-##### 页表区 PageTableArea
+##### 6.4.2.5 页表区 PageTableArea
 
 ~~~java
 public class PageTableArea {
@@ -1579,7 +1581,7 @@ public class PageTableArea {
 
 - 通过页表起始地址快速查找（Map键）
 
-##### 页表 PageTable
+##### 6.4.2.6 页表 PageTable
 
 ~~~java
 public class PageTable {
@@ -1597,7 +1599,7 @@ public class PageTable {
 
 - 通过指针实现页面置换算法
 
-##### 页表项 PageTableEntry
+##### 6.4.2.7 页表项 PageTableEntry
 
 ~~~java
 public class PageTableEntry {
@@ -1619,7 +1621,7 @@ public class PageTableEntry {
 
 - `diskAddress`实现虚拟内存的磁盘交换
 
-##### 物理内存 Memory
+##### 6.4.2.8 物理内存 Memory
 
 ~~~java
 public class Memory {
@@ -1632,7 +1634,7 @@ public class Memory {
 
 - 每个内存页对应一个状态记录
 
-##### 物理内存块 MemoryBlockStatus
+##### 6.4.2.9 物理内存块 MemoryBlockStatus
 
 ~~~java
 class MemoryBlockStatus {
@@ -1648,11 +1650,11 @@ class MemoryBlockStatus {
 
 - `pid`+`pageId`建立与虚拟页的映射
 
-#### 接口实现说明
+#### 6.4.3 接口实现说明
 
-##### Allocate 内存分配方法
+##### 6.4.3.1 Allocate 内存分配方法
 
-###### 调用方法：
+###### 6.4.3.1.1 调用方法：
 
 ~~~java
 /**
@@ -1665,7 +1667,7 @@ class MemoryBlockStatus {
 public boolean Allocate(CPU cpu, int size);
 ~~~
 
-###### 流程图
+###### 6.4.3.1.2 流程图
 
 ```mermaid
 graph TD
@@ -1677,7 +1679,7 @@ G --> H[更新MMU配置]
 H --> I[返回成功]
 ```
 
-###### 流程说明：
+###### 6.4.3.1.3 流程说明：
 
 1. 获取当前进程页表
 2. 计算需要新增的页数
@@ -1685,9 +1687,9 @@ H --> I[返回成功]
 4. 更新进程控制块内存信息
 5. 更新MMU内存管理单元配置
 
-##### FreeProcess/releaseProcess 进程内存释放方法
+##### 6.4.3.2 FreeProcess/releaseProcess 进程内存释放方法
 
-###### 调用方法：
+###### 6.4.3.2.1 调用方法：
 
 ~~~java
 /**
@@ -1706,7 +1708,7 @@ public boolean FreeProcess(CPU cpu);
 public void releaseProcess(PCB pcb);
 ~~~
 
-###### 流程图：
+###### 6.4.3.2.2 流程图：
 
 ```mermaid
 graph TD
@@ -1718,16 +1720,16 @@ C -->|完成| F[移除页表]
 F --> H[返回成功]
 ```
 
-###### 流程说明：
+###### 6.4.3.2.3 流程说明：
 
 1. 遍历进程所有页表项
 2. 释放占用的物理内存块
 3. 释放关联的磁盘空间
 4. 从页表区移除进程页表
 
-##### Read/Write 内存读写方法
+##### 6.4.3.3 Read/Write 内存读写方法
 
-###### 调用方法：
+###### 6.4.3.3.1 调用方法：
 
 ~~~java
 /**
@@ -1753,7 +1755,7 @@ public boolean Read(CPU cpu, int logicAddress, byte[] data, int length);
 public boolean Write(CPU cpu, int logicAddress, byte[] data, int length);
 ~~~
 
-###### 流程图：
+###### 6.4.3.3.2 流程图：
 
 ```mermaid
 graph TD
@@ -1765,16 +1767,16 @@ E -->|否| B
 E -->|是| F[返回成功]
 ```
 
-###### 流程说明：
+###### 6.4.3.3.3 流程说明：
 
 1. 逐字节进行地址转换
 2. 处理可能的缺页中断
 3. 执行物理内存读写
 4. 循环直到完成所有操作
 
-##### getPageUse/showPageUse 内存状态获取方法
+##### 6.4.3.4 getPageUse/showPageUse 内存状态获取方法
 
-###### 调用方法：
+###### 6.4.3.4.1 调用方法：
 
 ~~~java
 /**
@@ -1793,7 +1795,7 @@ public Map<String, Object> getPageUse();
 public void showPageUse(int start, int end);
 ~~~
 
-###### 流程图：
+###### 6.4.3.4.2 流程图：
 
 
 ```mermaid
@@ -1804,15 +1806,15 @@ C -->|未完成| D[打印/添加内存块信息]
 C -->|完成| H[返回成功/内存块数据]
 ```
 
-###### 流程说明：
+###### 6.4.3.4.3 流程说明：
 
 1. 遍历内存块
 2. 打印/添加内存块信息
 3. 返回成功/内存块数据
 
-#### 主要方法实现说明
+#### 6.4.4 主要方法实现说明
 
-##### 地址转换
+##### 6.4.4.1 地址转换
 
 在具体实现中，调用下面的函数地址转换
 
@@ -1820,7 +1822,7 @@ C -->|完成| H[返回成功/内存块数据]
 public int addressTranslation(int logicalAddress, boolean dirty) 
 ~~~
 
-###### **流程图：**
+###### 6.4.4.1.1 流程图
 
 
 ```mermaid
@@ -1842,7 +1844,7 @@ graph TD
     N --> O[返回结果]
 ```
 
-###### **流程说明：**
+###### 6.4.4.1.2 流程说明
 
 1. 验证逻辑地址有效性
 2. 计算页号和页内偏移
@@ -1851,18 +1853,18 @@ graph TD
 5. 处理可能的缺页中断
 6. 最终组合物理地址
 
-###### **调用方法**：
+###### 6.4.4.1.3 调用方法
 
 - `tlb.getFrameNumber()` - 查询TLB
 - `PageTableArea.getInstance().getPageTable()` - 获取页表
 - `PageFaultHandler.handlePageFault()` - 处理缺页
 
-###### **被调用**：
+###### 6.4.4.1.4 被调用
 
 - 内存管理模块读内存`read()` - 地址转换
 - 内存管理模块写内存`write()` - 地址转换
 
-##### 缺页中断处理
+##### 6.4.4.2 缺页中断处理
 
 在具体实现中，调用下面的函数进行缺页中断处理
 
@@ -1870,7 +1872,7 @@ graph TD
 static public boolean handlePageFault(int pageTableAddress, TLB tlb, int pageNumber) 
 ~~~
 
-###### 流程图：
+###### 6.4.4.2.1 流程图
 
 ```mermaid
 graph TD
@@ -1888,7 +1890,7 @@ graph TD
     K --> L[返回成功]
 ```
 
-###### 流程说明：
+###### 6.4.4.2.2 流程说明
 
 1. 同步锁保证线程安全
 2. 检查内存状态决定替换策略
@@ -1896,7 +1898,7 @@ graph TD
 4. 加载请求页到内存
 5. 更新页表和TLB
 
-###### 调用方法：
+###### 6.4.4.2.3 调用方法
 
 - `Memory.getInstance().findEmptyBlock()` - 查找空闲帧
 
@@ -1904,11 +1906,11 @@ graph TD
 
 - `tlb.deleteEntry()` - 清除TLB项
 
-###### 被调用：
+###### 6.4.4.2.4 被调用
 
 - 被地址转换调用 - 处理缺页中断
 
-##### clock算法快表更新
+##### 6.4.43 clock算法快表更新
 
 在具体实现中，调用下面的函数进行快表更新
 
@@ -1916,7 +1918,7 @@ graph TD
 public void addEntry(int pageNumber, int frameNumber) 
 ~~~
 
-###### 流程图：
+###### 6.4.4.3.1 流程图
 
 ```mermaid
 graph TD
@@ -1931,24 +1933,24 @@ graph TD
     H --> I[完成更新]
 ```
 
-###### 流程说明：
+###### 6.4.4.3.2 流程说明
 
 1. 优先使用空闲TLB槽
 2. 采用Clock算法选择替换项
 3. 访问位为1时给第二次机会
 4. 最终替换最不活跃项
 
-###### 调用方法：
+###### 6.4.4.3.3 调用方法
 
 - 无特殊调用
 
-###### 被调用：
+###### 6.4.4.3.4 被调用
 
 - 被地址转换调用 - 更新快表
 
 - 被缺页处理流程调用 - 更新快表
 
-##### 二次机会算法找到牺牲页面
+##### 6.4.4.4 二次机会算法找到牺牲页面
 
 在具体实现中，调用下面的函数进行找到牺牲页面
 
@@ -1956,7 +1958,7 @@ graph TD
 public int getReplacePage() 
 ~~~
 
-###### 流程图：
+###### 6.4.4.4.1 流程图
 
 ```mermaid
 graph TD
@@ -1973,7 +1975,7 @@ graph TD
     K --> L[返回任意有效页]
 ```
 
-###### 流程说明：
+###### 6.4.4.4.2 流程说明
 
 1. 四轮渐进式扫描策略
 2. 优先选择"未访问+未修改"页
@@ -1981,15 +1983,15 @@ graph TD
 4. 其次选择"已访问+未修改"页
 5. 最后选择"已访问+已修改"页
 
-######  调用方法：
+######  6.4.4.4.3 调用方法
 
 - `entries.get()` - 访问页表项
 
-###### 被调用：
+###### 6.4.4.4.4 被调用
 
 - 被缺页处理流程调用 - 找到要牺牲的页面
 
-#### 顺序图（以读内存为例）
+#### 6.4.5 顺序图（以读内存为例）
 
 ```mermaid
 sequenceDiagram
@@ -2026,15 +2028,15 @@ sequenceDiagram
 
 
 
-### 文件管理实现
+### 6.5 文件管理实现
 
-#### 类与方法
+#### 6.5.1 类与方法
 
 ![image-20250507094128271](./report2025.assets/image-20250507094128271.png)
 
-#### 数据结构说明
+#### 6.5.2 数据结构说明
 
-##### 索引节点 Inode
+##### 6.5.2.1 索引节点 Inode
 
 ```java
 class Inode {
@@ -2049,7 +2051,7 @@ class Inode {
 
 
 
-##### 目录项 Directory
+##### 6.5.2.2 目录项 Directory
 
 ```java
 class Directory {
@@ -2064,7 +2066,7 @@ class Directory {
 
 
 
-##### 位图 Bitmap
+##### 6.5.2.3 位图 Bitmap
 
 ```java
 class Bitmap {
@@ -2077,7 +2079,7 @@ class Bitmap {
 
 
 
-##### 磁盘 Disk
+##### 6.5.2.4 磁盘 Disk
 
 ```java
 class Disk {
@@ -2092,7 +2094,7 @@ class Disk {
 
 
 
-####  allocateBlock、freeBlock、 readBlock、writeBlock 实现
+####  6.5.3 allocateBlock、freeBlock、 readBlock、writeBlock 实现
 
 ```java
 int allocateBlock();
@@ -2103,17 +2105,17 @@ void writeBlock(int blockAddress, byte[] data);
 
 
 
-##### int allocateBlock()
+##### 6.5.3.1 int allocateBlock()
 
 从磁盘的空闲块位图中申请一个可用的磁盘块编号，返回分配成功的块索引（blockIndex），若无可用块则返回 `-1`。
 
-###### 模块调用关系
+###### 6.5.3.1.1 模块调用关系
 
 文件系统模块（FileSystemImpl） 在 `createFile()` 和 `editFile()` 中调用该方法，用于为文件分配实际物理块；
 
 内存管理模块（MemoryManagement） 当发生Page Fault，并需要从磁盘调入页面时，文件系统需要调用 `allocateBlock()` ；
 
-###### 流程图
+###### 6.5.3.1.2 流程图
 
 ```mermaid
 flowchart TD
@@ -2127,17 +2129,17 @@ flowchart TD
 
 
 
-##### void freeBlock(int blockIndex)
+##### 6.5.3.2 void freeBlock(int blockIndex)
 
 释放指定编号的磁盘块，将其标记为空闲块。
 
-###### 模块调用关系
+###### 6.5.3.2.1 模块调用关系
 
 文件系统模块（FileSystemImpl）删除文件（`removeFile()`）时会释放所有块；
 
 内存管理模块（MemoryManagement） 释放进程的时候会相应释放由于页面换出占用的磁盘空间。
 
-###### 流程图
+###### 6.5.3.2.2 流程图
 
 ```mermaid
 flowchart TD
@@ -2149,15 +2151,15 @@ flowchart TD
 
 
 
-##### byte[] readBlock(int blockAddress)
+##### 6.5.3.3 byte[] readBlock(int blockAddress)
 
 按块编号读取磁盘中对应块的数据内容，并返回其字节数组。
 
-###### 模块调用关系
+###### 6.5.3.3.1 模块调用关系
 
 内存管理模块（MemoryManagement）在缺页中断处理时，从磁盘读取数据，加载到内存。
 
-###### 流程图
+###### 6.5.3.3.2 流程图
 
 ```mermaid
 flowchart TD
@@ -2169,15 +2171,15 @@ flowchart TD
 
 
 
-##### void writeBlock(int blockAddress, byte[] data)
+##### 6.5.3.4 void writeBlock(int blockAddress, byte[] data)
 
 将指定数据写入磁盘中某块，覆盖该块原有内容。
 
-###### 模块调用关系
+###### 6.5.3.4.1 模块调用关系
 
 内存管理模块（MemoryManagement）在页面置换中，当脏页（Dirty Page）被置换出内存时，调用该方法将其写回磁盘块。
 
-###### 流程图
+###### 6.5.3.4.2 流程图
 
 ```mermaid
 flowchart TD
@@ -2189,7 +2191,7 @@ flowchart TD
 
 
 
-#### void createFile(String filename, int size) 实现
+#### 6.5.4 void createFile(String filename, int size) 实现
 
 该方法用于在当前目录下创建一个新的文件，分配相应的 inode 和磁盘空间，建立目录项。
 
@@ -2224,7 +2226,7 @@ flowchart TD
 
 
 
-#### void editFile(String filename, String content) 实现
+#### 6.5.5 void editFile(String filename, String content) 实现
 
 该方法用于编辑（修改）现有文件的内容，将文件重新写入新的数据。
 
@@ -2265,7 +2267,7 @@ flowchart TD
 
 
 
-#### String readFileData(String filename) 实现
+#### 6.5.6 String readFileData(String filename) 实现
 
 该方法用于读取指定文件的完整内容并以字符串形式返回，其实现流程如下：
 
@@ -2277,7 +2279,7 @@ flowchart TD
 
 
 
-#### void removeFile(String filename) 实现
+#### 6.5.7 void removeFile(String filename) 实现
 
 该方法用于删除当前目录中的单个文件，释放其占用的资源。实现逻辑如下：
 
@@ -2289,7 +2291,7 @@ flowchart TD
 
 
 
-#### void createDirectory(String name)、void changeDirectory(String path)、void goBack() 实现
+#### 6.5.8 void createDirectory(String name)、void changeDirectory(String path)、void goBack() 实现
 
 **createDirectory(String name)**： 在当前目录下创建一个新的子目录。
 
@@ -2305,7 +2307,7 @@ flowchart TD
 
 
 
-#### void removeDirectory(String name)、void removeDirectoryRecursively(String name) 实现
+#### 6.5.9 void removeDirectory(String name)、void removeDirectoryRecursively(String name) 实现
 
 **非递归删除 (`removeDirectory`)：** 只能删除空目录。若目录确实为空，则将其从当前目录的 subdirectories 列表中移除，释放对该 Directory 对象的引用。
 
@@ -2344,7 +2346,7 @@ flowchart TD
 
 ```
 
-#### 文件锁实现
+#### 6.5.10 文件锁实现
 
 FileLockManager文件锁管理器采用读者-写者模型，主要运作机制如下：
 
@@ -2415,7 +2417,7 @@ graph TD
 
 
 
-### 设备管理实现
+### 6.6 设备管理实现
 
 设备管理模块负责系统中 I/O 设备的统一注册、注销、I/O 请求分发与调度。核心组件包括：
 
@@ -2423,7 +2425,7 @@ graph TD
 - **IODevice**：设备线程，执行 I/O 请求并触发中断；
 - **IORequest**：I/O 请求封装，保存请求来源（PCB）、处理时长及目标设备信息。
 
-#### 数据结构
+#### 6.6.1 数据结构
 
 ```java
 // DeviceManager 中维护的全局设备映射
@@ -2440,9 +2442,9 @@ private int deviceId;          // 设备 ID
 
 ```
 
-#### DeviceManager 类
+#### 6.6.2 DeviceManager 类
 
-##### addDevice(deviceId, deviceName)实现
+##### 6.6.2.1 addDevice(deviceId, deviceName)实现
 
 ```mermaid
 flowchart LR
@@ -2457,21 +2459,21 @@ flowchart LR
 
 ```
 
-##### 流程描述
+##### 6.6.2.2 流程描述
 
 1. 生成设备唯一键（`deviceName + "_" + deviceId`）；
 2. 判断该键是否已存在于 `devices`；
 3. 若存在，则记录失败日志并返回；
 4. 否则构建 `IODevice`，将其加入 `devices`，启动线程并记录成功日志。
 
-##### 调用方与被调用方法
+##### 6.6.2.3 调用方与被调用方法
 
 - **调用方**：系统初始化或上层模块检测到新设备时；
 - **被调用**：`generateDeviceKey(...)`、`IODevice.start()`、`LogEmitterService.sendLog(...)`。
 
 
 
-##### removeDevice(deviceId, deviceName)实现
+##### 6.6.2.4 removeDevice(deviceId, deviceName)实现
 
 ```mermaid
 flowchart LR
@@ -2483,20 +2485,20 @@ flowchart LR
     F --> G[记录移除成功日志]
 ```
 
-##### 流程描述
+##### 6.6.2.5 流程描述
 
 1. 生成设备键；
 2. 若映射中无此键，记录“设备不存在”日志并返回；
 3. 否则调用 `shutdown()` 停止线程，移除映射，记录移除日志。
 
-##### 调用方与被调用方法
+##### 6.6.2.6 调用方与被调用方法
 
 - **调用方**：系统卸载或管理员界面；
 - **被调用**：`IODevice.shutdown()`、`LogEmitterService.sendLog(...)`。
 
 
 
-##### requestIO(pcb, processingTime, deviceName, deviceId)实现
+##### 6.6.2.7 requestIO(pcb, processingTime, deviceName, deviceId)实现
 
 ```mermaid
 flowchart LR
@@ -2508,23 +2510,23 @@ flowchart LR
     F --> G[添加 IORequest 至设备请求队列]
 ```
 
-##### 流程描述
+##### 6.6.2.8 流程描述
 
 1. 根据设备 ID 与名称生成键；
 2. 若设备不存在，则记录日志并返回；
 3. 设置 PCB 状态为 `WAITING`，加入调度器等待队列；
 4. 构造 `IORequest` 并添加到对应 `IODevice.requests` 队列。
 
-##### 调用方与被调用方法
+##### 6.6.2.9 调用方与被调用方法
 
 - **调用方**：进程管理模块在执行 I/O 系统调用时；
 - **被调用**：`pcb.setState(...)`、`Scheduler.addWaitingProcess(...)`、`IODevice.addRequest(...)`。
 
 
 
-#### IODevice 类
+#### 6.6.3 IODevice 类
 
-##### run() 主处理循环
+##### 6.6.3.1 run() 主处理循环
 
 ```mermaid
 flowchart TD
@@ -2538,12 +2540,12 @@ flowchart TD
     H --> A
 ```
 
-##### 流程描述
+##### 6.6.3.2 流程描述
 
 1. 阻塞获取请求，检查对应 PCB 是否已终止；
 2. 若终止则清理；否则分段模拟执行并触发中断。
 
-##### 清理线程逻辑
+##### 6.6.3.3 清理线程逻辑
 
 ```mermaid
 flowchart TD
@@ -2564,11 +2566,11 @@ flowchart TD
 
 
 
-### 中断管理实现
+### 6.7 中断管理实现
 
 本模块基于单例模式设计 `InterruptHandler`，提供了对时钟中断、设备中断和 I/O 中断的统一管理。模块核心在于通过调度器（`Scheduler`）与 CPU、PCB（进程控制块）协作，实现对进程状态的切换与调度。
 
-#### handleClockInterrupt(CPU cpu, PCB currentPCB, Scheduler scheduler)实现
+#### 6.7.1 handleClockInterrupt(CPU cpu, PCB currentPCB, Scheduler scheduler)实现
 
 ```mermaid
 flowchart TD
@@ -2618,7 +2620,7 @@ flowchart TD
 
 
 
-#### handleDeviceInterrupt(PCB pcb, Scheduler scheduler)实现
+#### 6.7.2 handleDeviceInterrupt(PCB pcb, Scheduler scheduler)实现
 
 ```mermaid
 flowchart LR
@@ -2647,7 +2649,7 @@ flowchart LR
 
 
 
-#### handleIOInterrupt(PCB pcb, String fileName, Scheduler scheduler, boolean isReadOperation)实现
+#### 6.7.3 handleIOInterrupt(PCB pcb, String fileName, Scheduler scheduler, boolean isReadOperation)实现
 
 ```mermaid
 flowchart LR
@@ -2683,15 +2685,15 @@ flowchart LR
 
 
 
-### 系统快照展示与API实现
+### 6.8 系统快照展示与API实现
 
-#### 界面展示图
+#### 6.8.1 界面展示图
 
 ![image-20250505213739069](./report2025.assets/image-20250505213739069.png)
 
 
 
-#### 系统快照展示流程图
+#### 6.8.2 系统快照展示流程图
 
 ```mermaid
 flowchart TD
@@ -2714,7 +2716,7 @@ flowchart TD
 
 
 
-#### 系统快照类实现（SystemSnapshot.java）
+#### 6.8.3 系统快照类实现（SystemSnapshot.java）
 
 <img src="./report2025.assets/image-20250506110151272.png" alt="image-20250506110151272" style="zoom:50%;" />
 
@@ -2734,7 +2736,7 @@ SystemSnapshot 类负责定时采集操作系统各模块状态并通过 SSE 推
 
 
 
-#### Snapshot JSON 格式
+#### 6.8.4 Snapshot JSON 格式
 
 ```json
 {
@@ -2812,23 +2814,23 @@ SystemSnapshot 类负责定时采集操作系统各模块状态并通过 SSE 推
 
 
 
-#### Shell指令解析API实现 
+#### 6.8.5 Shell指令解析API实现 
 
 `POST /api/shell/command`，请求体是纯文本命令字符串，ShellController接收后调用Shell模块处理命令。该接口在前端由终端输入事件触发：当用户在Shell输入行按回车，JS使用`fetch`发送请求，命令执行结果由日志SSE推送。
 
-#### VI文件编辑API实现
+#### 6.8.6 VI文件编辑API实现
 
 `POST /api/shell/vi`，请求体为JSON（`{"fileName": "...", "content": "..."}`），用于保存前端VI文本编辑器中用户修改的文件内容。Controller调用文件系统的`editFile`更新文件，返回操作结果字符串。前端在VI对话框点“OK”时发送此请求。保存成功后，并不会立即在终端输出内容，只在控制台打印确认，用于调试。文件内容实际更新后，可由用户再执行`cat`命令查看。
 
-#### 日志SSE API实现
+#### 6.8.7 日志SSE API实现
 
 `GET /api/shell/stream`，用于建立服务器推送日志的EventSource连接。后端通过`LogEmitterService.addEmitter()`创建SSE通道。前端Shell.js在页面加载时即创建`eventSource = new EventSource("/api/shell/stream")`监听。后端各模块执行时调用`LogEmitterService.sendLog(msg)`，将消息广播给所有连接的SSE。前端收到日志事件后，将日志内容追加到终端输出区域。除了普通日志，还定义了若干特殊消息：以`PROMPT:`开头的消息用于更新Shell提示符，前端检测到后提取路径并修改最后一行提示符显示，用于实时更新用户所在的文件路径；以`OPEN_VI:`开头的消息用于触发前端打开VI编辑窗口，当用户执行`vi <文件>`命令时，Shell模块不会阻塞等待，而是通过日志先行发送此指令，前端据此弹出编辑窗口并暂停终端交互。这种机制利用SSE的单向推送能力，实现了后端对前端界面的主动控制。
 
-#### 系统快照SSE API实现
+#### 6.8.8 系统快照SSE API实现
 
 `GET /api/snapshot`，建立系统状态快照推送的EventSource连接。后端`SnapshotController`调用`SnapshotEmitterService.addEmitter()`生成连接。前端snapshotManager.js脚本打开该连接并监听`snapshot`事件。每当SystemSnapshot定时发送状态更新时，前端收到包含各模块数据的JSON串，解析后分发为自定义事件`snapshot-update`。各UI模块的JS监听该事件并更新界面元素。例如，process.js监听snapshot-update，从数据中提取进程管理部分刷新进程表格、就绪/等待队列和调度策略显示；memory.js获取内存快照，重新绘制64格内存方格，每个已占用帧用颜色和标签标明所属进程及页号；disk.js据快照中occupiedBlocks数组高亮磁盘栅格中占用的块（实现类似于内存，可视化磁盘1KB块的使用分布）；filesystem.js读取文件目录字符串，在文件目录面板以预格式文本呈现（带缩进的树结构)；device.js根据设备列表重绘设备表格，包括每个设备名、正在服务的进程以及等待队列进程列表。通过快照SSE，前端实现了对后端状态变化的被动拉取（实为服务端推送）更新。
 
-#### 系统快照的接收与广播 snapshotManager.js
+#### 6.8.9 系统快照的接收与广播 snapshotManager.js
 
 它的作用是在页面加载完成后建立与后端 `/api/snapshot` 接口的 SSE 连接，实时接收后端推送的系统快照数据，并将其广播为一个自定义事件，供页面中其他模块监听和使用。
 
@@ -2838,25 +2840,25 @@ SystemSnapshot 类负责定时采集操作系统各模块状态并通过 SSE 推
 
 页面上的其他脚本（如 `process.js`, `memory.js`, `disk.js`, `device.js` 等）会监听这个 `"snapshot-update"` 事件，并从 `event.detail` 中获取快照数据，以更新自己的显示内容。
 
-#### 进程管理展示实现 process.js
+#### 6.8.10 进程管理展示实现 process.js
 
 进程管理界面的脚本监听 `"snapshot-update"`事件，从中提取快照的 `processManagement` 部分。然后按照快照内容刷新进程状态面板：
 
 - **CPU运行信息表：** 脚本获取页面中用于显示CPU信息的表格容器。每次收到新快照时先清空该表格，然后遍历快照中的 `cpuDetails` 列表，为每个CPU核心创建一行，填入该核心ID以及其上运行的进程信息。如果某项数据不存在则以`--`标示空白。这样多个CPU核心的当前执行情况（运行进程PID、程序名称、当前指令、剩余运行时间、优先级等）都会在表格中实时更新。
 - **队列和策略显示：** 脚本更新界面上显示当前运行进程、就绪队列、等待队列和调度策略的元素文本。将 `processManagement.cpuRunning`（当前运行进程）直接显示，如果为空则显示`--`；将 `readyQueue` 和 `waitingQueue` 列表转换为逗号分隔的字符串显示（若队列为空则显示`--`）；以及显示当前使用的CPU调度算法名称（如先来先服务FCFS、时间片轮转RR等）。通过这些动态更新，前端“进程状态”面板即可反映内核调度器的实时队列变化和当前执行的进程。
 
-#### 内存管理展示实现 memory.js
+#### 6.8.11 内存管理展示实现 memory.js
 
 内存管理界面的脚本同样监听 `snapshot-update` 事件，从快照中获取 `memoryManagement` 数据。该数据包括物理内存总页框数以及已分配页框的信息列表。前端据此以图形化网格方式展示内存使用情况：
 
 - **准备数据结构：** 脚本先读取 `memory.totalFrames` 确定总页框数量，并取出 `frameInfo` 列表。`frameInfo` 中每个元素包含一个已占用页框的详情（例如 `{pid: 2, page: 3, frameId: 10}` 表示帧号10被PID为2的进程的第3页占用）。为了方便绘制，脚本创建一个 `frameMap` 将每个 frameId 映射到对应信息，并为不同PID分配不同的颜色类，以便直观区分。
 - **绘制内存帧网格：** 清空显示区域后，前端按索引0到`totalFrames-1`迭代每个页框号，创建一个方块元素代表该页框。如果当前帧号在已使用的映射中，则表示该帧被占用：给方块添加对应PID的颜色样式，文本内容显示该PID号，并设置鼠标悬停提示 来显示帧号、所属进程PID及页号。若当前帧号不在已用映射中，则将方块标记为空闲颜色，文本留空，提示内容标明“空闲”。最后将方块加入页面网格容器。通过这一方式，内存面板呈现出总内存页框的使用分布图：不同颜色代表不同进程，占用的块上标注进程ID，悬停可见详细信息，而空闲块则无标注。
 
-#### 目录展示实现 filesystem.js
+#### 6.8.12 目录展示实现 filesystem.js
 
 该模块监听 `snapshot-update` 事件并读取快照中的 `fileDirectory` 字符串。`fileDirectory` 是后端生成的当前目录树结构文本，例如包含根目录和子目录、文件的层次缩进格式。前端获取到此字符串后，直接将其设置为页面中表示文件系统树的元素的文本内容（innerText）。
 
-#### Shell模块界面交互实现 shell.js
+#### 6.8.13 Shell模块界面交互实现 shell.js
 
 Shell 模块提供一个模拟终端界面，允许用户输入命令并显示执行结果日志。它与快照推送同样使用 SSE 机制，但处理的内容不同。前端脚本（`shell.js`）建立到后端 `/api/shell/stream` 的 EventSource 连接，以接收日志输出和提示符更新等事件。该模块并不处理系统快照JSON，而是通过监听特定的日志事件来更新终端界面：
 
@@ -2865,13 +2867,13 @@ Shell 模块提供一个模拟终端界面，允许用户输入命令并显示�
 - **SSE 通道共用情况：** Shell 模块和系统快照模块都采用了服务器推送（SSE）来实现前端实时更新，但二者在后端通过不同的Service管理各自的事件流（一个发送`snapshot`事件，一个发送`log`事件）。前端也使用不同的EventSource连接或事件名加以区分。因此，Shell界面不参与快照 JSON 的处理，而是通过SSE获得日志/提示符信息，实现命令行交互界面的刷新。
 - 总结来说，Shell模块共享了类似的SSE实时推送机制，但其关注的数据流（日志输出）与系统快照数据独立。
 
-#### 磁盘占用展示实现 disk.js
+#### 6.8.14 磁盘占用展示实现 disk.js
 
 该脚本监听 `snapshot-update` 事件，从中读取 `diskManagement` 数据结构。其中包含磁盘总块数 (`totalBlocks`) 和已占用块列表 (`occupiedBlocks`)。界面以网格或列表形式展示磁盘块的占用状态。
 
 收到快照后，脚本首先清空之前的磁盘显示区域，然后按照块编号从0一直迭代到 `totalBlocks - 1`，为每个磁盘块创建一个小方格元素。若当前块号存在于 `occupiedBlocks` 列表中，表示该块已被占用，则将方格标记为占用状态，并在方格内显示块号。如果块号不在占用列表，则表示为空闲块，此时方格添加空闲样式（`color-empty`），内容留空。
 
-#### 设备管理展示实现 device.js
+#### 6.8.15 设备管理展示实现 device.js
 
 快照中的 `deviceManagement` 包含设备总数和设备列表。前端脚本获取该数据后，主要利用其中的 `deviceList` 数组更新设备状态表格。
 
@@ -2885,9 +2887,9 @@ Shell 模块提供一个模拟终端界面，允许用户输入命令并显示�
 
 
 
-## 程序清单
+## 7 程序清单
 
-### 代码结构
+### 7.1 代码结构
 
 ```elixir
 OSCD/
@@ -2977,7 +2979,7 @@ JUnit 单元测试代码位于 `test/java/org/example/oscdspring/` 目录下。
 
 
 
-### 代码说明
+### 7.2 代码说明
 
 ```coffeescript
 pom.xml
@@ -3133,7 +3135,7 @@ src/test/java/org/example/oscdspring/ProcessManagementTest.java
 
 
 
-### 源代码
+### 7.3 源代码
 
 源代码见提交。
 
@@ -3143,9 +3145,9 @@ src/test/java/org/example/oscdspring/ProcessManagementTest.java
 
 
 
-## 测试报告
+## 8 测试报告
 
-### 测试环境
+### 8.1 测试环境
 
 为保证各模块在模拟环境下的正确性与稳定性，测试工作在以下软硬件和开发配置下进行：
 
@@ -3159,7 +3161,7 @@ src/test/java/org/example/oscdspring/ProcessManagementTest.java
 
 
 
-### 测试计划
+### 8.2 测试计划
 
 在实际开发过程中，我们针对操作系统模拟系统制定了分阶段的测试计划，以确保各模块功能和系统整体的可靠性。测试分为单元测试和集成测试两个主要阶段：先在后端模块完成且 Web 前端开发之前进行单元测试，随后在系统集成并提供前端界面后进行集成测试。
 
@@ -3174,9 +3176,9 @@ src/test/java/org/example/oscdspring/ProcessManagementTest.java
 
 
 
-### 单元测试
+### 8.3 单元测试
 
-#### 进程管理单元测试
+#### 8.3.1 进程管理单元测试
 
 <img src="./report2025.assets/image-20250505145916963.png" alt="image-20250505145916963" style="zoom: 33%;" />
 
@@ -3187,7 +3189,7 @@ src/test/java/org/example/oscdspring/ProcessManagementTest.java
 
 
 
-#### 内存管理单元测试
+#### 8.3.2 内存管理单元测试
 
 <img src="./report2025.assets/image-20250505150002668.png" alt="image-20250505150002668" style="zoom: 33%;" />
 
@@ -3198,7 +3200,7 @@ src/test/java/org/example/oscdspring/ProcessManagementTest.java
 
 
 
-#### CPU 单元测试
+#### 8.3.3 CPU 单元测试
 
 <img src="./report2025.assets/image-20250505150059067.png" alt="image-20250505150059067" style="zoom:50%;" />
 
@@ -3209,7 +3211,7 @@ src/test/java/org/example/oscdspring/ProcessManagementTest.java
 
 
 
-#### 设备管理单元测试
+#### 8.3.4 设备管理单元测试
 
 <img src="./report2025.assets/image-20250505154142506.png" alt="image-20250505154142506" style="zoom:50%;" />
 
@@ -3220,7 +3222,7 @@ src/test/java/org/example/oscdspring/ProcessManagementTest.java
 
 
 
-#### 文件系统单元测试
+#### 8.3.5 文件系统单元测试
 
 <img src="./report2025.assets/image-20250505154221633.png" alt="image-20250505154221633" style="zoom:50%;" />
 
@@ -3233,11 +3235,11 @@ src/test/java/org/example/oscdspring/ProcessManagementTest.java
 
 
 
-### 集成测试
+### 8.4 集成测试
 
-#### Shell 测试
+#### 8.4.1 Shell 测试
 
-##### 错误命令
+##### 8.4.1.1 错误命令
 
 <img src="./report2025.assets/image-20250502104933111.png" alt="image-20250502104933111" style="zoom:50%;" />
 
@@ -3245,7 +3247,7 @@ src/test/java/org/example/oscdspring/ProcessManagementTest.java
 
 
 
-##### `mkdir`
+##### 8.4.1.2 `mkdir`
 
 创建目录前：
 
@@ -3267,7 +3269,7 @@ src/test/java/org/example/oscdspring/ProcessManagementTest.java
 
 
 
-##### `mkf`与`cat`
+##### 8.4.1.3 `mkf`与`cat`
 
 创建文件前：
 
@@ -3299,7 +3301,7 @@ src/test/java/org/example/oscdspring/ProcessManagementTest.java
 
 
 
-##### `cd`与`cd..`
+##### 8.4.1.4 `cd`与`cd..`
 
 <img src="./report2025.assets/image-20250502104550666.png" alt="image-20250502104550666" style="zoom:50%;" />
 
@@ -3311,7 +3313,7 @@ src/test/java/org/example/oscdspring/ProcessManagementTest.java
 
 
 
-##### `ls`
+##### 8.4.1.5 `ls`
 
 在根目录执行：
 
@@ -3323,7 +3325,7 @@ src/test/java/org/example/oscdspring/ProcessManagementTest.java
 
 
 
-##### `rm`
+##### 8.4.1.6 `rm`
 
 删除b：
 
@@ -3347,7 +3349,7 @@ src/test/java/org/example/oscdspring/ProcessManagementTest.java
 
 
 
-##### `rmdir`
+##### 8.4.1.7 `rmdir`
 
 删除空文件夹a：
 
@@ -3359,7 +3361,7 @@ a被删除：
 
 
 
-##### `rmrdir`
+##### 8.4.1.8 `rmrdir`
 
 递归删除文件夹d1：
 
@@ -3375,7 +3377,7 @@ a被删除：
 
  
 
-##### `shf`
+##### 8.4.1.9 `shf`
 
 创建一个40960字节的文件。
 
@@ -3393,7 +3395,7 @@ a被删除：
 
 
 
-##### `vi`
+##### 8.4.1.10 `vi`
 
 输入vi指令：
 
@@ -3413,7 +3415,7 @@ a被删除：
 
 
 
-##### `exec`
+##### 8.4.1.11 `exec`
 
 创建一个文件，输入一段简易示例程序：
 
@@ -3427,7 +3429,7 @@ a被删除：
 
 
 
-##### `addevc`与`rmdevc`
+##### 8.4.1.12 `addevc`与`rmdevc`
 
 <img src="./report2025.assets/image-20250502111832116.png" alt="image-20250502111832116" style="zoom:50%;" />
 
@@ -3439,9 +3441,9 @@ a被删除：
 
 
 
-##### `kill`
+##### 8.4.1.13 `kill`
 
-###### kill 运行态进程
+###### 8.4.1.13.1 kill 运行态进程
 
 kill执行前状态：
 
@@ -3453,7 +3455,7 @@ kill 1，杀死正在执行的t1进程，可见其运行被终止，且占用的
 
 
 
-###### kill 就绪态进程
+###### 8.4.1.13.2 kill 就绪态进程
 
 kill执行前状态：
 
@@ -3467,7 +3469,7 @@ t3从Ready队列移除，转为Terminate态，释放资源。
 
 
 
-###### kill IO进程
+###### 8.4.1.13.3 kill IO进程
 
 kill执行前状态：
 
@@ -3485,7 +3487,7 @@ t1正在进行设备IO：
 
 
 
-###### kill 内存读写进程
+###### 8.4.1.13.4 kill 内存读写进程
 
 执行t8，读内存：
 
@@ -3499,7 +3501,7 @@ t1正在进行设备IO：
 
 
 
-##### `info`
+##### 8.4.14 `info`
 
 <img src="./report2025.assets/屏幕截图 2025-05-02 112512.png" style="zoom:50%;" />
 
@@ -3511,7 +3513,7 @@ t1正在进行设备IO：
 
 
 
-#### 单CPU进程调度测试
+#### 8.4.2 单CPU进程调度测试
 
 测试程序：
 
@@ -3536,7 +3538,7 @@ C 2000#Q#
 
 
 
-##### FCFS
+##### 8.4.2.1 FCFS
 
 测试命令：`exec t9 0 t10 0 t11 0`
 
@@ -3563,7 +3565,7 @@ gantt
 
 <img src=".\report2025.assets\进程调度测试FCFS-3.png" style="zoom:25%;" />
 
-##### SJF
+##### 8.4.2.2 SJF
 
 说明：本程序SJF调度算法按程序代码段大小对程序进行排序
 
@@ -3595,13 +3597,13 @@ gantt
 
 <img src=".\report2025.assets\进程调度测试SJF-3.png" style="zoom:25%;" />
 
-##### RR
+##### 8.4.2.3 RR
 
 测试命令：`exec t9 0 t10 0`
 
 测试结果：CPU交替运行t9、t10。
 
-##### PRIORITY
+##### 8.4.2.4 PRIORITY
 
 测试命令：`exec t9 3 t10 2 t11 1`
 
@@ -3630,7 +3632,7 @@ gantt
 
 <img src=".\report2025.assets\进程调度测试PRIORITY-3.png" style="zoom:25%;" />
 
-##### MLFQ
+##### 8.4.2.5 MLFQ
 
 测试命令：`exec t13 0 t14 1 t15 2 t16 3`
 
@@ -3687,7 +3689,7 @@ gantt
 
 
 
-##### PRIORITY_Preemptive
+##### 8.4.2.6 PRIORITY_Preemptive
 
 测试命令：`exec t14 3 t15 2 t16 1`
 
@@ -3722,11 +3724,11 @@ gantt
 
 
 
-#### 多CPU进程调度测试
+#### 8.4.3 多CPU进程调度测试
 
 本测试使用2个CPU。
 
-##### FCFS
+##### 8.4.3.1 FCFS
 
 测试命令：`exec t9 0 t10 0 t11 0`
 
@@ -3753,7 +3755,7 @@ gantt
 
 ![](.\report2025.assets\多CPU-FCFS-3.png)
 
-##### SJF
+##### 8.4.3.2 SJF
 
 说明：本程序SJF调度算法按程序代码段大小对程序进行排序
 
@@ -3788,13 +3790,13 @@ gantt
 
 ![](.\report2025.assets\多CPU-SJF-3.png)
 
-##### RR
+##### 8.4.3.3 RR
 
 测试命令：`exec t9 0 t10 0 t11 0`
 
 测试结果：CPU交替运行t9、t10、t11。
 
-##### PRIORITY
+##### 8.4.3.4 PRIORITY
 
 测试命令：`exec t9 3 t9 3 t10 2 t11 1 t12 0`
 
@@ -3832,7 +3834,7 @@ gantt
 
 ![](.\report2025.assets\多CPU-优先级-5.png)
 
-##### MLFQ
+##### 8.4.3.5 MLFQ
 
 测试命令：`exec t13 0 t14 1 t15 2 t16 3`
 
@@ -3885,7 +3887,7 @@ gantt
    
 ```
 
-##### PRIORITY_Preemptive
+##### 8.4.3.6 PRIORITY_Preemptive
 
 测试命令：`exec t14 3 t15 2 t16 1 t16 0`
 
@@ -3920,7 +3922,7 @@ gantt
 
 
 
-#### 设备调度测试
+#### 8.4.4 设备调度测试
 
 测试程序：
 
@@ -3983,7 +3985,7 @@ gantt
 
 
 
-#### 文件系统测试
+#### 8.4.5 文件系统测试
 
 基本功能（文件创建删除修改，目录创建删除切换，磁盘块管理，磁盘空间分配等）已在Shell测试部分完成测试，下面仅测试文件读写互斥性。
 
@@ -4061,9 +4063,9 @@ t7和t8读之后同时释放：
 
 
 
-#### 内存管理测试
+#### 8.4.6 内存管理测试
 
-##### 测试程序
+##### 8.4.6.1 测试程序
 
 ```yaml
 m1:
@@ -4078,7 +4080,7 @@ C 2000#M 100000#C 2000#MW 100 101000#Q#
 
 
 
-##### 测试说明
+##### 8.4.6.2 测试说明
 
 文件`m1` 测试正常读写：
 
@@ -4090,7 +4092,7 @@ C 2000#M 100000#C 2000#MW 100 101000#Q#
 
 
 
-##### 预期结果
+##### 8.4.6.3 预期结果
 
 `m1`:
 
@@ -4108,7 +4110,7 @@ C 2000#M 100000#C 2000#MW 100 101000#Q#
 
 
 
-##### 测试结果
+##### 8.4.6.4 测试结果
 
 `m1`:
 
@@ -4162,13 +4164,13 @@ C 2000#M 100000#C 2000#MW 100 101000#Q#
 
 <img src="./report2025.assets/内存管理测试-m2-3.png" style="zoom:50%;" />
 
-##### 结果分析
+##### 8.4.6.5 结果分析
 
 测试结果与预期结果相符
 
 
 
-#### 复杂测试
+#### 8.4.7 复杂测试
 
 为了测试我们OS的多道程序并发性，证明我们的程序各模块之间可以正确交互，可以处理更复杂以及接近现实的操作，我们设计了复杂测试。
 
@@ -4331,9 +4333,9 @@ x7写完，x6，x8并行读
 
 
 
-## 个人总结与体会
+## 9 个人总结与体会
 
-### 任泽高
+### 9.1 任泽高
 
 我是本次大作业的组长。这次大作业出现了很多问题。
 
@@ -4351,7 +4353,7 @@ x7写完，x6，x8并行读
 
 
 
-### 安轶东
+### 9.2 安轶东
 
 在本次大作业中，我主要负责进程管理模块，在早期，我查阅了大量资料，在模仿现代操作系统实际实现的基础上有取舍地搭建了作业中进程管理模块的基础框架。中期，我和队友紧密配合，协力完成了进程管理的细节部分。后期，我主要进行测试工作，辅以查找和修复bug。
 
@@ -4363,7 +4365,7 @@ x7写完，x6，x8并行读
 
 
 
-### 董佳鑫
+### 9.3 董佳鑫
 
 在本次操作系统模拟系统的开发过程中，我主要负责了前端部分的设计与实现。前端采用了单页 Web 应用的形式，通过与后端提供的 REST 接口和 SSE 接口进行交互，完成了对操作系统多个核心模块运行状态的可视化展示，包括进程调度、内存分页、文件系统、磁盘管理、设备管理以及 Shell 交互等。
 通过此次开发，我深入掌握了前端与后端交互的两种主要方式：一方面，利用标准 REST API（如 /api/shell/command 和 /api/shell/vi）完成了命令传递和文件编辑功能；另一方面，通过 Server-Sent Events（SSE）技术实现了前端对后端实时日志输出和系统快照的接收与展示，尤其在处理 /api/shell/stream 和 /api/snapshot 接口时，体会到了前端事件监听机制在实时系统监控中的重要作用。
@@ -4373,7 +4375,7 @@ x7写完，x6，x8并行读
 
 
 
-### 路遥
+### 9.4 路遥
 
 在本次操作系统课程设计中，我负责内存管理模块的架构设计与实现工作。项目初期，我查阅相关资料，系统性地梳理了操作系统的内存管理机制，结合实验需求选择了页式内存管理方案，并完成了需求文档与详细设计说明的编写。在具体开发阶段，基于组长搭建的框架进行模块实现，期间主要面临以下技术挑战：
 
@@ -4388,7 +4390,9 @@ x7写完，x6，x8并行读
 
 通过本次实践，我不仅深化了对内存分级管理、地址转换机制等技术要点的理解，更收获了宝贵的工程实践经验。在团队协作方面，我学会了如何通过技术文档同步设计思路、如何通过Git进行高效代码协同。这些经验将指导我在未来的系统级开发中，更好地平衡技术理想与工程现实，实现更高质量的交付。
 
-### 杨皓岚
+
+
+### 9.5 杨皓岚
 
 本次操作系统大作业中，本人主要负责cpu、PCB、进程调度 、设备管理部分相关部分的内容，前期负责部分关于进程执行和设备管理的shell指令的实现（例如exec、addevc，rmdevc，kill），同时完善并且补充了对应机器指令的底层逻辑（比如C,R/W,Q 新增M，MW/MR），同时完善了初版的中断功能。之后同时完成了相关进程调度功能的完善，完善了时间片轮询调度的初版逻辑。同时本次也负责了自己负责部分内容的测试环节，以及后期的相关bug修复，比如kill进程后前端界面显示异常相关的问题。
 
@@ -4398,7 +4402,7 @@ x7写完，x6，x8并行读
 
 
 
-### 张志鑫
+### 9.6 张志鑫
 
 在本次操作系统课程设计中，本人主要负责进程管理模块，完成了对进程整个生命周期的管理和调度算法，设计了PCB的部分内容和cpu的运行规则，完成了进程执行过程中部分中断的实现，完善了部分与进程相关的shell指令的实现。并参与了后期部分bug修复和单元测试等内容。
 
