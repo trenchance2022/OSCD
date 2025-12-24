@@ -1,3 +1,5 @@
+package file_disk_management;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
@@ -43,7 +45,6 @@ class Directory {
             }
         }
 
-        disk.setOccupiedBlocks(disk.getOccupiedBlocks() + totalBlocksNeeded);
         files.add(inode);
         System.out.println("File " + fileName + " created with size " + fileSize + "B.");
     }
@@ -185,5 +186,14 @@ class Directory {
         for (Directory dir : subdirectories) {
             dir.showDirectoryStructure(prefix + "  ");
         }
+    }
+
+    public int[] getFileDiskBlock(String filename){
+        for (Inode inode : files) {
+            if (inode.fileName.equals(filename)) {
+                return inode.blockIndexes;
+            }
+        }
+        return null;
     }
 }

@@ -1,3 +1,7 @@
+package memory_management;
+
+import process_management.CPU;
+
 //内存管理模块对外接口
 public interface MemoryManagement {
 
@@ -57,4 +61,7 @@ public interface MemoryManagement {
      */
     public void showPageUse(int start, int end);
 
+    void releaseMemory(int pid);
+
+    boolean allocateMemory(int pid, int bytes);
 }

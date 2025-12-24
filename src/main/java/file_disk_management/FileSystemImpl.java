@@ -1,10 +1,12 @@
+package file_disk_management;
+
 import java.util.Scanner;
 import java.util.Arrays;
 
-class FileSystemImpl implements FileDiskManagement {
-    Disk disk;
-    Directory root;
-    Directory currentDirectory;
+public class FileSystemImpl implements FileDiskManagement {
+    public static Disk disk;
+    public static Directory root;
+    public static Directory currentDirectory;
 
     public FileSystemImpl() {
         disk = Disk.getInstance();
@@ -132,6 +134,8 @@ class FileSystemImpl implements FileDiskManagement {
             return;
         }
 
+        disk.setOccupiedBlocks(disk.getOccupiedBlocks() - fileInode.size / 1024 -1);
+
         // 进入vi模式，编辑文件
         Scanner scanner = new Scanner(System.in);
         System.out.println("Editing file " + fileName + ". Type ':wq' to save and exit.");
@@ -141,6 +145,7 @@ class FileSystemImpl implements FileDiskManagement {
         while (true) {
             String line = scanner.nextLine();
             if (line.equals(":wq")) {
+                newContent.append("*");
                 break;  // 如果用户输入 ':wq'，则保存并退出编辑
             }
             newContent.append(line).append("\n");
@@ -211,6 +216,10 @@ class FileSystemImpl implements FileDiskManagement {
 
         // 文件未找到时，返回提示信息
         return "-1";
+    }
+
+    public int[] getFileDiskBlock(String filename){
+        return currentDirectory.getFileDiskBlock(filename);
     }
 
 }

@@ -1,3 +1,6 @@
+package memory_management;
+
+import main.Constants;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -110,7 +113,7 @@ public class PageTable {
         }
         return entries.get(pageNumber);
     }
-    
+
     public void addEntry() {
         PageTableEntry entry = new PageTableEntry(-1);
         entries.add(entry);
